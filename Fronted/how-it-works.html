@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>How It Works — OneClick</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+<linkhref="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Main Website CSS - Required for Navbar -->
+  <link rel="stylesheet" href="css/main.css">
+
+  <!-- How It Works Page CSS -->
+  <link rel="stylesheet" href="css/how-it-works.css">
+
+</head>
+
+<body>
+
+  <!-- =========================================================
+       NAVBAR
+  ========================================================== -->
+  <nav class="navbar navbar-expand-lg fixed-top oc-navbar" id="mainNavbar">
+
+    <div class="container">
+
+      <!-- Logo -->
+      <a class="navbar-brand oc-brand" href="index.html">
+        <span class="oc-brand-mark">
+          <i class="fa-solid fa-bolt"></i>
+        </span>
+        One<span class="text-accent">Click</span>
+      </a>
+
+      <!-- Mobile Toggle -->
+      <button class="navbar-toggler oc-toggler" type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navMenu"
+        aria-controls="navMenu"
+        aria-expanded="false"
+        aria-label="Toggle navigation">
+
+        <span class="oc-toggler-bar"></span>
+        <span class="oc-toggler-bar"></span>
+        <span class="oc-toggler-bar"></span>
+
+      </button>
+
+      <!-- Navbar Links -->
+      <div class="collapse navbar-collapse" id="navMenu">
+
+        <ul class="navbar-nav mx-auto oc-nav-links">
+
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">
+              Home
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="services.html">
+              Services
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link active" href="how-it-works.html">
+              How It Works
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="become-provider.html">
+              Become Provider
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="about.html">
+              About
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="contact.html">
+              Contact
+            </a>
+          </li>
+
+        </ul>
+
+        <!-- Login/Register -->
+        <div class="d-flex align-items-center oc-nav-actions">
+
+          <a href="login.html" class="btn oc-btn-ghost me-2">
+            Login
+          </a>
+
+          <a href="register.html" class="btn oc-btn-primary">
+            Register
+          </a>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </nav>
+
+
+  <!-- =========================================================
+       HERO
+  ========================================================== -->
+  <section class="hero">
+
+    <div class="hero-grid-line"></div>
+
+    <div class="container position-relative">
+
+      <div class="row align-items-center gy-5">
+
+        <div class="col-lg-7">
+
+          <div class="eyebrow mb-3">
+            How It Works
+          </div>
+
+          <h1 class="mb-4">
+            From first search to a five-star finish, in six simple steps.
+          </h1>
+
+          <p class="lead mb-4">
+            Every booking on our platform follows the same trusted path —
+            no surprises, no guesswork. Here's exactly what happens between
+            the moment you search and the moment you leave a review.
+          </p>
+
+          <div class="d-flex flex-wrap gap-3">
+
+            <a href="#timeline" class="btn btn-amber">
+              See the process
+            </a>
+
+            <a href="#faq" class="btn btn-outline-paper">
+              Booking FAQ
+            </a>
+
+          </div>
+
+        </div>
+
+
+        <div class="col-lg-5">
+
+          <div class="row row-cols-2 g-4">
+
+            <div class="col hero-stat">
+              <span class="num">6</span>
+              <span class="label">simple steps</span>
+            </div>
+
+            <div class="col hero-stat">
+              <span class="num">15k+</span>
+              <span class="label">verified providers</span>
+            </div>
+
+            <div class="col hero-stat">
+              <span class="num">98%</span>
+              <span class="label">on-time arrivals</span>
+            </div>
+
+            <div class="col hero-stat">
+              <span class="num">24/7</span>
+              <span class="label">support & payments</span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================================================
+       TIMELINE
+  ========================================================== -->
+  <section class="timeline-section" id="timeline">
+
+    <div class="container">
+
+      <div class="section-heading">
+
+        <div class="eyebrow mb-2">
+          The Journey
+        </div>
+
+        <h2>Six steps, start to finish</h2>
+
+        <p>
+          Each step is designed to remove friction — from finding the right
+          person for the job to paying safely once it's done.
+        </p>
+
+      </div>
+
+
+      <div class="timeline-wrap">
+
+        <div class="timeline-spine">
+          <div class="timeline-spine-progress" id="spineProgress"></div>
+        </div>
+
+
+        <!-- STEP 01 -->
+        <div class="timeline-item">
+
+          <div class="timeline-card-slot card-left">
+
+            <div class="step-card">
+
+              <span class="step-number">STEP 01</span>
+
+              <h3>Search Service</h3>
+
+              <p>
+                Tell us what you need — plumbing, cleaning, electrical, and
+                more — along with your location and preferred date.
+              </p>
+
+            </div>
+
+          </div>
+
+          <div class="timeline-node">
+            <i class="bi bi-search"></i>
+          </div>
+
+          <div class="timeline-card-slot card-right"></div>
+
+        </div>
+
+
+        <!-- STEP 02 -->
+        <div class="timeline-item">
+
+          <div class="timeline-card-slot card-left"></div>
+
+          <div class="timeline-node">
+            <i class="bi bi-people"></i>
+          </div>
+
+          <div class="timeline-card-slot card-right">
+
+            <div class="step-card">
+
+              <span class="step-number">STEP 02</span>
+
+              <h3>Choose Provider</h3>
+
+              <p>
+                Compare ratings, reviews, pricing, and availability side by
+                side. Every profile is verified.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- STEP 03 -->
+        <div class="timeline-item">
+
+          <div class="timeline-card-slot card-left">
+
+            <div class="step-card">
+
+              <span class="step-number">STEP 03</span>
+
+              <h3>Book Appointment</h3>
+
+              <p>
+                Pick a time that works for you from the provider's live
+                calendar and receive instant confirmation.
+              </p>
+
+            </div>
+
+          </div>
+
+          <div class="timeline-node">
+            <i class="bi bi-calendar-check"></i>
+          </div>
+
+          <div class="timeline-card-slot card-right"></div>
+
+        </div>
+
+
+        <!-- STEP 04 -->
+        <div class="timeline-item">
+
+          <div class="timeline-card-slot card-left"></div>
+
+          <div class="timeline-node">
+            <i class="bi bi-shield-lock"></i>
+          </div>
+
+          <div class="timeline-card-slot card-right">
+
+            <div class="step-card">
+
+              <span class="step-number">STEP 04</span>
+
+              <h3>Secure Payment</h3>
+
+              <p>
+                Your payment is held safely until the job is completed.
+                Pay securely using your preferred payment method.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- STEP 05 -->
+        <div class="timeline-item">
+
+          <div class="timeline-card-slot card-left">
+
+            <div class="step-card">
+
+              <span class="step-number">STEP 05</span>
+
+              <h3>Provider Arrives</h3>
+
+              <p>
+                Track your provider's arrival and receive a notification
+                when they are on the way.
+              </p>
+
+            </div>
+
+          </div>
+
+          <div class="timeline-node">
+            <i class="bi bi-truck"></i>
+          </div>
+
+          <div class="timeline-card-slot card-right"></div>
+
+        </div>
+
+
+        <!-- STEP 06 -->
+        <div class="timeline-item">
+
+          <div class="timeline-card-slot card-left"></div>
+
+          <div class="timeline-node">
+            <i class="bi bi-star"></i>
+          </div>
+
+          <div class="timeline-card-slot card-right">
+
+            <div class="step-card">
+
+              <span class="step-number">STEP 06</span>
+
+              <h3>Leave Review</h3>
+
+              <p>
+                Rate your experience and leave feedback to help other
+                customers find trusted providers.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================================================
+       FAQ
+  ========================================================== -->
+  <section class="faq-section" id="faq">
+
+    <div class="container">
+
+      <div class="row">
+
+        <div class="col-lg-5">
+
+          <div class="eyebrow mb-2">
+            Good to know
+          </div>
+
+          <h2 class="display-font mb-3">
+            Booking FAQ
+          </h2>
+
+          <p style="color:var(--muted);">
+            Answers to the questions we hear most before someone books
+            their first service.
+          </p>
+
+        </div>
+
+
+        <div class="col-lg-7">
+
+          <div class="accordion" id="faqAccordion">
+
+
+            <div class="accordion-item">
+
+              <h3 class="accordion-header">
+
+                <button class="accordion-button"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#faq1">
+
+                  How quickly can I book a provider?
+
+                </button>
+
+              </h3>
+
+              <div id="faq1"
+                class="accordion-collapse collapse show"
+                data-bs-parent="#faqAccordion">
+
+                <div class="accordion-body">
+
+                  Most services can be booked for same-day or next-day
+                  appointments depending on availability.
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div class="accordion-item">
+
+              <h3 class="accordion-header">
+
+                <button class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#faq2">
+
+                  What happens if I need to reschedule?
+
+                </button>
+
+              </h3>
+
+              <div id="faq2"
+                class="accordion-collapse collapse"
+                data-bs-parent="#faqAccordion">
+
+                <div class="accordion-body">
+
+                  You can reschedule or cancel directly from your booking
+                  dashboard.
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div class="accordion-item">
+
+              <h3 class="accordion-header">
+
+                <button class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#faq3">
+
+                  Is my payment protected?
+
+                </button>
+
+              </h3>
+
+              <div id="faq3"
+                class="accordion-collapse collapse"
+                data-bs-parent="#faqAccordion">
+
+                <div class="accordion-body">
+
+                  Yes. Your payment is handled securely until the job is
+                  completed.
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div class="accordion-item">
+
+              <h3 class="accordion-header">
+
+                <button class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#faq4">
+
+                  Are all providers verified?
+
+                </button>
+
+              </h3>
+
+              <div id="faq4"
+                class="accordion-collapse collapse"
+                data-bs-parent="#faqAccordion">
+
+                <div class="accordion-body">
+
+                  Every provider completes identity verification before
+                  joining the platform.
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================================================
+       CTA
+  ========================================================== -->
+  <section class="cta-section">
+
+    <div class="container">
+
+      <div class="cta-banner">
+
+        <div class="row align-items-center g-4 mb-4">
+
+          <div class="col-lg-8">
+
+            <div class="eyebrow mb-2" style="color:var(--amber);">
+              Ready when you are
+            </div>
+
+            <h2 class="mb-2">
+              Start your next service in minutes
+            </h2>
+
+            <p class="mb-0">
+              Whether you're looking to hire help or offer your skills,
+              getting started is quick and simple.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="row g-3">
+
+          <div class="col-md-6">
+
+            <div class="cta-card">
+
+              <div class="icon-wrap">
+                <i class="bi bi-calendar2-check"></i>
+              </div>
+
+              <h4>Book Service</h4>
+
+              <p>
+                Find a trusted provider near you and schedule your service.
+              </p>
+
+              <a href="register.html" class="btn btn-amber mt-2">
+                Book Service
+              </a>
+
+            </div>
+
+          </div>
+
+
+          <div class="col-md-6">
+
+            <div class="cta-card provider">
+
+              <div class="icon-wrap">
+                <i class="bi bi-briefcase"></i>
+              </div>
+
+              <h4>Become Provider</h4>
+
+              <p>
+                Join our network and start earning from local jobs.
+              </p>
+
+              <a href="become-provider.html"
+                class="btn btn-outline-paper mt-2">
+
+                Become Provider
+
+              </a>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================================================
+       FOOTER
+  ========================================================== -->
+  <footer class="site-footer">
+    &copy; 2026 OneClick. All rights reserved.
+  </footer>
+
+
+  <!-- Bootstrap JavaScript -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+  </script>
+
+  <!-- Page JavaScript -->
+  <script src="js/how-it-works.js"></script>
+
+</body>
+
+</html>
