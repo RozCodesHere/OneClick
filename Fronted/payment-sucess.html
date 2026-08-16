@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Successful | OneClick</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- Page CSS -->
+<link rel="stylesheet" href="css/payment-sucess.css">
+</head>
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar navbar-expand-lg navbar-light oneclick-navbar sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">
+      <i class="fa-solid fa-bolt"></i> OneClick
+    </a>
+  </div>
+</nav>
+
+<canvas id="confettiCanvas"></canvas>
+
+<main class="success-main">
+  <div class="container">
+    <div class="success-card">
+
+      <div class="checkmark-wrapper">
+        <svg class="checkmark" viewBox="0 0 52 52">
+          <circle class="checkmark-circle" cx="26" cy="26" r="24" fill="none"/>
+          <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+      </div>
+
+      <h1>Payment Successful</h1>
+      <p class="success-sub"><i class="fa-solid fa-circle-check"></i> Booking Confirmed</p>
+
+      <div class="details-card">
+        <div class="detail-row">
+          <span class="detail-label"><i class="fa-solid fa-hashtag"></i> Booking ID</span>
+          <span class="detail-value" id="bookingIdValue">BK-20841</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fa-solid fa-user"></i> Provider Name</span>
+          <span class="detail-value" id="providerValue">Rajesh Karki</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fa-solid fa-money-bill-wave"></i> Amount Paid</span>
+          <span class="detail-value amount" id="amountValue">Rs. 1,025.00</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label"><i class="fa-solid fa-credit-card"></i> Payment Method</span>
+          <span class="detail-value" id="methodValue">Khalti</span>
+        </div>
+      </div>
+
+      <div class="success-actions">
+        <a href="booking-history.html" class="btn btn-outline-primary-gradient">
+          <i class="fa-solid fa-clock-rotate-left"></i> Booking History
+        </a>
+        <a href="customer-dashboard.html" class="btn btn-primary-gradient">
+          <i class="fa-solid fa-house"></i> Return to Dashboard
+        </a>
+        <button class="btn btn-outline-dark-soft" id="downloadReceiptBtn">
+          <i class="fa-solid fa-download"></i> Download Receipt
+        </button>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Page JS -->
+<script src="js/payment-sucess.js"></script>
+</body>
+</html>

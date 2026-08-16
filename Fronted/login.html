@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — OneClick</title>
+  <meta name="description" content="Log in to your OneClick account to book trusted home services or manage your provider profile.">
+
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <!-- Shared design tokens / brand styles -->
+  <link rel="stylesheet" href="css/main.css">
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body class="oc-auth-body">
+
+  <div class="oc-auth-wrapper">
+
+    <!-- =========================================================
+         LEFT PANEL — Brand / Marketing (hidden on small screens)
+    ========================================================== -->
+    <section class="oc-auth-brand" aria-hidden="true">
+      <div class="oc-auth-brand-blob oc-auth-blob-1"></div>
+      <div class="oc-auth-brand-blob oc-auth-blob-2"></div>
+
+      <div class="oc-auth-brand-content">
+        <a href="index.html" class="oc-brand oc-auth-brand-logo">
+          <span class="oc-brand-mark"><i class="fa-solid fa-bolt"></i></span>
+          One<span class="text-accent">Click</span>
+        </a>
+
+        <h1 class="oc-auth-headline">
+          Book trusted home services<br> in one click.
+        </h1>
+        <p class="oc-auth-tagline">
+          Verified electricians, cleaners, plumbers and more — booked in minutes,
+          tracked live, and paid for safely.
+        </p>
+
+        <!-- Illustration area: floating service cards, matches landing page motif -->
+        <div class="oc-auth-illustration">
+          <div class="oc-click-ripple oc-click-ripple-1"></div>
+          <div class="oc-click-ripple oc-click-ripple-2"></div>
+
+          <div class="oc-auth-float-card oc-auth-float-1">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Booking Confirmed</span>
+          </div>
+          <div class="oc-auth-float-card oc-auth-float-2">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>ID Verified Provider</span>
+          </div>
+          <div class="oc-auth-float-card oc-auth-float-3">
+            <i class="fa-solid fa-star"></i>
+            <span>4.9 Average Rating</span>
+          </div>
+        </div>
+
+        <ul class="oc-auth-stats-row">
+          <li><strong>1,000+</strong><span>Providers</span></li>
+          <li><strong>5,000+</strong><span>Customers</span></li>
+          <li><strong>4.9★</strong><span>Rated</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         RIGHT PANEL — Login Form
+    ========================================================== -->
+    <section class="oc-auth-form-side">
+      <div class="oc-auth-card">
+
+        <!-- Mobile-only brand mark (left panel is hidden below lg breakpoint) -->
+        <a href="index.html" class="oc-brand oc-auth-mobile-logo d-lg-none">
+          <span class="oc-brand-mark"><i class="fa-solid fa-bolt"></i></span>
+          One<span class="text-accent">Click</span>
+        </a>
+
+        <header class="oc-auth-card-header">
+          <h2>Welcome Back</h2>
+          <p>Log in to continue booking trusted home services.</p>
+        </header>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="oc-auth-form needs-validation" novalidate autocomplete="on">
+
+          <!-- Email Field -->
+          <div class="mb-3">
+            <label for="loginEmail" class="form-label">Email address</label>
+            <div class="oc-input-group">
+              <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
+              <input
+                type="email"
+                class="form-control oc-form-control"
+                id="loginEmail"
+                name="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+                aria-describedby="loginEmailFeedback"
+              >
+            </div>
+            <div id="loginEmailFeedback" class="invalid-feedback">
+              Please enter a valid email address.
+            </div>
+          </div>
+
+          <!-- Password Field -->
+          <div class="mb-2">
+            <label for="loginPassword" class="form-label">Password</label>
+            <div class="oc-input-group">
+              <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+              <input
+                type="password"
+                class="form-control oc-form-control oc-password-input"
+                id="loginPassword"
+                name="password"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                required
+                minlength="6"
+                aria-describedby="loginPasswordFeedback"
+              >
+              <button
+                type="button"
+                class="oc-password-toggle"
+                id="togglePassword"
+                aria-label="Show password"
+                aria-pressed="false"
+                data-target="loginPassword"
+              >
+                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div id="loginPasswordFeedback" class="invalid-feedback">
+              Password must be at least 6 characters.
+            </div>
+          </div>
+
+          <!-- Remember Me / Forgot Password -->
+          <div class="oc-auth-row">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
+              <label class="form-check-label" for="rememberMe">Remember me</label>
+            </div>
+            <a href="#" class="oc-forgot-link">Forgot Password?</a>
+          </div>
+
+          <!-- Server / general form alert (hidden by default) -->
+          <div id="loginAlert" class="alert alert-danger oc-auth-alert d-none" role="alert"></div>
+
+          <!-- Submit -->
+          <button type="submit" class="btn oc-btn-primary btn-lg w-100 oc-ripple-btn oc-auth-submit">
+            <span class="oc-btn-text">Login</span>
+            <span class="spinner-border spinner-border-sm oc-btn-spinner d-none" role="status" aria-hidden="true"></span>
+          </button>
+
+          <!-- Divider -->
+          <div class="oc-auth-divider" role="separator">
+            <span>OR</span>
+          </div>
+
+          <!-- Google Login -->
+          <button type="button" class="btn oc-btn-google w-100" id="googleLoginBtn">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" class="oc-google-icon" aria-hidden="true">
+            Continue with Google
+          </button>
+
+          <!-- Register Link -->
+          <p class="oc-auth-switch">
+            Don't have an account? <a href="register.html">Register</a>
+          </p>
+        </form>
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Page-specific JS -->
+  <script src="js/login.js"></script>
+</body>
+</html>

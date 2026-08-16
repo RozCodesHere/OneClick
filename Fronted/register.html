@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account — OneClick</title>
+  <meta name="description" content="Create your OneClick account — book trusted home services as a customer, or apply to offer your services as a provider.">
+
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <!-- AOS Animation Library -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+  <!-- Shared design tokens / brand styles from the landing page -->
+  <link rel="stylesheet" href="css/main.css">
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="css/register.css">
+</head>
+<body>
+
+  <!-- =========================================================
+       NAVBAR (same markup/classes as the landing page)
+  ========================================================== -->
+  <nav class="navbar navbar-expand-lg fixed-top oc-navbar oc-scrolled" id="mainNavbar">
+    <div class="container">
+      <a class="navbar-brand oc-brand" href="index.html">
+        <span class="oc-brand-mark"><i class="fa-solid fa-bolt"></i></span>
+        One<span class="text-accent">Click</span>
+      </a>
+
+      <button class="navbar-toggler oc-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="oc-toggler-bar"></span>
+        <span class="oc-toggler-bar"></span>
+        <span class="oc-toggler-bar"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav mx-auto oc-nav-links">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#how-it-works">How It Works</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#become-provider">Become Provider</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#contact">Contact</a></li>
+        </ul>
+
+        <div class="d-flex align-items-center oc-nav-actions">
+          <a href="login.html" class="btn oc-btn-ghost me-2">Login</a>
+          <a href="register.html" class="btn oc-btn-primary">Register</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- =========================================================
+       MAIN — Registration Flow
+       Three panels toggle visibility via js/register.js:
+       #roleSelect -> #customerFormSection / #providerFormSection
+  ========================================================== -->
+  <main class="oc-register-main">
+    <div class="oc-register-bg-blob oc-register-blob-1"></div>
+    <div class="oc-register-bg-blob oc-register-blob-2"></div>
+
+    <div class="container position-relative">
+
+      <!-- =====================================================
+           STEP 1 — Role Selection
+      ====================================================== -->
+      <section id="roleSelect" class="oc-role-section">
+        <div class="oc-section-head" data-aos="fade-up">
+          <span class="oc-eyebrow">Join OneClick</span>
+          <h1 class="oc-section-title">How do you want to use OneClick?</h1>
+          <p class="oc-section-sub">Choose the account type that fits you — you can always reach out to support to change this later.</p>
+        </div>
+
+        <div class="row justify-content-center g-4">
+
+          <!-- Customer Role Card -->
+          <div class="col-md-6 col-lg-5" data-aos="fade-up" data-aos-delay="0">
+            <button type="button" class="oc-role-card" id="chooseCustomerBtn" aria-describedby="customerRoleDesc">
+              <span class="oc-role-icon"><i class="fa-solid fa-user"></i></span>
+              <h3>Customer</h3>
+              <p id="customerRoleDesc">Book trusted home services.</p>
+              <span class="btn oc-btn-primary oc-role-btn">
+                Continue as Customer <i class="fa-solid fa-arrow-right ms-2"></i>
+              </span>
+            </button>
+          </div>
+
+          <!-- Provider Role Card -->
+          <div class="col-md-6 col-lg-5" data-aos="fade-up" data-aos-delay="150">
+            <button type="button" class="oc-role-card" id="chooseProviderBtn" aria-describedby="providerRoleDesc">
+              <span class="oc-role-icon oc-role-icon-accent"><i class="fa-solid fa-user-tie"></i></span>
+              <h3>Provider</h3>
+              <p id="providerRoleDesc">Offer your services and earn money.</p>
+              <span class="btn oc-btn-outline oc-role-btn">
+                Continue as Provider <i class="fa-solid fa-arrow-right ms-2"></i>
+              </span>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- =====================================================
+           STEP 2 — Customer Registration Form
+      ====================================================== -->
+      <section id="customerFormSection" class="oc-form-section d-none">
+        <div class="oc-form-card" data-aos="fade-up">
+
+          <button type="button" class="oc-back-btn" data-back-target="roleSelect">
+            <i class="fa-solid fa-arrow-left"></i> Back
+          </button>
+
+          <header class="oc-form-header">
+            <span class="oc-form-header-icon"><i class="fa-solid fa-user"></i></span>
+            <div>
+              <h2>Customer Registration</h2>
+              <p>Create an account to start booking trusted professionals.</p>
+            </div>
+          </header>
+
+          <!-- Success alert (hidden until submit succeeds) -->
+          <div id="customerSuccessAlert" class="alert alert-success oc-success-alert d-none" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i>
+            <span>Registration successful!</span>
+          </div>
+
+          <form id="customerForm" class="oc-register-form needs-validation" novalidate autocomplete="on">
+
+            <div class="row g-3">
+              <!-- Full Name -->
+              <div class="col-md-6">
+                <label for="custFullName" class="form-label">Full Name</label>
+                <div class="oc-input-group">
+                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+                  <input type="text" class="form-control oc-form-control" id="custFullName" name="fullName"
+                         placeholder="e.g. Rozit Chhetri" autocomplete="name" required minlength="3"
+                         aria-describedby="custFullNameFeedback">
+                </div>
+                <div id="custFullNameFeedback" class="invalid-feedback">Please enter your full name (at least 3 characters).</div>
+              </div>
+
+              <!-- Email -->
+              <div class="col-md-6">
+                <label for="custEmail" class="form-label">Email</label>
+                <div class="oc-input-group">
+                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
+                  <input type="email" class="form-control oc-form-control" id="custEmail" name="email"
+                         placeholder="you@example.com" autocomplete="email" required
+                         aria-describedby="custEmailFeedback">
+                </div>
+                <div id="custEmailFeedback" class="invalid-feedback">Please enter a valid email address.</div>
+              </div>
+
+              <!-- Phone Number -->
+              <div class="col-md-6">
+                <label for="custPhone" class="form-label">Phone Number</label>
+                <div class="oc-input-group">
+                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-phone"></i></span>
+                  <input type="tel" class="form-control oc-form-control" id="custPhone" name="phoneNumber"
+                         placeholder="98XXXXXXXX" autocomplete="tel" inputmode="numeric" required
+                         aria-describedby="custPhoneFeedback">
+                </div>
+                <div id="custPhoneFeedback" class="invalid-feedback">Please enter a valid 10-digit phone number.</div>
+              </div>
+
+              <!-- spacer to keep grid even on desktop -->
+              <div class="col-md-6 d-none d-md-block"></div>
+
+              <!-- Password -->
+              <div class="col-md-6">
+                <label for="custPassword" class="form-label">Password</label>
+                <div class="oc-input-group">
+                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+                  <input type="password" class="form-control oc-form-control oc-password-input" id="custPassword" name="password"
+                         placeholder="At least 8 characters" autocomplete="new-password" required minlength="8"
+                         aria-describedby="custPasswordFeedback">
+                  <button type="button" class="oc-password-toggle" data-target="custPassword" aria-label="Show password" aria-pressed="false">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <div id="custPasswordFeedback" class="invalid-feedback">Password must be at least 8 characters.</div>
+              </div>
+
+              <!-- Confirm Password -->
+              <div class="col-md-6">
+                <label for="custConfirmPassword" class="form-label">Confirm Password</label>
+                <div class="oc-input-group">
+                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+                  <input type="password" class="form-control oc-form-control oc-password-input" id="custConfirmPassword" name="confirmPassword"
+                         placeholder="Re-enter your password" autocomplete="new-password" required
+                         aria-describedby="custConfirmPasswordFeedback">
+                  <button type="button" class="oc-password-toggle" data-target="custConfirmPassword" aria-label="Show password" aria-pressed="false">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <div id="custConfirmPasswordFeedback" class="invalid-feedback">Passwords do not match.</div>
+              </div>
+            </div>
+
+            <!-- Terms checkbox -->
+            <div class="form-check oc-terms-check mt-4 mb-3">
+              <input class="form-check-input" type="checkbox" id="custAgreeTerms" name="agreeTerms" required>
+              <label class="form-check-label" for="custAgreeTerms">
+                I agree to <a href="#">Terms &amp; Privacy Policy</a>
+              </label>
+              <div class="invalid-feedback">You must agree to the terms before continuing.</div>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn oc-btn-primary btn-lg w-100 oc-ripple-btn oc-form-submit">
+              <span class="oc-btn-text">Create Customer Account</span>
+              <span class="spinner-border spinner-border-sm oc-btn-spinner d-none" role="status" aria-hidden="true"></span>
+            </button>
+
+            <p class="oc-form-switch">
+              Already have an account? <a href="login.html">Login</a>
+            </p>
+          </form>
+        </div>
+      </section>
+
+      <!-- =====================================================
+           STEP 3 — Provider Registration Form
+      ====================================================== -->
+      <section id="providerFormSection" class="oc-form-section d-none">
+        <div class="oc-form-card oc-form-card-wide" data-aos="fade-up">
+
+          <button type="button" class="oc-back-btn" data-back-target="roleSelect">
+            <i class="fa-solid fa-arrow-left"></i> Back
+          </button>
+
+          <header class="oc-form-header">
+            <span class="oc-form-header-icon oc-form-header-icon-accent"><i class="fa-solid fa-user-tie"></i></span>
+            <div>
+              <h2>Provider Registration</h2>
+              <p>Apply to join OneClick's network of verified professionals.</p>
+            </div>
+          </header>
+
+          <!-- Success alert (hidden until submit succeeds) -->
+          <div id="providerSuccessAlert" class="alert alert-success oc-success-alert d-none" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i>
+            <span>Registration successful!</span>
+          </div>
+
+          <form id="providerForm" class="oc-register-form needs-validation" novalidate autocomplete="on">
+
+            <div class="row g-3">
+              <!-- Full Name -->
+              <div class="col-md-6">
+                <label for="provFullName" class="form-label">Full Name</label>
+                <div class="oc-input-group">
+                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+                  <input type="text" class="form-control oc-form-control" id="provFullName" name="fullName"
+                         placeholder="e.g. Ramesh Karki" autocomplete="name" required minlength="3"
+                         aria-describedby="provFullNameFeedback">
+                </div>
+                <div id="provFullNameFeedback" class="invalid-feedback">Please enter your full name (at least 3 characters).</div>
+              </div>
+
+              <!-- Email -->
+              <div class="col-md-6">
+                <label for="provEmail" class="form-label">Email</label>
+                <div class="oc-input-group">
+                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
+                  <input type="email" class="form-control oc-form-control" id="provEmail" name="email"
+                         placeholder="you@example.com" autocomplete="email" required
+                         aria-describedby="provEmailFeedback">
+                </div>
+                <div id="provEmailFeedback" class="invalid-feedback">Please enter a valid email address.</div>
+              </div>
+
+              <!-- Phone Number -->
+              <div class="col-md-6">
+                <label for="provPhone" class="form-label">Phone Number</label>
+                <div class="oc-input-group">
+                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-phone"></i></span>
+                  <input type="tel" class="form-control oc-form-control" id="provPhone" name="phoneNumber"
+                         placeholder="98XXXXXXXX" autocomplete="tel" inputmode="numeric" required
+                         aria-describedby="provPhoneFeedback">
+                </div>
+                <div id="provPhoneFeedback" class="invalid-feedback">Please enter a valid 10-digit phone number.</div>
+              </div>
+
+              <!-- Service Category -->
+              <div class="col-md-6">
+                <label for="provCategory" class="form-label">Service Category</label>
+                <div class="oc-input-group">
+                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-list-check"></i></span>
+                  <select class="form-select oc-form-control oc-form-select" id="provCategory" name="serviceCategory" required
+                          aria-describedby="provCategoryFeedback">
+                    <option value="" selected disabled>Select your service category</option>
+                    <option value="electrician">Electrician</option>
+                    <option value="plumber">Plumber</option>
+                    <option value="cleaner">Cleaner</option>
+                    <option value="painter">Painter</option>
+                    <option value="carpenter">Carpenter</option>
+                    <option value="gardener">Gardener</option>
+                    <option value="ac-repair">AC Repair</option>
+                    <option value="beauty-service">Beauty Service</option>
+                    <option value="laundry">Laundry</option>
+                    <option value="computer-repair">Computer Repair</option>
+                    <option value="vehicle-repair">Vehicle Repair</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div id="provCategoryFeedback" class="invalid-feedback">Please select a service category.</div>
+              </div>
+
+              <!-- Password -->
+              <div class="col-md-6">
+                <label for="provPassword" class="form-label">Password</label>
+                <div class="oc-input-group">
+                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+                  <input type="password" class="form-control oc-form-control oc-password-input" id="provPassword" name="password"
+                         placeholder="At least 8 characters" autocomplete="new-password" required minlength="8"
+                         aria-describedby="provPasswordFeedback">
+                  <button type="button" class="oc-password-toggle" data-target="provPassword" aria-label="Show password" aria-pressed="false">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <div id="provPasswordFeedback" class="invalid-feedback">Password must be at least 8 characters.</div>
+              </div>
+
+              <!-- Confirm Password -->
+              <div class="col-md-6">
+                <label for="provConfirmPassword" class="form-label">Confirm Password</label>
+                <div class="oc-input-group">
+                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+                  <input type="password" class="form-control oc-form-control oc-password-input" id="provConfirmPassword" name="confirmPassword"
+                         placeholder="Re-enter your password" autocomplete="new-password" required
+                         aria-describedby="provConfirmPasswordFeedback">
+                  <button type="button" class="oc-password-toggle" data-target="provConfirmPassword" aria-label="Show password" aria-pressed="false">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <div id="provConfirmPasswordFeedback" class="invalid-feedback">Passwords do not match.</div>
+              </div>
+
+              <!-- Years of Experience -->
+              <div class="col-md-6">
+                <label for="provExperience" class="form-label">Years of Experience</label>
+                <div class="oc-input-group">
+                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-briefcase"></i></span>
+                  <input type="number" class="form-control oc-form-control" id="provExperience" name="yearsExperience"
+                         placeholder="e.g. 3" min="0" max="60" required
+                         aria-describedby="provExperienceFeedback">
+                </div>
+                <div id="provExperienceFeedback" class="invalid-feedback">Please enter your years of experience (0–60).</div>
+              </div>
+
+              <!-- Address -->
+              <div class="col-md-6">
+                <label for="provAddress" class="form-label">Address</label>
+                <div class="oc-input-group">
+                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span>
+                  <input type="text" class="form-control oc-form-control" id="provAddress" name="address"
+                         placeholder="Ward, Municipality, District" required minlength="5"
+                         aria-describedby="provAddressFeedback">
+                </div>
+                <div id="provAddressFeedback" class="invalid-feedback">Please enter your address.</div>
+              </div>
+
+              <!-- Short Bio -->
+              <div class="col-12">
+                <label for="provBio" class="form-label">Short Bio</label>
+                <div class="oc-input-group oc-input-group-textarea">
+                  <span class="oc-input-icon oc-input-icon-textarea" aria-hidden="true"><i class="fa-solid fa-pen"></i></span>
+                  <textarea class="form-control oc-form-control oc-form-textarea" id="provBio" name="bio" rows="3"
+                            placeholder="Tell customers about your skills and experience..." required minlength="20"
+                            aria-describedby="provBioFeedback"></textarea>
+                </div>
+                <div id="provBioFeedback" class="invalid-feedback">Please write a short bio (at least 20 characters).</div>
+              </div>
+
+              <!-- Upload Citizenship -->
+              <div class="col-md-6">
+                <label for="provCitizenship" class="form-label">Upload Citizenship</label>
+                <div class="oc-file-upload">
+                  <label for="provCitizenship" class="oc-file-upload-label" id="provCitizenshipLabel">
+                    <i class="fa-solid fa-id-card"></i>
+                    <span>Choose file — JPG, PNG or PDF</span>
+                  </label>
+                  <input type="file" class="form-control oc-file-input" id="provCitizenship" name="citizenshipDoc"
+                         accept=".jpg,.jpeg,.png,.pdf" required aria-describedby="provCitizenshipFeedback">
+                </div>
+                <div id="provCitizenshipFeedback" class="invalid-feedback d-block-when-invalid">Please upload a copy of your citizenship document.</div>
+              </div>
+
+              <!-- Upload Profile Photo -->
+              <div class="col-md-6">
+                <label for="provPhoto" class="form-label">Upload Profile Photo</label>
+                <div class="oc-file-upload">
+                  <label for="provPhoto" class="oc-file-upload-label" id="provPhotoLabel">
+                    <i class="fa-solid fa-camera"></i>
+                    <span>Choose file — JPG or PNG</span>
+                  </label>
+                  <input type="file" class="form-control oc-file-input" id="provPhoto" name="profilePhoto"
+                         accept=".jpg,.jpeg,.png" required aria-describedby="provPhotoFeedback">
+                </div>
+                <div id="provPhotoFeedback" class="invalid-feedback d-block-when-invalid">Please upload a profile photo.</div>
+              </div>
+            </div>
+
+            <!-- Terms checkbox -->
+            <div class="form-check oc-terms-check mt-4 mb-2">
+              <input class="form-check-input" type="checkbox" id="provAgreeTerms" name="agreeTerms" required>
+              <label class="form-check-label" for="provAgreeTerms">
+                I agree to <a href="#">Terms &amp; Privacy Policy</a>
+              </label>
+              <div class="invalid-feedback">You must agree to the terms before continuing.</div>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn oc-btn-primary btn-lg w-100 oc-ripple-btn oc-form-submit">
+              <span class="oc-btn-text">Apply as Provider</span>
+              <span class="spinner-border spinner-border-sm oc-btn-spinner d-none" role="status" aria-hidden="true"></span>
+            </button>
+
+            <p class="oc-review-note">
+              <i class="fa-solid fa-circle-info"></i>
+              Your account will be reviewed by the admin before you can accept jobs.
+            </p>
+
+            <p class="oc-form-switch">
+              Already have an account? <a href="login.html">Login</a>
+            </p>
+          </form>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- =========================================================
+       FOOTER (same markup/classes as the landing page)
+  ========================================================== -->
+  <footer id="contact" class="oc-footer">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <a class="oc-brand oc-footer-brand" href="index.html">
+            <span class="oc-brand-mark"><i class="fa-solid fa-bolt"></i></span>
+            One<span class="text-accent">Click</span>
+          </a>
+          <p class="oc-footer-about">Nepal's trusted marketplace for verified home and personal service professionals — booked in one click.</p>
+          <div class="oc-social-icons">
+            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+          </div>
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <h6 class="oc-footer-title">Company</h6>
+          <ul class="oc-footer-links">
+            <li><a href="index.html#about">About Us</a></li>
+            <li><a href="index.html#become-provider">Become a Provider</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <h6 class="oc-footer-title">Services</h6>
+          <ul class="oc-footer-links">
+            <li><a href="index.html#services">Electrician</a></li>
+            <li><a href="index.html#services">Plumbing</a></li>
+            <li><a href="index.html#services">Cleaning</a></li>
+            <li><a href="index.html#services">Beauty Services</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-4">
+          <h6 class="oc-footer-title">Get In Touch</h6>
+          <ul class="oc-footer-contact">
+            <li><i class="fa-solid fa-location-dot"></i> Kathmandu, Nepal</li>
+            <li><i class="fa-solid fa-phone"></i> +977 1-4000000</li>
+            <li><i class="fa-solid fa-envelope"></i> hello@oneclick.com.np</li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="oc-footer-divider">
+
+      <div class="oc-footer-bottom">
+        <p class="mb-0">&copy; <span id="year"></span> OneClick. All rights reserved.</p>
+        <div class="oc-footer-legal">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Back to top -->
+  <button id="backToTop" class="oc-back-to-top" aria-label="Back to top"><i class="fa-solid fa-arrow-up"></i></button>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- AOS Animation Library -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+  <!-- Page-specific JS -->
+  <script src="js/register.js"></script>
+</body>
+</html>

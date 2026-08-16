@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment | OneClick</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- Page CSS -->
+<link rel="stylesheet" href="css/payment.css">
+</head>
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar navbar-expand-lg navbar-light oneclick-navbar sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">
+      <i class="fa-solid fa-bolt"></i> OneClick
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+        <li class="nav-item"><a class="nav-link" href="customer-dashboard.html">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="booking.html">Bookings</a></li>
+        <li class="nav-item"><a class="nav-link active" href="payment.html">Payment</a></li>
+        <li class="nav-item ms-lg-2">
+          <a class="btn btn-outline-primary rounded-pill px-3" href="customer-dashboard.html">
+            <i class="fa-regular fa-user"></i> My Account
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= PAGE HEADER ================= -->
+<header class="payment-hero">
+  <div class="container">
+    <p class="eyebrow"><i class="fa-solid fa-lock"></i> Secure Checkout</p>
+    <h1>Complete Your Payment</h1>
+    <p class="sub">You're one step away from confirming your booking with a trusted service provider.</p>
+  </div>
+</header>
+
+<!-- ================= MAIN CONTENT ================= -->
+<main class="container payment-main">
+  <div class="row g-4">
+
+    <!-- LEFT COLUMN -->
+    <div class="col-lg-8">
+
+      <!-- Booking Summary -->
+      <section class="glass-card mb-4 booking-summary-card">
+        <div class="card-heading">
+          <i class="fa-solid fa-file-invoice"></i>
+          <h2>Booking Summary</h2>
+        </div>
+
+        <div class="provider-row">
+          <img src="https://ui-avatars.com/api/?name=Rajesh+Karki&background=2563EB&color=fff&size=128" alt="Provider" class="provider-avatar">
+          <div>
+            <h3 class="provider-name">Rajesh Karki</h3>
+            <p class="provider-profession"><i class="fa-solid fa-wrench"></i> Electrician &amp; Home Wiring Specialist</p>
+          </div>
+          <span class="badge-id ms-auto">#BK-20841</span>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="label"><i class="fa-solid fa-tag"></i> Category</span>
+            <span class="value">Electrical Repair</span>
+          </div>
+          <div class="summary-item">
+            <span class="label"><i class="fa-regular fa-calendar"></i> Date</span>
+            <span class="value">Aug 22, 2026</span>
+          </div>
+          <div class="summary-item">
+            <span class="label"><i class="fa-regular fa-clock"></i> Time</span>
+            <span class="value">10:30 AM</span>
+          </div>
+          <div class="summary-item">
+            <span class="label"><i class="fa-solid fa-location-dot"></i> Location</span>
+            <span class="value">Baneshwor, Kathmandu</span>
+          </div>
+        </div>
+
+        <hr class="summary-divider">
+
+        <div class="charges-list">
+          <div class="charge-row">
+            <span>Service Charges</span>
+            <span>Rs. 950.00</span>
+          </div>
+          <div class="charge-row">
+            <span>Platform Fee</span>
+            <span>Rs. 75.00</span>
+          </div>
+          <div class="charge-row discount-row d-none" id="discountRow">
+            <span>Coupon Discount</span>
+            <span id="discountAmount">- Rs. 0.00</span>
+          </div>
+          <div class="charge-row total-row">
+            <span>Grand Total</span>
+            <span id="grandTotal">Rs. 1,025.00</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Coupon Section -->
+      <section class="glass-card mb-4 coupon-card">
+        <div class="card-heading">
+          <i class="fa-solid fa-ticket"></i>
+          <h2>Apply Coupon</h2>
+        </div>
+        <div class="coupon-input-group">
+          <input type="text" id="couponInput" class="form-control" placeholder="Enter coupon code (try ONECLICK10)">
+          <button class="btn btn-accent" id="applyCouponBtn">Apply</button>
+        </div>
+        <div id="couponMessage" class="coupon-message"></div>
+      </section>
+
+      <!-- Payment Methods -->
+      <section class="glass-card mb-4 methods-card">
+        <div class="card-heading">
+          <i class="fa-solid fa-credit-card"></i>
+          <h2>Select Payment Method</h2>
+        </div>
+
+        <div class="method-options">
+          <button type="button" class="method-option active" data-method="khalti">
+            <span class="method-check"><i class="fa-solid fa-check"></i></span>
+            <img src="https://web.khalti.com/static/img/logo1.png" alt="Khalti" class="method-icon-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+            <span class="method-icon-fallback" style="display:none;"><i class="fa-solid fa-wallet"></i></span>
+            <span class="method-label">Khalti</span>
+          </button>
+
+          <button type="button" class="method-option" data-method="card">
+            <span class="method-check"><i class="fa-solid fa-check"></i></span>
+            <span class="method-icon-fallback"><i class="fa-regular fa-credit-card"></i></span>
+            <span class="method-label">Credit / Debit Card</span>
+          </button>
+
+          <button type="button" class="method-option" data-method="cash">
+            <span class="method-check"><i class="fa-solid fa-check"></i></span>
+            <span class="method-icon-fallback"><i class="fa-solid fa-money-bill-wave"></i></span>
+            <span class="method-label">Cash on Service</span>
+          </button>
+        </div>
+
+        <!-- KHALTI PANEL -->
+        <div class="method-panel" id="khaltiPanel">
+          <div class="khalti-box">
+            <img src="https://web.khalti.com/static/img/logo1.png" alt="Khalti Logo" class="khalti-logo" onerror="this.style.display='none';">
+            <h3>Pay Securely with Khalti</h3>
+            <p>Complete your payment using Khalti Wallet.</p>
+            <button class="btn btn-khalti" id="continueKhaltiBtn" data-bs-toggle="modal" data-bs-target="#khaltiModal">
+              <i class="fa-solid fa-wallet"></i> Continue with Khalti
+            </button>
+          </div>
+        </div>
+
+        <!-- CARD PANEL -->
+        <div class="method-panel d-none" id="cardPanel">
+          <form id="cardForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label">Cardholder Name</label>
+              <input type="text" class="form-control" id="cardName" placeholder="Name as on card">
+              <div class="invalid-feedback">Please enter the cardholder's name.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Card Number</label>
+              <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+              <div class="invalid-feedback">Enter a valid 16-digit card number.</div>
+            </div>
+            <div class="row">
+              <div class="col-6 mb-3">
+                <label class="form-label">Expiry (MM/YY)</label>
+                <input type="text" class="form-control" id="cardExpiry" placeholder="MM/YY" maxlength="5">
+                <div class="invalid-feedback">Format must be MM/YY.</div>
+              </div>
+              <div class="col-6 mb-3">
+                <label class="form-label">CVV</label>
+                <input type="password" class="form-control" id="cardCvv" placeholder="123" maxlength="3">
+                <div class="invalid-feedback">Enter a valid 3-digit CVV.</div>
+              </div>
+            </div>
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="saveCard">
+              <label class="form-check-label" for="saveCard">Save this card for future payments</label>
+            </div>
+            <button type="submit" class="btn btn-primary-gradient w-100">
+              <i class="fa-solid fa-lock"></i> Pay Now
+            </button>
+          </form>
+        </div>
+
+        <!-- CASH PANEL -->
+        <div class="method-panel d-none" id="cashPanel">
+          <div class="cash-box">
+            <div class="cash-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+            <h3>Cash on Service</h3>
+            <p>You can pay directly to the provider after your service has been completed. No advance payment required.</p>
+            <div class="estimated-amount">
+              <span>Estimated Amount</span>
+              <strong>Rs. 1,073.50</strong>
+            </div>
+            <button class="btn btn-success-gradient w-100" id="confirmCashBtn">
+              <i class="fa-solid fa-circle-check"></i> Confirm Booking
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Security Section -->
+      <section class="security-section">
+        <div class="security-grid">
+          <div class="security-item">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Secure Payment</span>
+          </div>
+          <div class="security-item">
+            <i class="fa-solid fa-lock"></i>
+            <span>SSL Protected</span>
+          </div>
+          <div class="security-item">
+            <i class="fa-solid fa-key"></i>
+            <span>Encrypted Transactions</span>
+          </div>
+          <div class="security-item">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Verified Platform</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- RIGHT COLUMN — ORDER SUMMARY -->
+    <div class="col-lg-4">
+      <aside class="order-summary glass-card sticky-summary">
+        <div class="card-heading">
+          <i class="fa-solid fa-receipt"></i>
+          <h2>Order Summary</h2>
+        </div>
+
+        <div class="order-total">
+          <span>Total Amount</span>
+          <h3 id="orderTotal">Rs. 1,025.00</h3>
+        </div>
+
+        <div class="order-method">
+          <span>Payment Method</span>
+          <div class="order-method-value" id="orderMethodValue">
+            <i class="fa-solid fa-wallet"></i> Khalti
+          </div>
+        </div>
+
+        <button class="btn btn-primary-gradient w-100 order-confirm-btn" id="orderConfirmBtn">
+          <i class="fa-solid fa-circle-check"></i> Confirm &amp; Pay
+        </button>
+
+        <p class="order-note"><i class="fa-solid fa-circle-info"></i> Final action depends on your selected payment method.</p>
+      </aside>
+    </div>
+
+  </div>
+</main>
+
+<!-- ================= KHALTI MODAL ================= -->
+<div class="modal fade" id="khaltiModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content khalti-modal-content">
+      <div class="modal-body text-center">
+        <img src="https://web.khalti.com/static/img/logo1.png" alt="Khalti" class="khalti-modal-logo" onerror="this.style.display='none';">
+        <h4>Khalti Payment</h4>
+        <div class="khalti-spinner"></div>
+        <p class="redirect-text">Redirecting to Khalti...</p>
+        <p class="demo-note">(This is a frontend demo.)</p>
+        <div class="d-flex gap-2 justify-content-center mt-3">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-khalti" id="simulatePaymentBtn">Simulate Payment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Page JS -->
+<script src="js/payment.js"></script>
+</body>
+</html>

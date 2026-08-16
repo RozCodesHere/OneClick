@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OneClick — Book Trusted Home Services in One Click</title>
+  <meta name="description" content="OneClick connects you with verified electricians, plumbers, cleaners, and more — book a trusted local service provider in one click.">
+
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <!-- AOS Animation Library -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/main.css">
+
+
+</head>
+<body>
+
+  <!-- =========================================================
+       NAVBAR
+  ========================================================== -->
+  <nav class="navbar navbar-expand-lg fixed-top oc-navbar" id="mainNavbar">
+    <div class="container">
+      <a class="navbar-brand oc-brand" href="#home">
+        <span class="oc-brand-mark"><i class="fa-solid fa-bolt"></i></span>
+        One<span class="text-accent">Click</span>
+      </a>
+
+      <button class="navbar-toggler oc-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="oc-toggler-bar"></span>
+        <span class="oc-toggler-bar"></span>
+        <span class="oc-toggler-bar"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav mx-auto oc-nav-links">
+          <li class="nav-item"><a class="nav-link active" href="#home">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="#how-it-works">How It Works</a></li>
+          <li class="nav-item"><a class="nav-link" href="#become-provider">Become Provider</a></li>
+          <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+        </ul>
+
+        <div class="d-flex align-items-center oc-nav-actions">
+          <a href="login.html" class="btn oc-btn-ghost me-2">Login</a>
+          <a href="register.html" class="btn oc-btn-primary">Register</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- =========================================================
+       HERO SECTION
+  ========================================================== -->
+  <header id="home" class="oc-hero">
+    <div class="oc-hero-blob oc-hero-blob-1"></div>
+    <div class="oc-hero-blob oc-hero-blob-2"></div>
+
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-6" data-aos="fade-right" data-aos-duration="800">
+          <span class="oc-eyebrow">Local services, verified &amp; on-demand</span>
+          <h1 class="oc-hero-title">
+            Book Trusted Home Services<br>
+            In Just <span class="oc-underline">One Click</span>
+          </h1>
+          <p class="oc-hero-sub">
+            From electricians to house cleaners, OneClick connects you with background-checked
+            professionals near you — compare, book, and pay, all from a single screen.
+          </p>
+
+          <div class="oc-hero-cta">
+            <a href="register.html" class="btn oc-btn-primary btn-lg oc-ripple-btn"></a>
+              <i class="fa-solid fa-calendar-check me-2"></i>Book Service
+            </a>
+            <a href="#become-provider" class="btn oc-btn-outline btn-lg">
+              <i class="fa-solid fa-user-tie me-2"></i>Become Provider
+            </a>
+          </div>
+
+          <div class="oc-hero-trust">
+            <div class="oc-avatars">
+              <span class="oc-avatar" style="background:#2563EB;">R</span>
+              <span class="oc-avatar" style="background:#F59E0B;">S</span>
+              <span class="oc-avatar" style="background:#22C55E;">P</span>
+              <span class="oc-avatar oc-avatar-more">5k+</span>
+            </div>
+            <p class="mb-0"><strong>5,000+</strong> happy customers booked this week</p>
+          </div>
+        </div>
+
+        <div class="col-lg-6" data-aos="fade-left" data-aos-duration="800" data-aos-delay="150">
+          <div class="oc-hero-visual">
+            <div class="oc-click-ripple oc-click-ripple-1"></div>
+            <div class="oc-click-ripple oc-click-ripple-2"></div>
+            <div class="oc-click-ripple oc-click-ripple-3"></div>
+
+            <div class="oc-hero-card oc-hero-card-main">
+              <div class="oc-hero-card-icon"><i class="fa-solid fa-house-chimney-crack"></i></div>
+              <h6>Home Repair</h6>
+              <p class="mb-2">Ramesh K. — Electrician</p>
+              <div class="oc-mini-rating"><i class="fa-solid fa-star"></i> 4.9 (320 jobs)</div>
+              <button class="btn oc-btn-primary btn-sm w-100 mt-3">Book Now</button>
+            </div>
+
+            <div class="oc-hero-card oc-hero-card-float oc-float-1">
+              <i class="fa-solid fa-circle-check text-success"></i>
+              <span>Booking Confirmed</span>
+            </div>
+
+            <div class="oc-hero-card oc-hero-card-float oc-float-2">
+              <i class="fa-solid fa-shield-halved" style="color:#2563EB;"></i>
+              <span>ID Verified Provider</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       POPULAR CATEGORIES
+  ========================================================== -->
+  <section id="services" class="oc-section">
+    <div class="container">
+      <div class="oc-section-head" data-aos="fade-up">
+        <span class="oc-eyebrow">What you need, on demand</span>
+        <h2 class="oc-section-title">Popular Categories</h2>
+        <p class="oc-section-sub">Every provider is background-checked, rated, and ready to work — pick a category to get started.</p>
+      </div>
+
+      <div class="row g-4">
+        <!-- Category Card Template x14 -->
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="0">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-bolt"></i></div>
+            <h6>Electrician</h6>
+            <p>Wiring, switches &amp; repairs</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="50">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-faucet-drip"></i></div>
+            <h6>Plumbing</h6>
+            <p>Leaks, pipes &amp; fittings</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-broom"></i></div>
+            <h6>Cleaning</h6>
+            <p>Home &amp; deep cleaning</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="150">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-paint-roller"></i></div>
+            <h6>Painting</h6>
+            <p>Interior &amp; exterior paint</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="0">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-hammer"></i></div>
+            <h6>Carpenter</h6>
+            <p>Furniture &amp; woodwork</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="50">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-snowflake"></i></div>
+            <h6>AC Repair</h6>
+            <p>Install, service &amp; gas fill</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-blender"></i></div>
+            <h6>Appliance Repair</h6>
+            <p>Fridge, washer &amp; more</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="150">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-bug-slash"></i></div>
+            <h6>Pest Control</h6>
+            <p>Safe fumigation &amp; spray</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="0">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-seedling"></i></div>
+            <h6>Gardening</h6>
+            <p>Lawn &amp; landscape care</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="50">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-truck-moving"></i></div>
+            <h6>Movers &amp; Packers</h6>
+            <p>Safe, careful relocation</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-spa"></i></div>
+            <h6>Beauty Services</h6>
+            <p>Salon at your doorstep</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="150">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-shirt"></i></div>
+            <h6>Laundry</h6>
+            <p>Wash, dry &amp; iron</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="0">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-car-side"></i></div>
+            <h6>Vehicle Repair</h6>
+            <p>Bike &amp; car mechanics</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="50">
+          <div class="oc-cat-card">
+            <div class="oc-cat-icon"><i class="fa-solid fa-laptop"></i></div>
+            <h6>Computer Repair</h6>
+            <p>Hardware &amp; software fix</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+          <div class="oc-cat-card oc-cat-card-more">
+            <div class="oc-cat-icon"><i class="fa-solid fa-grip"></i></div>
+            <h6>More Services</h6>
+            <p>Browse the full list</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       HOW IT WORKS
+  ========================================================== -->
+  <section id="how-it-works" class="oc-section oc-section-alt">
+    <div class="container">
+      <div class="oc-section-head" data-aos="fade-up">
+        <span class="oc-eyebrow">Simple, fast, reliable</span>
+        <h2 class="oc-section-title">How It Works</h2>
+        <p class="oc-section-sub">Three steps between you and a job done right.</p>
+      </div>
+
+      <div class="row g-4 oc-steps">
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="0">
+          <div class="oc-step-card">
+            <div class="oc-step-num">01</div>
+            <div class="oc-step-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <h5>Search Service</h5>
+            <p>Tell us what you need and where — from electrical work to home cleaning.</p>
+          </div>
+        </div>
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="150">
+          <div class="oc-step-card">
+            <div class="oc-step-num">02</div>
+            <div class="oc-step-icon"><i class="fa-solid fa-user-check"></i></div>
+            <h5>Choose Provider</h5>
+            <p>Compare verified professionals by rating, price, and availability near you.</p>
+          </div>
+        </div>
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+          <div class="oc-step-card">
+            <div class="oc-step-num">03</div>
+            <div class="oc-step-icon"><i class="fa-solid fa-mug-hot"></i></div>
+            <h5>Book &amp; Relax</h5>
+            <p>Confirm your slot, track your provider live, and pay securely when done.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       WHY CHOOSE ONECLICK
+  ========================================================== -->
+  <section id="about" class="oc-section">
+    <div class="container">
+      <div class="oc-section-head" data-aos="fade-up">
+        <span class="oc-eyebrow">Built on trust</span>
+        <h2 class="oc-section-title">Why Choose OneClick</h2>
+        <p class="oc-section-sub">Everything you need for a worry-free booking experience.</p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="0">
+          <div class="oc-feature-card">
+            <div class="oc-feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <h6>Verified Professionals</h6>
+            <p>Every provider passes ID and background verification before joining the platform.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="80">
+          <div class="oc-feature-card">
+            <div class="oc-feature-icon"><i class="fa-solid fa-lock"></i></div>
+            <h6>Secure Payments</h6>
+            <p>Pay safely with Khalti, eSewa, or cash on service — your transactions stay protected.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="160">
+          <div class="oc-feature-card">
+            <div class="oc-feature-icon"><i class="fa-solid fa-bolt"></i></div>
+            <h6>Quick Booking</h6>
+            <p>Go from search to confirmed appointment in under two minutes.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="0">
+          <div class="oc-feature-card">
+            <div class="oc-feature-icon"><i class="fa-solid fa-headset"></i></div>
+            <h6>24/7 Support</h6>
+            <p>Our support team is on call around the clock for any booking issue.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="80">
+          <div class="oc-feature-card">
+            <div class="oc-feature-icon"><i class="fa-solid fa-tags"></i></div>
+            <h6>Affordable Pricing</h6>
+            <p>Transparent, upfront quotes with no hidden charges, ever.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="160">
+          <div class="oc-feature-card">
+            <div class="oc-feature-icon"><i class="fa-solid fa-star"></i></div>
+            <h6>Real Reviews</h6>
+            <p>Ratings come only from customers who completed a verified booking.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       STATISTICS
+  ========================================================== -->
+  <section class="oc-stats">
+    <div class="container">
+      <div class="row g-4 text-center">
+        <div class="col-6 col-lg-3" data-aos="zoom-in" data-aos-delay="0">
+          <div class="oc-stat-num" data-count="1000" data-suffix="+">0</div>
+          <p class="oc-stat-label">Providers</p>
+        </div>
+        <div class="col-6 col-lg-3" data-aos="zoom-in" data-aos-delay="100">
+          <div class="oc-stat-num" data-count="5000" data-suffix="+">0</div>
+          <p class="oc-stat-label">Customers</p>
+        </div>
+        <div class="col-6 col-lg-3" data-aos="zoom-in" data-aos-delay="200">
+          <div class="oc-stat-num" data-count="15000" data-suffix="+">0</div>
+          <p class="oc-stat-label">Completed Jobs</p>
+        </div>
+        <div class="col-6 col-lg-3" data-aos="zoom-in" data-aos-delay="300">
+          <div class="oc-stat-num" data-count="4.9" data-suffix="★" data-decimal="1">0</div>
+          <p class="oc-stat-label">Average Rating</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       FEATURED PROVIDERS
+  ========================================================== -->
+  <section class="oc-section">
+    <div class="container">
+      <div class="oc-section-head" data-aos="fade-up">
+        <span class="oc-eyebrow">Meet the pros</span>
+        <h2 class="oc-section-title">Featured Providers</h2>
+        <p class="oc-section-sub">Top-rated professionals ready to take your next job.</p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="0">
+          <div class="oc-provider-card">
+            <div class="oc-provider-avatar"><i class="fa-solid fa-user"></i></div>
+            <h6>Ramesh Karki</h6>
+            <p class="oc-provider-role">Electrician</p>
+            <ul class="oc-provider-meta">
+              <li><i class="fa-solid fa-briefcase"></i> 6 yrs experience</li>
+              <li><i class="fa-solid fa-star text-warning"></i> 4.9 rating</li>
+              <li><i class="fa-solid fa-location-dot"></i> Kathmandu</li>
+            </ul>
+            <button class="btn oc-btn-primary btn-sm w-100">Book Now</button>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+          <div class="oc-provider-card">
+            <div class="oc-provider-avatar"><i class="fa-solid fa-user"></i></div>
+            <h6>Sita Gurung</h6>
+            <p class="oc-provider-role">House Cleaning</p>
+            <ul class="oc-provider-meta">
+              <li><i class="fa-solid fa-briefcase"></i> 4 yrs experience</li>
+              <li><i class="fa-solid fa-star text-warning"></i> 4.8 rating</li>
+              <li><i class="fa-solid fa-location-dot"></i> Lalitpur</li>
+            </ul>
+            <button class="btn oc-btn-primary btn-sm w-100">Book Now</button>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+          <div class="oc-provider-card">
+            <div class="oc-provider-avatar"><i class="fa-solid fa-user"></i></div>
+            <h6>Prakash Thapa</h6>
+            <p class="oc-provider-role">Plumber</p>
+            <ul class="oc-provider-meta">
+              <li><i class="fa-solid fa-briefcase"></i> 8 yrs experience</li>
+              <li><i class="fa-solid fa-star text-warning"></i> 5.0 rating</li>
+              <li><i class="fa-solid fa-location-dot"></i> Bhaktapur</li>
+            </ul>
+            <button class="btn oc-btn-primary btn-sm w-100">Book Now</button>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
+          <div class="oc-provider-card">
+            <div class="oc-provider-avatar"><i class="fa-solid fa-user"></i></div>
+            <h6>Anita Shrestha</h6>
+            <p class="oc-provider-role">Beauty Services</p>
+            <ul class="oc-provider-meta">
+              <li><i class="fa-solid fa-briefcase"></i> 5 yrs experience</li>
+              <li><i class="fa-solid fa-star text-warning"></i> 4.9 rating</li>
+              <li><i class="fa-solid fa-location-dot"></i> Kathmandu</li>
+            </ul>
+            <button class="btn oc-btn-primary btn-sm w-100">Book Now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       TESTIMONIALS
+  ========================================================== -->
+  <section class="oc-section oc-section-alt">
+    <div class="container">
+      <div class="oc-section-head" data-aos="fade-up">
+        <span class="oc-eyebrow">What customers say</span>
+        <h2 class="oc-section-title">Testimonials</h2>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-4" data-aos="fade-up" data-aos-delay="0">
+          <div class="oc-testimonial-card">
+            <i class="fa-solid fa-quote-left oc-quote-icon"></i>
+            <p>"Booked an electrician within minutes and he arrived right on time. Fixed my wiring issue in under an hour."</p>
+            <div class="oc-testimonial-user">
+              <div class="oc-testimonial-avatar">B</div>
+              <div>
+                <h6 class="mb-0">Bibek Adhikari</h6>
+                <div class="oc-mini-rating"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4" data-aos="fade-up" data-aos-delay="150">
+          <div class="oc-testimonial-card">
+            <i class="fa-solid fa-quote-left oc-quote-icon"></i>
+            <p>"The cleaning service was thorough and the provider was genuinely friendly. Already booked my next one."</p>
+            <div class="oc-testimonial-user">
+              <div class="oc-testimonial-avatar">M</div>
+              <div>
+                <h6 class="mb-0">Manisha Rai</h6>
+                <div class="oc-mini-rating"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
+          <div class="oc-testimonial-card">
+            <i class="fa-solid fa-quote-left oc-quote-icon"></i>
+            <p>"Loved being able to track my mover's location live. No guessing, no waiting around all day."</p>
+            <div class="oc-testimonial-user">
+              <div class="oc-testimonial-avatar">S</div>
+              <div>
+                <h6 class="mb-0">Suresh Lama</h6>
+                <div class="oc-mini-rating"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       DOWNLOAD APP
+  ========================================================== -->
+  <section class="oc-section oc-download">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-6" data-aos="fade-right">
+          <span class="oc-eyebrow oc-eyebrow-light">Take OneClick with you</span>
+          <h2 class="oc-section-title text-white">Book Services On The Go</h2>
+          <p class="oc-section-sub oc-sub-light">Get the OneClick app for faster booking, live tracking, and instant provider chat — wherever you are.</p>
+          <div class="oc-store-buttons">
+            <a href="#" class="oc-store-btn">
+              <i class="fa-brands fa-google-play"></i>
+              <div><small>Get it on</small><span>Google Play</span></div>
+            </a>
+            <a href="#" class="oc-store-btn">
+              <i class="fa-brands fa-app-store-ios"></i>
+              <div><small>Download on the</small><span>App Store</span></div>
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-6" data-aos="fade-left">
+          <div class="oc-phone-mock">
+            <div class="oc-phone-screen">
+              <div class="oc-phone-notch"></div>
+              <div class="oc-phone-card"><i class="fa-solid fa-bolt"></i> Electrician<span class="badge oc-badge-success ms-auto">Available</span></div>
+              <div class="oc-phone-card"><i class="fa-solid fa-broom"></i> Cleaning<span class="badge oc-badge-success ms-auto">Available</span></div>
+              <div class="oc-phone-card"><i class="fa-solid fa-faucet-drip"></i> Plumbing<span class="badge oc-badge-muted ms-auto">Busy</span></div>
+              <div class="oc-phone-btn">Book in One Click</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       CALL TO ACTION
+  ========================================================== -->
+  <section id="become-provider" class="oc-cta-band">
+    <div class="container text-center" data-aos="zoom-in">
+      <h2>Ready to Book Your First Service?</h2>
+      <p>Join thousands of happy customers — or grow your business as a verified provider.</p>
+      <a href="#services" class="btn oc-btn-accent btn-lg oc-ripple-btn">
+        Get Started Now <i class="fa-solid fa-arrow-right ms-2"></i>
+      </a>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       FOOTER
+  ========================================================== -->
+  <footer id="contact" class="oc-footer">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <a class="oc-brand oc-footer-brand" href="#home">
+            <span class="oc-brand-mark"><i class="fa-solid fa-bolt"></i></span>
+            One<span class="text-accent">Click</span>
+          </a>
+          <p class="oc-footer-about">Nepal's trusted marketplace for verified home and personal service professionals — booked in one click.</p>
+          <div class="oc-social-icons">
+            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+          </div>
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <h6 class="oc-footer-title">Company</h6>
+          <ul class="oc-footer-links">
+            <li><a href="#about">About Us</a></li>
+            <li><a href="#become-provider">Become a Provider</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <h6 class="oc-footer-title">Services</h6>
+          <ul class="oc-footer-links">
+            <li><a href="#services">Electrician</a></li>
+            <li><a href="#services">Plumbing</a></li>
+            <li><a href="#services">Cleaning</a></li>
+            <li><a href="#services">Beauty Services</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-4">
+          <h6 class="oc-footer-title">Get In Touch</h6>
+          <ul class="oc-footer-contact">
+            <li><i class="fa-solid fa-location-dot"></i> Kathmandu, Nepal</li>
+            <li><i class="fa-solid fa-phone"></i> +977 1-4000000</li>
+            <li><i class="fa-solid fa-envelope"></i> hello@oneclick.com.np</li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="oc-footer-divider">
+
+      <div class="oc-footer-bottom">
+        <p class="mb-0">&copy; <span id="year"></span> OneClick. All rights reserved.</p>
+        <div class="oc-footer-legal">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Back to top -->
+  <button id="backToTop" class="oc-back-to-top" aria-label="Back to top"><i class="fa-solid fa-arrow-up"></i></button>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- AOS Animation Library -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+  <!-- Custom JS -->
+  <script src="js/main.js"></script>
+</body>
+</html>

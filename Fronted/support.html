@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help & Support · OneClick</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<!-- Custom CSS -->
+<link rel="stylesheet" href="css/support.css">
+</head>
+<body>
+
+<!-- ============ NAVBAR ============ -->
+<nav class="navbar navbar-expand-lg oc-navbar sticky-top">
+  <div class="container-fluid px-3 px-lg-4">
+    <a class="navbar-brand oc-brand" href="#">
+      <span class="oc-brand-icon"><i class="fa-solid fa-bolt"></i></span>
+      OneClick
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ocNavbar" aria-controls="ocNavbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="ocNavbar">
+      <ul class="navbar-nav mx-auto oc-nav-links">
+        <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-grip me-1"></i>Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-calendar-check me-1"></i>Bookings</a></li>
+        <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-comment-dots me-1"></i>Messages</a></li>
+        <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-bell me-1"></i>Notifications</a></li>
+        <li class="nav-item"><a class="nav-link active" href="#"><i class="fa-solid fa-circle-question me-1"></i>Support</a></li>
+      </ul>
+
+      <ul class="navbar-nav ms-auto align-items-lg-center oc-nav-right">
+        <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-user me-1"></i>Profile</a></li>
+        <li class="nav-item">
+          <a class="nav-link oc-logout-link" href="#"><i class="fa-solid fa-right-from-bracket me-1"></i>Logout</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ HEADER + HERO SEARCH ============ -->
+<header class="oc-hero">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="oc-hero-inner fade-in-up">
+      <h1 class="oc-page-title"><i class="fa-solid fa-life-ring me-2"></i>Help &amp; Support</h1>
+      <p class="oc-page-subtitle">Need assistance? We're here to help you 24/7.</p>
+
+      <div class="oc-search-box">
+        <i class="fa-solid fa-magnifying-glass oc-search-icon"></i>
+        <input type="text" id="faqSearchInput" class="oc-search-input" placeholder="Search help articles...">
+        <button class="oc-search-clear d-none" id="searchClearBtn" aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="oc-popular-searches">
+        <span class="oc-popular-label">Popular:</span>
+        <button class="oc-popular-chip" data-term="booking">Booking</button>
+        <button class="oc-popular-chip" data-term="payment">Payment</button>
+        <button class="oc-popular-chip" data-term="refund">Refund</button>
+        <button class="oc-popular-chip" data-term="provider">Provider</button>
+        <button class="oc-popular-chip" data-term="account">Account</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container-fluid px-3 px-lg-4 oc-main">
+
+  <!-- ============ QUICK HELP CARDS ============ -->
+  <section class="oc-section">
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4">
+        <a href="#faq" class="oc-help-card fade-in-up" data-scroll-filter="booking">
+          <div class="oc-help-icon oc-help-blue"><i class="fa-solid fa-calendar-days"></i></div>
+          <h5>Booking Issues</h5>
+          <p>Trouble booking, editing, or tracking a service request.</p>
+          <span class="oc-help-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+        </a>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <a href="#faq" class="oc-help-card fade-in-up" data-scroll-filter="payment">
+          <div class="oc-help-icon oc-help-orange"><i class="fa-solid fa-credit-card"></i></div>
+          <h5>Payment Problems</h5>
+          <p>Failed payments, Khalti/eSewa issues, and billing questions.</p>
+          <span class="oc-help-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+        </a>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <a href="#faq" class="oc-help-card fade-in-up" data-scroll-filter="provider">
+          <div class="oc-help-icon oc-help-green"><i class="fa-solid fa-user-tie"></i></div>
+          <h5>Provider Support</h5>
+          <p>Provider verification, ratings, and communication help.</p>
+          <span class="oc-help-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+        </a>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <a href="#faq" class="oc-help-card fade-in-up" data-scroll-filter="account">
+          <div class="oc-help-icon oc-help-purple"><i class="fa-solid fa-user-gear"></i></div>
+          <h5>Account Help</h5>
+          <p>Login issues, profile updates, and account deletion.</p>
+          <span class="oc-help-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+        </a>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <a href="#faq" class="oc-help-card fade-in-up" data-scroll-filter="technical">
+          <div class="oc-help-icon oc-help-teal"><i class="fa-solid fa-laptop-code"></i></div>
+          <h5>Technical Problems</h5>
+          <p>App crashes, loading errors, and other technical glitches.</p>
+          <span class="oc-help-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+        </a>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <a href="#emergency" class="oc-help-card fade-in-up" data-scroll-filter="safety">
+          <div class="oc-help-icon oc-help-red"><i class="fa-solid fa-shield-halved"></i></div>
+          <h5>Safety &amp; Reporting</h5>
+          <p>Report fraud, misconduct, or safety concerns immediately.</p>
+          <span class="oc-help-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="row g-4">
+    <!-- ============ LEFT / MAIN COLUMN ============ -->
+    <div class="col-lg-8">
+
+      <!-- ============ FAQ ============ -->
+      <section class="oc-card glass-card p-4 mb-4 fade-in-up" id="faq">
+        <div class="oc-section-head">
+          <div class="oc-section-icon"><i class="fa-solid fa-circle-question"></i></div>
+          <div>
+            <h5 class="mb-0">Frequently Asked Questions</h5>
+            <p class="oc-section-sub mb-0">Quick answers to common questions.</p>
+          </div>
+        </div>
+
+        <p class="oc-hint mt-3 mb-2" id="faqResultCount"></p>
+
+        <div class="accordion oc-accordion mt-2" id="faqAccordion">
+
+          <div class="accordion-item" data-faq-cat="booking">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                How do I book a provider?
+              </button>
+            </h2>
+            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">Browse a service category, choose a verified provider, pick a time slot, and confirm your booking. You'll get instant confirmation with the provider's estimated arrival time.</div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-faq-cat="booking">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                How do I cancel a booking?
+              </button>
+            </h2>
+            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">Go to Bookings, open the booking you want to cancel, and tap Cancel Booking. Cancellations made more than 2 hours before the scheduled time are free of charge.</div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-faq-cat="booking">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                Can I reschedule a booking?
+              </button>
+            </h2>
+            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">Yes. Open the booking from your Bookings list and select Reschedule to choose a new available time slot with the same provider, subject to their availability.</div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-faq-cat="payment">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                How do refunds work?
+              </button>
+            </h2>
+            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">Eligible refunds are processed back to your original payment method within 3-7 business days. Cash on Service payments are refunded as OneClick wallet credit.</div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-faq-cat="provider">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                How do I contact my provider?
+              </button>
+            </h2>
+            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">Once a booking is confirmed, use the in-app Messages tab to chat directly with your provider, or tap the call icon on the booking details page.</div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-faq-cat="provider">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                How do I become a provider?
+              </button>
+            </h2>
+            <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">Apply from the "Become a Provider" page with your citizenship document, service category, and experience details. Our team verifies applications within 2-3 business days.</div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-faq-cat="payment">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                How does Khalti payment work?
+              </button>
+            </h2>
+            <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">Select Khalti at checkout, confirm the amount in the Khalti app or with your MPIN, and your booking is confirmed instantly once payment succeeds.</div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-faq-cat="payment">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                Can I pay cash?
+              </button>
+            </h2>
+            <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">Yes, choose Cash on Service at checkout and pay your provider directly after the job is completed to your satisfaction.</div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-faq-cat="provider">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq9">
+                How are providers verified?
+              </button>
+            </h2>
+            <div id="faq9" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">Every provider submits a citizenship document and undergoes a background and skill check before approval. Verified providers display a blue verification badge on their profile.</div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-faq-cat="booking">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq10">
+                What if the provider doesn't arrive?
+              </button>
+            </h2>
+            <div id="faq10" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">If your provider is more than 20 minutes late with no message, you can cancel free of charge from the booking screen and report the issue to our support team.</div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-faq-cat="provider">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq11">
+                How do ratings work?
+              </button>
+            </h2>
+            <div id="faq11" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">After each completed booking, you can rate your provider from 1 to 5 stars and leave a comment. Ratings feed into each provider's public average score.</div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-faq-cat="account">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq12">
+                How do I delete my account?
+              </button>
+            </h2>
+            <div id="faq12" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">Go to Settings &gt; Danger Zone &gt; Delete Account. This permanently removes your profile, booking history, and saved data and cannot be undone.</div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-faq-cat="account">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq13">
+                I forgot my password. What do I do?
+              </button>
+            </h2>
+            <div id="faq13" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">Tap Forgot Password on the login screen and follow the link sent to your registered email or phone number to set a new password.</div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-faq-cat="technical">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq14">
+                The app keeps crashing or freezing. What should I do?
+              </button>
+            </h2>
+            <div id="faq14" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">Try updating to the latest version, clearing the app cache, or reinstalling. If the issue continues, submit a support ticket with your device model and OS version.</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="oc-no-results d-none" id="faqNoResults">
+          <i class="fa-solid fa-magnifying-glass-minus"></i>
+          <p>No FAQs match your search. Try a different keyword or contact support below.</p>
+        </div>
+      </section>
+
+      <!-- ============ CONTACT SUPPORT FORM ============ -->
+      <section class="oc-card glass-card p-4 mb-4 fade-in-up" id="contact">
+        <div class="oc-section-head">
+          <div class="oc-section-icon"><i class="fa-solid fa-paper-plane"></i></div>
+          <div>
+            <h5 class="mb-0">Contact Support</h5>
+            <p class="oc-section-sub mb-0">Can't find an answer? Send us a message and we'll get back to you.</p>
+          </div>
+        </div>
+
+        <form id="supportForm" class="mt-4" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-control oc-input" id="ticketName" placeholder="Your full name" required>
+              <div class="invalid-feedback">Please enter your full name.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control oc-input" id="ticketEmail" placeholder="you@example.com" required>
+              <div class="invalid-feedback">Please enter a valid email address.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Subject</label>
+              <input type="text" class="form-control oc-input" id="ticketSubject" placeholder="Brief summary of the issue" required>
+              <div class="invalid-feedback">Please enter a subject.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Category</label>
+              <select class="form-select oc-input" id="ticketCategory" required>
+                <option value="" selected disabled>Select a category</option>
+                <option>Booking Issues</option>
+                <option>Payment Problems</option>
+                <option>Provider Support</option>
+                <option>Account Help</option>
+                <option>Technical Problems</option>
+                <option>Safety &amp; Reporting</option>
+                <option>Other</option>
+              </select>
+              <div class="invalid-feedback">Please choose a category.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Message</label>
+              <textarea class="form-control oc-input" id="ticketMessage" rows="5" maxlength="500" placeholder="Describe your issue in detail..." required></textarea>
+              <div class="d-flex justify-content-between mt-1">
+                <div class="invalid-feedback mb-0" style="display:block;" id="messageFeedback"></div>
+                <small class="oc-hint" id="charCounter">0 / 500</small>
+              </div>
+            </div>
+            <div class="col-12">
+              <button type="button" class="oc-attach-btn" id="attachBtn">
+                <i class="fa-solid fa-paperclip"></i>
+                <span id="attachLabel">Attach a file (optional)</span>
+              </button>
+              <input type="file" id="attachInput" hidden>
+            </div>
+          </div>
+
+          <button type="submit" class="btn oc-btn-primary oc-ripple mt-4" id="submitTicketBtn">
+            <span class="btn-label"><i class="fa-solid fa-paper-plane me-2"></i>Submit Ticket</span>
+            <span class="btn-spinner d-none"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+            <span class="btn-check d-none"><i class="fa-solid fa-check"></i></span>
+          </button>
+        </form>
+      </section>
+
+      <!-- ============ TICKET HISTORY ============ -->
+      <section class="oc-card glass-card p-4 mb-4 fade-in-up" id="tickets">
+        <div class="oc-section-head">
+          <div class="oc-section-icon"><i class="fa-solid fa-ticket"></i></div>
+          <div>
+            <h5 class="mb-0">Ticket History</h5>
+            <p class="oc-section-sub mb-0">Track the status of your previous support requests.</p>
+          </div>
+        </div>
+
+        <div class="oc-ticket-filters mt-3" id="ticketFilters">
+          <button class="oc-filter-chip active" data-filter="all">All</button>
+          <button class="oc-filter-chip" data-filter="resolved">Resolved</button>
+          <button class="oc-filter-chip" data-filter="pending">Pending</button>
+          <button class="oc-filter-chip" data-filter="open">Open</button>
+        </div>
+
+        <div class="oc-ticket-list mt-3" id="ticketList">
+
+          <div class="oc-ticket-row" data-status="resolved">
+            <div class="oc-ticket-main">
+              <span class="oc-ticket-id">#TCK-1042</span>
+              <strong>Provider didn't show up on scheduled date</strong>
+              <div class="oc-ticket-meta">
+                <span><i class="fa-solid fa-tag"></i>Booking Issues</span>
+                <span><i class="fa-regular fa-calendar"></i>Aug 02, 2026</span>
+              </div>
+            </div>
+            <div class="oc-ticket-side">
+              <span class="oc-priority oc-priority-medium">Medium</span>
+              <span class="oc-status oc-status-resolved"><i class="fa-solid fa-circle-check"></i>Resolved</span>
+              <button class="btn oc-btn-ghost btn-sm oc-view-details">View Details</button>
+            </div>
+          </div>
+
+          <div class="oc-ticket-row" data-status="pending">
+            <div class="oc-ticket-main">
+              <span class="oc-ticket-id">#TCK-1057</span>
+              <strong>Khalti payment deducted but booking not confirmed</strong>
+              <div class="oc-ticket-meta">
+                <span><i class="fa-solid fa-tag"></i>Payment Problems</span>
+                <span><i class="fa-regular fa-calendar"></i>Aug 09, 2026</span>
+              </div>
+            </div>
+            <div class="oc-ticket-side">
+              <span class="oc-priority oc-priority-high">High</span>
+              <span class="oc-status oc-status-pending"><i class="fa-solid fa-clock"></i>Pending</span>
+              <button class="btn oc-btn-ghost btn-sm oc-view-details">View Details</button>
+            </div>
+          </div>
+
+          <div class="oc-ticket-row" data-status="open">
+            <div class="oc-ticket-main">
+              <span class="oc-ticket-id">#TCK-1063</span>
+              <strong>Unable to update profile phone number</strong>
+              <div class="oc-ticket-meta">
+                <span><i class="fa-solid fa-tag"></i>Account Help</span>
+                <span><i class="fa-regular fa-calendar"></i>Aug 13, 2026</span>
+              </div>
+            </div>
+            <div class="oc-ticket-side">
+              <span class="oc-priority oc-priority-low">Low</span>
+              <span class="oc-status oc-status-open"><i class="fa-solid fa-circle-dot"></i>Open</span>
+              <button class="btn oc-btn-ghost btn-sm oc-view-details">View Details</button>
+            </div>
+          </div>
+
+          <div class="oc-ticket-row" data-status="resolved">
+            <div class="oc-ticket-main">
+              <span class="oc-ticket-id">#TCK-0994</span>
+              <strong>App crashes when uploading citizenship document</strong>
+              <div class="oc-ticket-meta">
+                <span><i class="fa-solid fa-tag"></i>Technical Problems</span>
+                <span><i class="fa-regular fa-calendar"></i>Jul 21, 2026</span>
+              </div>
+            </div>
+            <div class="oc-ticket-side">
+              <span class="oc-priority oc-priority-medium">Medium</span>
+              <span class="oc-status oc-status-resolved"><i class="fa-solid fa-circle-check"></i>Resolved</span>
+              <button class="btn oc-btn-ghost btn-sm oc-view-details">View Details</button>
+            </div>
+          </div>
+
+        </div>
+
+        <p class="oc-no-results d-none" id="ticketNoResults">
+          <i class="fa-solid fa-inbox"></i> No tickets match this filter.
+        </p>
+      </section>
+
+    </div>
+
+    <!-- ============ RIGHT COLUMN ============ -->
+    <div class="col-lg-4">
+      <div class="oc-sticky">
+
+        <!-- Live Chat Card -->
+        <div class="oc-card glass-card oc-chat-card p-4 mb-4 fade-in-up">
+          <div class="oc-chat-agent">
+            <div class="oc-agent-avatar">
+              <img src="https://ui-avatars.com/api/?name=Sujal+K&background=2563EB&color=fff&bold=true" alt="Support agent">
+              <span class="oc-online-dot" title="Online"></span>
+            </div>
+            <div>
+              <strong>Sujal K.</strong>
+              <small class="d-block oc-hint">Support Agent</small>
+            </div>
+          </div>
+          <p class="oc-chat-response"><i class="fa-solid fa-bolt me-1"></i>Avg. response time: <b>under 2 minutes</b></p>
+          <button class="btn oc-btn-primary oc-ripple w-100" id="startChatBtn">
+            <i class="fa-solid fa-comments me-2"></i>Start Live Chat
+          </button>
+        </div>
+
+        <!-- Support Information -->
+        <div class="oc-card glass-card p-4 mb-4 fade-in-up">
+          <h6 class="oc-sidebar-heading">Support Information</h6>
+          <ul class="oc-info-list">
+            <li>
+              <span class="oc-info-icon"><i class="fa-solid fa-headset"></i></span>
+              <div><strong>Customer Care</strong><small>Mon - Sun, always active</small></div>
+            </li>
+            <li>
+              <span class="oc-info-icon"><i class="fa-solid fa-phone"></i></span>
+              <div><strong>+977 1-4XXXXXX</strong><small>Phone support</small></div>
+            </li>
+            <li>
+              <span class="oc-info-icon"><i class="fa-solid fa-envelope"></i></span>
+              <div><strong>support@oneclick.com.np</strong><small>Email support</small></div>
+            </li>
+            <li>
+              <span class="oc-info-icon"><i class="fa-solid fa-location-dot"></i></span>
+              <div><strong>Putalisadak, Kathmandu</strong><small>Office address</small></div>
+            </li>
+            <li>
+              <span class="oc-info-icon"><i class="fa-solid fa-clock"></i></span>
+              <div><strong>8:00 AM - 10:00 PM</strong><small>Working hours</small></div>
+            </li>
+            <li>
+              <span class="oc-info-icon oc-info-icon-danger"><i class="fa-solid fa-triangle-exclamation"></i></span>
+              <div><strong>24/7 Emergency Line</strong><small>For urgent safety issues</small></div>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EMERGENCY HELP ============ -->
+  <section class="oc-emergency fade-in-up" id="emergency">
+    <div class="oc-emergency-inner">
+      <div class="oc-emergency-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="oc-emergency-text">
+        <h5>Emergency Help</h5>
+        <p>If you feel unsafe during a booking or suspect fraud, contact us immediately or use the buttons below.</p>
+        <ul class="oc-emergency-guidelines">
+          <li><i class="fa-solid fa-check"></i>Stay in a public or well-lit area if possible.</li>
+          <li><i class="fa-solid fa-check"></i>Share your live location with a trusted contact.</li>
+          <li><i class="fa-solid fa-check"></i>Never share your OTP, PIN, or password with anyone.</li>
+        </ul>
+      </div>
+      <div class="oc-emergency-actions">
+        <a href="tel:+9779800000000" class="oc-emergency-number">
+          <i class="fa-solid fa-phone-volume"></i>
+          <span>+977 98XXXXXXXX</span>
+        </a>
+        <button class="btn oc-btn-danger oc-ripple" id="reportFraudBtn">
+          <i class="fa-solid fa-flag me-2"></i>Report Fraud
+        </button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ TOAST ============ -->
+<div class="oc-toast-wrap">
+  <div class="oc-toast" id="successToast">
+    <span class="oc-toast-check"><i class="fa-solid fa-check"></i></span>
+    <span id="toastMessage">Done.</span>
+  </div>
+</div>
+
+<!-- ============ LIVE CHAT POPUP (DUMMY) ============ -->
+<div class="oc-chat-popup" id="chatPopup">
+  <div class="oc-chat-popup-header">
+    <div class="oc-chat-agent">
+      <div class="oc-agent-avatar oc-agent-avatar-sm">
+        <img src="https://ui-avatars.com/api/?name=Sujal+K&background=2563EB&color=fff&bold=true" alt="Support agent">
+        <span class="oc-online-dot"></span>
+      </div>
+      <div>
+        <strong>Sujal K.</strong>
+        <small>Support Agent · Online</small>
+      </div>
+    </div>
+    <button class="oc-chat-close" id="closeChatBtn" aria-label="Close chat"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="oc-chat-body" id="chatBody">
+    <div class="oc-chat-msg oc-chat-msg-agent">
+      Hi! 👋 I'm Sujal from OneClick support. How can I help you today?
+    </div>
+  </div>
+  <div class="oc-chat-input-row">
+    <input type="text" id="chatInput" placeholder="Type your message...">
+    <button id="chatSendBtn" aria-label="Send message"><i class="fa-solid fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<!-- ============ TICKET DETAILS MODAL ============ -->
+<div class="modal fade" id="ticketModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content oc-modal">
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="ticketModalTitle">Ticket Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-0" id="ticketModalBody">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="js/support.js"></script>
+</body>
+</html>

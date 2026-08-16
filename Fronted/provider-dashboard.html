@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Provider Dashboard | OneClick</title>
+
+<!-- Google Fonts: Poppins -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<!-- OneClick Provider Dashboard Styles -->
+<link rel="stylesheet" href="css/provider-dashboard.css">
+</head>
+<body>
+
+<!-- ============================= -->
+<!-- SIDEBAR OVERLAY (mobile only) -->
+<!-- ============================= -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="app-shell">
+
+  <!-- ============================= -->
+  <!-- LEFT SIDEBAR -->
+  <!-- ============================= -->
+  <aside class="oc-sidebar" id="ocSidebar">
+    <div class="sidebar-brand">
+      <a href="#" class="brand-link">
+        <span class="brand-icon"><i class="fa-solid fa-bolt"></i></span>
+        <span class="brand-text">OneClick<span class="brand-sub">Provider</span></span>
+      </a>
+      <button class="sidebar-close d-lg-none" id="sidebarClose" aria-label="Close menu">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <p class="nav-section-label">Main</p>
+      <ul class="nav-list">
+        <li class="nav-item active">
+          <a href="#overview" class="nav-link" data-section="overview">
+            <i class="fa-solid fa-gauge-high"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#job-requests" class="nav-link" data-section="job-requests">
+            <i class="fa-solid fa-inbox"></i>
+            <span>Job Requests</span>
+            <span class="nav-badge">4</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#todays-jobs" class="nav-link" data-section="todays-jobs">
+            <i class="fa-regular fa-calendar-check"></i>
+            <span>Today's Jobs</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#completed-jobs" class="nav-link" data-section="completed-jobs">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Completed Jobs</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#earnings" class="nav-link" data-section="earnings">
+            <i class="fa-solid fa-sack-dollar"></i>
+            <span>Earnings</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#reviews" class="nav-link" data-section="reviews">
+            <i class="fa-solid fa-star"></i>
+            <span>Reviews</span>
+          </a>
+        </li>
+      </ul>
+
+      <p class="nav-section-label">Manage</p>
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a href="#availability" class="nav-link" data-section="availability">
+            <i class="fa-regular fa-clock"></i>
+            <span>Availability</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#messages" class="nav-link" data-section="messages">
+            <i class="fa-regular fa-comment-dots"></i>
+            <span>Messages</span>
+            <span class="nav-badge nav-badge-accent">3</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#profile" class="nav-link" data-section="profile">
+            <i class="fa-regular fa-user"></i>
+            <span>Profile</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#settings" class="nav-link" data-section="settings">
+            <i class="fa-solid fa-gear"></i>
+            <span>Settings</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="#logout" class="nav-link logout-link">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============================= -->
+  <!-- MAIN CONTENT -->
+  <!-- ============================= -->
+  <div class="oc-main">
+
+    <!-- ============================= -->
+    <!-- TOP NAVBAR -->
+    <!-- ============================= -->
+    <header class="oc-topbar">
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle sidebar">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <div class="topbar-search">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="topSearch" class="search-input" placeholder="Search jobs, customers, messages...">
+      </div>
+
+      <div class="topbar-actions">
+
+        <!-- Online / Offline toggle -->
+        <div class="status-toggle-wrap">
+          <span class="status-dot" id="statusDot"></span>
+          <span class="status-label" id="statusLabel">Online</span>
+          <label class="oc-switch status-switch">
+            <input type="checkbox" id="onlineToggle" checked>
+            <span class="oc-slider"></span>
+          </label>
+        </div>
+
+        <!-- Notification Bell -->
+        <div class="topbar-dropdown">
+          <button class="icon-btn" id="notifBtn" aria-label="Notifications">
+            <i class="fa-regular fa-bell"></i>
+            <span class="icon-dot">5</span>
+          </button>
+          <div class="dropdown-panel" id="notifPanel">
+            <div class="dropdown-header">
+              <span>Notifications</span>
+              <a href="#" class="mark-read">Mark all read</a>
+            </div>
+            <div class="dropdown-list">
+              <a href="#" class="dropdown-item unread">
+                <span class="item-icon bg-primary-soft"><i class="fa-solid fa-inbox"></i></span>
+                <span class="item-text">
+                  <strong>New job request</strong> from Sunita Gurung for AC Repair
+                  <small>2 minutes ago</small>
+                </span>
+              </a>
+              <a href="#" class="dropdown-item unread">
+                <span class="item-icon bg-success-soft"><i class="fa-solid fa-star"></i></span>
+                <span class="item-text">
+                  <strong>New 5-star review</strong> from Bimal Shrestha
+                  <small>1 hour ago</small>
+                </span>
+              </a>
+              <a href="#" class="dropdown-item">
+                <span class="item-icon bg-accent-soft"><i class="fa-solid fa-sack-dollar"></i></span>
+                <span class="item-text">
+                  <strong>Payout processed</strong> — Rs. 8,500 sent to your account
+                  <small>Yesterday</small>
+                </span>
+              </a>
+            </div>
+            <a href="#" class="dropdown-footer">View all notifications</a>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="topbar-dropdown">
+          <button class="icon-btn" id="msgBtn" aria-label="Messages">
+            <i class="fa-regular fa-comment-dots"></i>
+            <span class="icon-dot icon-dot-accent">3</span>
+          </button>
+          <div class="dropdown-panel" id="msgPanel">
+            <div class="dropdown-header"><span>Messages</span></div>
+            <div class="dropdown-list">
+              <a href="#" class="dropdown-item unread">
+                <img src="https://i.pravatar.cc/40?img=32" class="item-avatar" alt="Customer">
+                <span class="item-text">
+                  <strong>Anjali Rai</strong> — Can you arrive 15 mins early?
+                  <small>5 minutes ago</small>
+                </span>
+              </a>
+              <a href="#" class="dropdown-item">
+                <img src="https://i.pravatar.cc/40?img=15" class="item-avatar" alt="Customer">
+                <span class="item-text">
+                  <strong>Kiran Thapa</strong> — Thank you for the great work!
+                  <small>3 hours ago</small>
+                </span>
+              </a>
+            </div>
+            <a href="#" class="dropdown-footer">Open Messages</a>
+          </div>
+        </div>
+
+        <!-- Provider Profile -->
+        <div class="topbar-dropdown profile-dropdown">
+          <button class="profile-trigger" id="profileBtn">
+            <img src="https://i.pravatar.cc/44?img=68" alt="Ramesh Shrestha" class="profile-avatar">
+            <span class="profile-meta">
+              <span class="profile-name">Ramesh Shrestha</span>
+              <span class="profile-role">Electrician · Verified <i class="fa-solid fa-circle-check verified-icon"></i></span>
+            </span>
+            <i class="fa-solid fa-chevron-down profile-caret"></i>
+          </button>
+          <div class="dropdown-panel profile-panel" id="profilePanel">
+            <a href="#profile" class="dropdown-item"><span class="item-icon bg-primary-soft"><i class="fa-regular fa-user"></i></span> My Profile</a>
+            <a href="#earnings" class="dropdown-item"><span class="item-icon bg-success-soft"><i class="fa-solid fa-wallet"></i></span> Earnings &amp; Payouts</a>
+            <a href="#settings" class="dropdown-item"><span class="item-icon bg-accent-soft"><i class="fa-solid fa-gear"></i></span> Settings</a>
+            <div class="dropdown-divider"></div>
+            <a href="#logout" class="dropdown-item text-danger"><span class="item-icon bg-danger-soft"><i class="fa-solid fa-right-from-bracket"></i></span> Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============================= -->
+    <!-- PAGE BODY -->
+    <!-- ============================= -->
+    <div class="oc-body">
+
+      <!-- MAIN COLUMN -->
+      <main class="oc-content">
+
+        <!-- HEADER -->
+        <section class="page-header fade-in" id="overview">
+          <div>
+            <h1 class="greeting">Good Morning, Ramesh <span class="wave">👋</span></h1>
+            <p class="greeting-sub">Manage your jobs and grow your business.</p>
+          </div>
+          <div class="header-actions d-none d-md-flex">
+            <button class="btn btn-oc-outline ripple">
+              <i class="fa-regular fa-calendar"></i> Aug 15, 2026
+            </button>
+            <button class="btn btn-oc-primary ripple">
+              <i class="fa-solid fa-plus"></i> Add Service
+            </button>
+          </div>
+        </section>
+
+        <!-- STATISTICS CARDS -->
+        <section class="stats-grid fade-in">
+
+          <div class="stat-card">
+            <div class="stat-icon bg-primary-soft text-primary"><i class="fa-solid fa-inbox"></i></div>
+            <div class="stat-info">
+              <h3 class="stat-value" data-count="4">0</h3>
+              <p class="stat-label">Pending Requests</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon bg-secondary-soft text-secondary"><i class="fa-regular fa-calendar-check"></i></div>
+            <div class="stat-info">
+              <h3 class="stat-value" data-count="6">0</h3>
+              <p class="stat-label">Today's Jobs</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon bg-success-soft text-success"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="stat-info">
+              <h3 class="stat-value" data-count="214">0</h3>
+              <p class="stat-label">Completed Jobs</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon bg-accent-soft text-accent"><i class="fa-solid fa-sack-dollar"></i></div>
+            <div class="stat-info">
+              <h3 class="stat-value" data-count="68500" data-prefix="Rs. ">0</h3>
+              <p class="stat-label">Monthly Earnings</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon bg-warning-soft text-warning"><i class="fa-solid fa-star"></i></div>
+            <div class="stat-info">
+              <h3 class="stat-value" data-count="4.9" data-decimal="1">0</h3>
+              <p class="stat-label">Average Rating</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon bg-primary-soft text-primary"><i class="fa-solid fa-bolt"></i></div>
+            <div class="stat-info">
+              <h3 class="stat-value" data-count="97" data-suffix="%">0</h3>
+              <p class="stat-label">Response Rate</p>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- CURRENT JOB -->
+        <section class="oc-panel current-job-panel fade-in">
+          <div class="current-job-glow"></div>
+          <div class="panel-heading">
+            <h2><i class="fa-solid fa-location-arrow"></i> Current Job</h2>
+            <span class="badge-live"><span class="live-dot"></span> In Progress</span>
+          </div>
+
+          <div class="current-job-body">
+            <div class="current-job-customer">
+              <img src="https://i.pravatar.cc/64?img=47" alt="Customer" class="cj-avatar">
+              <div>
+                <h4>Sunita Gurung</h4>
+                <p><i class="fa-solid fa-location-dot"></i> Baneshwor, Kathmandu</p>
+                <p class="cj-service"><i class="fa-solid fa-plug"></i> AC Installation &amp; Gas Refill</p>
+              </div>
+            </div>
+
+            <div class="current-job-progress">
+              <div class="progress-label">
+                <span>Job Progress</span>
+                <span class="progress-percent">65%</span>
+              </div>
+              <div class="oc-progress">
+                <div class="oc-progress-bar" data-progress="65"></div>
+              </div>
+              <div class="progress-steps">
+                <span class="step done">Arrived</span>
+                <span class="step done">Diagnosed</span>
+                <span class="step active">Repairing</span>
+                <span class="step">Completed</span>
+              </div>
+            </div>
+
+            <div class="current-job-actions">
+              <button class="btn btn-oc-outline ripple"><i class="fa-solid fa-diamond-turn-right"></i> Navigate</button>
+              <button class="btn btn-oc-secondary ripple"><i class="fa-solid fa-phone"></i> Call Customer</button>
+              <button class="btn btn-oc-success ripple"><i class="fa-solid fa-circle-check"></i> Complete Job</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- JOB REQUESTS -->
+        <section class="oc-panel fade-in" id="job-requests">
+          <div class="panel-heading">
+            <h2><i class="fa-solid fa-inbox"></i> Job Requests</h2>
+            <a href="#" class="panel-link">View All <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+
+          <div class="job-requests-grid">
+
+            <div class="request-card">
+              <div class="request-top">
+                <img src="https://i.pravatar.cc/48?img=5" class="req-avatar" alt="Customer">
+                <div class="req-customer">
+                  <h5>Anjali Rai</h5>
+                  <span class="req-service-tag"><i class="fa-solid fa-bolt"></i> Electrical Repair</span>
+                </div>
+                <span class="req-price">Rs. 1,200</span>
+              </div>
+              <ul class="req-details">
+                <li><i class="fa-solid fa-location-dot"></i> Kalanki, Kathmandu</li>
+                <li><i class="fa-regular fa-calendar"></i> Aug 15, 2026</li>
+                <li><i class="fa-regular fa-clock"></i> 02:30 PM</li>
+              </ul>
+              <div class="req-actions">
+                <button class="btn btn-oc-success btn-sm ripple accept-btn"><i class="fa-solid fa-check"></i> Accept</button>
+                <button class="btn btn-oc-danger-outline btn-sm ripple reject-btn"><i class="fa-solid fa-xmark"></i> Reject</button>
+              </div>
+            </div>
+
+            <div class="request-card">
+              <div class="request-top">
+                <img src="https://i.pravatar.cc/48?img=12" class="req-avatar" alt="Customer">
+                <div class="req-customer">
+                  <h5>Bimal Shrestha</h5>
+                  <span class="req-service-tag"><i class="fa-solid fa-faucet-drip"></i> Pipe Leakage Fix</span>
+                </div>
+                <span class="req-price">Rs. 900</span>
+              </div>
+              <ul class="req-details">
+                <li><i class="fa-solid fa-location-dot"></i> Patan, Lalitpur</li>
+                <li><i class="fa-regular fa-calendar"></i> Aug 15, 2026</li>
+                <li><i class="fa-regular fa-clock"></i> 04:00 PM</li>
+              </ul>
+              <div class="req-actions">
+                <button class="btn btn-oc-success btn-sm ripple accept-btn"><i class="fa-solid fa-check"></i> Accept</button>
+                <button class="btn btn-oc-danger-outline btn-sm ripple reject-btn"><i class="fa-solid fa-xmark"></i> Reject</button>
+              </div>
+            </div>
+
+            <div class="request-card">
+              <div class="request-top">
+                <img src="https://i.pravatar.cc/48?img=25" class="req-avatar" alt="Customer">
+                <div class="req-customer">
+                  <h5>Kiran Thapa</h5>
+                  <span class="req-service-tag"><i class="fa-solid fa-broom"></i> Deep Home Cleaning</span>
+                </div>
+                <span class="req-price">Rs. 2,500</span>
+              </div>
+              <ul class="req-details">
+                <li><i class="fa-solid fa-location-dot"></i> Baneshwor, Kathmandu</li>
+                <li><i class="fa-regular fa-calendar"></i> Aug 16, 2026</li>
+                <li><i class="fa-regular fa-clock"></i> 10:00 AM</li>
+              </ul>
+              <div class="req-actions">
+                <button class="btn btn-oc-success btn-sm ripple accept-btn"><i class="fa-solid fa-check"></i> Accept</button>
+                <button class="btn btn-oc-danger-outline btn-sm ripple reject-btn"><i class="fa-solid fa-xmark"></i> Reject</button>
+              </div>
+            </div>
+
+            <div class="request-card">
+              <div class="request-top">
+                <img src="https://i.pravatar.cc/48?img=33" class="req-avatar" alt="Customer">
+                <div class="req-customer">
+                  <h5>Prakash Adhikari</h5>
+                  <span class="req-service-tag"><i class="fa-solid fa-snowflake"></i> AC Servicing</span>
+                </div>
+                <span class="req-price">Rs. 1,800</span>
+              </div>
+              <ul class="req-details">
+                <li><i class="fa-solid fa-location-dot"></i> Boudha, Kathmandu</li>
+                <li><i class="fa-regular fa-calendar"></i> Aug 16, 2026</li>
+                <li><i class="fa-regular fa-clock"></i> 01:00 PM</li>
+              </ul>
+              <div class="req-actions">
+                <button class="btn btn-oc-success btn-sm ripple accept-btn"><i class="fa-solid fa-check"></i> Accept</button>
+                <button class="btn btn-oc-danger-outline btn-sm ripple reject-btn"><i class="fa-solid fa-xmark"></i> Reject</button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- TODAY'S SCHEDULE -->
+        <section class="oc-panel fade-in" id="todays-jobs">
+          <div class="panel-heading">
+            <h2><i class="fa-regular fa-calendar-check"></i> Today's Schedule</h2>
+            <span class="panel-date">Saturday, August 15</span>
+          </div>
+
+          <div class="timeline">
+
+            <div class="timeline-item done">
+              <div class="timeline-time">09:00 AM</div>
+              <div class="timeline-dot"><i class="fa-solid fa-bolt"></i></div>
+              <div class="timeline-card">
+                <div class="timeline-card-top">
+                  <h5>Electrical Repair</h5>
+                  <span class="status-pill status-completed">Completed</span>
+                </div>
+                <p><i class="fa-regular fa-user"></i> Suman Karki</p>
+                <p><i class="fa-solid fa-location-dot"></i> Koteshwor, Kathmandu</p>
+                <p><i class="fa-regular fa-clock"></i> 45 min duration</p>
+              </div>
+            </div>
+
+            <div class="timeline-item done">
+              <div class="timeline-time">11:30 AM</div>
+              <div class="timeline-dot"><i class="fa-solid fa-house-chimney"></i></div>
+              <div class="timeline-card">
+                <div class="timeline-card-top">
+                  <h5>House Wiring</h5>
+                  <span class="status-pill status-completed">Completed</span>
+                </div>
+                <p><i class="fa-regular fa-user"></i> Rita Maharjan</p>
+                <p><i class="fa-solid fa-location-dot"></i> Sinamangal, Kathmandu</p>
+                <p><i class="fa-regular fa-clock"></i> 1 hr 30 min duration</p>
+              </div>
+            </div>
+
+            <div class="timeline-item active">
+              <div class="timeline-time">03:00 PM</div>
+              <div class="timeline-dot"><i class="fa-solid fa-snowflake"></i></div>
+              <div class="timeline-card">
+                <div class="timeline-card-top">
+                  <h5>AC Installation</h5>
+                  <span class="status-pill status-inprogress">In Progress</span>
+                </div>
+                <p><i class="fa-regular fa-user"></i> Sunita Gurung</p>
+                <p><i class="fa-solid fa-location-dot"></i> Baneshwor, Kathmandu</p>
+                <p><i class="fa-regular fa-clock"></i> 2 hr duration</p>
+              </div>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-time">05:30 PM</div>
+              <div class="timeline-dot"><i class="fa-solid fa-plug"></i></div>
+              <div class="timeline-card">
+                <div class="timeline-card-top">
+                  <h5>Switchboard Replacement</h5>
+                  <span class="status-pill status-upcoming">Upcoming</span>
+                </div>
+                <p><i class="fa-regular fa-user"></i> Deepak Basnet</p>
+                <p><i class="fa-solid fa-location-dot"></i> New Baneshwor, Kathmandu</p>
+                <p><i class="fa-regular fa-clock"></i> 40 min duration</p>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- MONTHLY EARNINGS -->
+        <section class="oc-panel earnings-panel fade-in" id="earnings">
+          <div class="panel-heading">
+            <h2><i class="fa-solid fa-sack-dollar"></i> Monthly Earnings</h2>
+            <span class="panel-date">August 2026</span>
+          </div>
+
+          <div class="earnings-grid">
+            <div class="earnings-highlight">
+              <p class="eh-label">Total Earnings</p>
+              <h2 class="eh-value">Rs. 68,500</h2>
+              <p class="eh-change"><i class="fa-solid fa-arrow-trend-up"></i> +18% from last month</p>
+              <button class="btn btn-oc-accent ripple withdraw-btn"><i class="fa-solid fa-wallet"></i> Withdraw Earnings</button>
+            </div>
+
+            <div class="earnings-mini-stats">
+              <div class="mini-stat">
+                <span class="mini-icon bg-success-soft text-success"><i class="fa-solid fa-circle-check"></i></span>
+                <div>
+                  <h4>38</h4>
+                  <p>Completed Jobs</p>
+                </div>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-icon bg-primary-soft text-primary"><i class="fa-solid fa-coins"></i></span>
+                <div>
+                  <h4>Rs. 1,803</h4>
+                  <p>Average Job Value</p>
+                </div>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-icon bg-accent-soft text-accent"><i class="fa-regular fa-clock"></i></span>
+                <div>
+                  <h4>Rs. 12,400</h4>
+                  <p>Pending Payout</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="earnings-chart">
+              <div class="mini-bar-chart" id="earningsChart">
+                <div class="bar" style="--val:40%"><span>Mon</span></div>
+                <div class="bar" style="--val:65%"><span>Tue</span></div>
+                <div class="bar" style="--val:50%"><span>Wed</span></div>
+                <div class="bar" style="--val:80%"><span>Thu</span></div>
+                <div class="bar" style="--val:60%"><span>Fri</span></div>
+                <div class="bar" style="--val:95%"><span>Sat</span></div>
+                <div class="bar" style="--val:35%"><span>Sun</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RECENT REVIEWS -->
+        <section class="oc-panel fade-in" id="reviews">
+          <div class="panel-heading">
+            <h2><i class="fa-solid fa-star"></i> Recent Reviews</h2>
+            <a href="#" class="panel-link">View All <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+
+          <div class="reviews-grid">
+
+            <div class="review-card">
+              <div class="review-top">
+                <img src="https://i.pravatar.cc/44?img=20" class="review-avatar" alt="Customer">
+                <div>
+                  <h5>Bimal Shrestha</h5>
+                  <div class="review-stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                </div>
+                <span class="review-date">2 days ago</span>
+              </div>
+              <p class="review-text">"Ramesh arrived on time and fixed the wiring issue quickly. Very professional and explained everything clearly."</p>
+            </div>
+
+            <div class="review-card">
+              <div class="review-top">
+                <img src="https://i.pravatar.cc/44?img=8" class="review-avatar" alt="Customer">
+                <div>
+                  <h5>Sarita Koirala</h5>
+                  <div class="review-stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                </div>
+                <span class="review-date">4 days ago</span>
+              </div>
+              <p class="review-text">"Excellent service! Fair pricing and cleaned up after the job. Will definitely book again for future repairs."</p>
+            </div>
+
+            <div class="review-card">
+              <div class="review-top">
+                <img src="https://i.pravatar.cc/44?img=52" class="review-avatar" alt="Customer">
+                <div>
+                  <h5>Deepak Basnet</h5>
+                  <div class="review-stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i></div>
+                </div>
+                <span class="review-date">1 week ago</span>
+              </div>
+              <p class="review-text">"Good work overall, slightly late but communicated in advance. Wiring looks neat and safe now."</p>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- PERFORMANCE SECTION -->
+        <section class="oc-panel fade-in" id="performance">
+          <div class="panel-heading">
+            <h2><i class="fa-solid fa-chart-simple"></i> Performance</h2>
+          </div>
+
+          <div class="performance-grid">
+
+            <div class="perf-item">
+              <div class="radial-progress" data-percent="97">
+                <svg viewBox="0 0 120 120">
+                  <circle class="radial-track" cx="60" cy="60" r="52"></circle>
+                  <circle class="radial-bar" cx="60" cy="60" r="52" stroke="var(--primary)"></circle>
+                </svg>
+                <span class="radial-value">97%</span>
+              </div>
+              <h5>Response Rate</h5>
+              <p>Replies within 5 minutes</p>
+            </div>
+
+            <div class="perf-item">
+              <div class="radial-progress" data-percent="94">
+                <svg viewBox="0 0 120 120">
+                  <circle class="radial-track" cx="60" cy="60" r="52"></circle>
+                  <circle class="radial-bar" cx="60" cy="60" r="52" stroke="var(--success)"></circle>
+                </svg>
+                <span class="radial-value">94%</span>
+              </div>
+              <h5>Completion Rate</h5>
+              <p>Jobs finished without cancellation</p>
+            </div>
+
+            <div class="perf-item">
+              <div class="radial-progress" data-percent="98">
+                <svg viewBox="0 0 120 120">
+                  <circle class="radial-track" cx="60" cy="60" r="52"></circle>
+                  <circle class="radial-bar" cx="60" cy="60" r="52" stroke="var(--accent)"></circle>
+                </svg>
+                <span class="radial-value">98%</span>
+              </div>
+              <h5>Customer Satisfaction</h5>
+              <p>Based on last 100 reviews</p>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- AVAILABILITY -->
+        <section class="oc-panel fade-in" id="availability">
+          <div class="panel-heading">
+            <h2><i class="fa-regular fa-clock"></i> Availability</h2>
+          </div>
+
+          <div class="availability-grid">
+            <div class="availability-card">
+              <div class="avail-icon bg-success-soft text-success"><i class="fa-solid fa-toggle-on"></i></div>
+              <div class="avail-text">
+                <h5>Available Today</h5>
+                <p>Get matched with nearby job requests</p>
+              </div>
+              <label class="oc-switch">
+                <input type="checkbox" id="availableToday" checked>
+                <span class="oc-slider"></span>
+              </label>
+            </div>
+
+            <div class="availability-card">
+              <div class="avail-icon bg-danger-soft text-danger"><i class="fa-solid fa-toggle-off"></i></div>
+              <div class="avail-text">
+                <h5>Unavailable</h5>
+                <p>Pause all incoming job requests</p>
+              </div>
+              <label class="oc-switch">
+                <input type="checkbox" id="unavailable">
+                <span class="oc-slider"></span>
+              </label>
+            </div>
+
+            <div class="availability-card">
+              <div class="avail-icon bg-accent-soft text-accent"><i class="fa-solid fa-umbrella-beach"></i></div>
+              <div class="avail-text">
+                <h5>Vacation Mode</h5>
+                <p>Hide your profile until you're back</p>
+              </div>
+              <label class="oc-switch">
+                <input type="checkbox" id="vacationMode">
+                <span class="oc-slider"></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- QUICK ACTIONS -->
+        <section class="oc-panel fade-in" id="quick-actions">
+          <div class="panel-heading">
+            <h2><i class="fa-solid fa-bolt"></i> Quick Actions</h2>
+          </div>
+
+          <div class="quick-actions-grid">
+            <a href="#profile" class="quick-action-card ripple">
+              <span class="qa-icon bg-primary-soft text-primary"><i class="fa-regular fa-user"></i></span>
+              <span>Update Profile</span>
+            </a>
+            <a href="#" class="quick-action-card ripple">
+              <span class="qa-icon bg-secondary-soft text-secondary"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+              <span>Manage Services</span>
+            </a>
+            <a href="#earnings" class="quick-action-card ripple">
+              <span class="qa-icon bg-success-soft text-success"><i class="fa-solid fa-wallet"></i></span>
+              <span>Withdraw Earnings</span>
+            </a>
+            <a href="#" class="quick-action-card ripple">
+              <span class="qa-icon bg-accent-soft text-accent"><i class="fa-regular fa-circle-question"></i></span>
+              <span>Support</span>
+            </a>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- RIGHT SIDEBAR -->
+      <aside class="oc-right-sidebar">
+
+        <div class="side-card fade-in">
+          <h6 class="side-card-title"><i class="fa-solid fa-clock-rotate-left"></i> Upcoming Job</h6>
+          <div class="upcoming-job">
+            <img src="https://i.pravatar.cc/40?img=33" alt="Customer">
+            <div>
+              <h6>Prakash Adhikari</h6>
+              <p>AC Servicing · 01:00 PM</p>
+            </div>
+          </div>
+          <p class="upcoming-address"><i class="fa-solid fa-location-dot"></i> Boudha, Kathmandu</p>
+          <button class="btn btn-oc-outline btn-sm w-100 ripple">View Details</button>
+        </div>
+
+        <div class="side-card weather-card fade-in">
+          <h6 class="side-card-title"><i class="fa-solid fa-cloud-sun"></i> Weather Today</h6>
+          <div class="weather-main">
+            <span class="weather-icon"><i class="fa-solid fa-cloud-sun-rain"></i></span>
+            <div>
+              <h3>26°C</h3>
+              <p>Partly Cloudy · Kathmandu</p>
+            </div>
+          </div>
+          <p class="weather-note"><i class="fa-solid fa-circle-info"></i> Light rain expected after 4 PM — plan outdoor jobs accordingly.</p>
+        </div>
+
+        <div class="side-card tips-card fade-in">
+          <h6 class="side-card-title"><i class="fa-solid fa-lightbulb"></i> Tips to Increase Earnings</h6>
+          <ul class="tips-list">
+            <li><i class="fa-solid fa-check"></i> Respond to requests within 5 minutes</li>
+            <li><i class="fa-solid fa-check"></i> Keep your profile photo &amp; ID updated</li>
+            <li><i class="fa-solid fa-check"></i> Ask happy customers for a review</li>
+            <li><i class="fa-solid fa-check"></i> Stay online during peak hours (6–9 PM)</li>
+          </ul>
+        </div>
+
+        <div class="side-card support-card fade-in">
+          <span class="support-icon"><i class="fa-regular fa-life-ring"></i></span>
+          <h6>Need Help?</h6>
+          <p>Our provider support team is available 24/7.</p>
+          <button class="btn btn-oc-primary btn-sm w-100 ripple">Contact Support</button>
+        </div>
+
+      </aside>
+
+    </div>
+
+    <!-- ============================= -->
+    <!-- FOOTER -->
+    <!-- ============================= -->
+    <footer class="oc-footer">
+      <p>&copy; 2026 OneClick. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </div>
+    </footer>
+
+  </div>
+</div>
+
+<!-- Back to Top -->
+<button id="backToTop" class="back-to-top" aria-label="Back to top">
+  <i class="fa-solid fa-arrow-up"></i>
+</button>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+
+<!-- OneClick Provider Dashboard Script -->
+<script src="js/provider-dashboard.js"></script>
+</body>
+</html>

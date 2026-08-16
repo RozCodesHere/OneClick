@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Service | OneClick</title>
+
+<!-- Google Fonts: Poppins -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<!-- Custom Stylesheet -->
+<link rel="stylesheet" href="css/booking.css">
+</head>
+<body>
+
+<!-- ============================= -->
+<!-- NAVBAR                        -->
+<!-- ============================= -->
+<nav class="navbar navbar-expand-lg oc-navbar" id="ocNavbar">
+  <div class="container">
+    <a class="navbar-brand oc-brand" href="#">
+      <span class="brand-icon"><i class="fa-solid fa-bolt"></i></span>
+      <span>OneClick</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ocNavMenu" aria-label="Toggle navigation">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <div class="collapse navbar-collapse" id="ocNavMenu">
+      <ul class="navbar-nav mx-auto oc-nav-links">
+        <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">Services</a></li>
+        <li class="nav-item"><a class="nav-link active" href="#">Book a Service</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">My Bookings</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">Support</a></li>
+      </ul>
+
+      <div class="oc-nav-actions">
+        <button class="icon-btn" aria-label="Notifications">
+          <i class="fa-regular fa-bell"></i>
+          <span class="icon-dot">3</span>
+        </button>
+        <div class="nav-user">
+          <img src="https://i.pravatar.cc/60?img=47" alt="User avatar" class="nav-avatar">
+          <span class="d-none d-md-inline">Aashika R.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================= -->
+<!-- PAGE HEADER                   -->
+<!-- ============================= -->
+<header class="booking-hero">
+  <div class="container">
+    <div class="booking-hero-inner fade-up">
+      <span class="hero-eyebrow"><i class="fa-solid fa-circle-check"></i> Trusted by 8,000+ customers</span>
+      <h1>Book a Service in Minutes</h1>
+      <p>Tell us what you need — we'll match you with a verified professional near you.</p>
+    </div>
+  </div>
+</header>
+
+<!-- ============================= -->
+<!-- MAIN CONTENT                  -->
+<!-- ============================= -->
+<main class="booking-main">
+  <div class="container">
+    <div class="booking-grid">
+
+      <!-- ============================= -->
+      <!-- BOOKING FORM                  -->
+      <!-- ============================= -->
+      <section class="booking-form-card glass-card fade-up" aria-labelledby="bookingFormTitle">
+        <div class="form-card-header">
+          <span class="form-card-icon"><i class="fa-solid fa-clipboard-list"></i></span>
+          <div>
+            <h2 id="bookingFormTitle">Service Details</h2>
+            <p>Fill in the details below and we'll take care of the rest.</p>
+          </div>
+        </div>
+
+        <form id="bookingForm" novalidate>
+
+          <!-- Service Category -->
+          <div class="form-group-block">
+            <label for="serviceCategory" class="form-label-custom">
+              <i class="fa-solid fa-toolbox"></i> Service Category
+            </label>
+            <select class="form-select form-select-custom" id="serviceCategory" required>
+              <option value="" disabled selected>Select a service</option>
+              <option value="Electrician" data-price="800">Electrician</option>
+              <option value="Plumber" data-price="700">Plumber</option>
+              <option value="Cleaner" data-price="1200">Cleaner</option>
+              <option value="Painter" data-price="2500">Painter</option>
+              <option value="Carpenter" data-price="900">Carpenter</option>
+              <option value="AC Repair" data-price="1500">AC Repair</option>
+              <option value="Appliance Repair" data-price="1000">Appliance Repair</option>
+              <option value="Gardening" data-price="600">Gardening</option>
+              <option value="Laundry" data-price="450">Laundry</option>
+              <option value="Beauty Services" data-price="1300">Beauty Services</option>
+              <option value="Vehicle Repair" data-price="1800">Vehicle Repair</option>
+              <option value="Computer Repair" data-price="1100">Computer Repair</option>
+            </select>
+            <div class="invalid-feedback">Please select a service category.</div>
+          </div>
+
+          <!-- Location -->
+          <div class="form-group-block">
+            <label for="serviceLocation" class="form-label-custom">
+              <i class="fa-solid fa-location-dot"></i> Current Address
+            </label>
+            <div class="input-with-action">
+              <input type="text" class="form-control form-control-custom" id="serviceLocation"
+                     placeholder="e.g. Baneshwor, Kathmandu" required>
+              <button type="button" class="input-action-btn" id="useLocationBtn" title="Use current location">
+                <i class="fa-solid fa-crosshairs"></i>
+              </button>
+            </div>
+            <div class="invalid-feedback">Please enter your address.</div>
+          </div>
+
+          <!-- Date & Time -->
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div class="form-group-block">
+                <label for="preferredDate" class="form-label-custom">
+                  <i class="fa-solid fa-calendar-days"></i> Preferred Date
+                </label>
+                <input type="date" class="form-control form-control-custom" id="preferredDate" required>
+                <div class="invalid-feedback">Please choose a date.</div>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="form-group-block">
+                <label for="preferredTime" class="form-label-custom">
+                  <i class="fa-solid fa-clock"></i> Preferred Time
+                </label>
+                <input type="time" class="form-control form-control-custom" id="preferredTime" required>
+                <div class="invalid-feedback">Please choose a time.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Emergency Toggle -->
+          <div class="emergency-toggle-block">
+            <div class="emergency-toggle-text">
+              <span class="emergency-icon"><i class="fa-solid fa-truck-fast"></i></span>
+              <div>
+                <p class="emergency-title">Emergency Service</p>
+                <p class="emergency-subtitle">Get a professional dispatched within 60 minutes</p>
+              </div>
+            </div>
+            <label class="oc-switch">
+              <input type="checkbox" id="emergencyToggle">
+              <span class="oc-switch-track"><span class="oc-switch-thumb"></span></span>
+            </label>
+          </div>
+
+          <!-- Problem Description -->
+          <div class="form-group-block">
+            <label for="problemDescription" class="form-label-custom">
+              <i class="fa-solid fa-message"></i> Problem Description
+            </label>
+            <textarea class="form-control form-control-custom" id="problemDescription" rows="5"
+                      placeholder="Describe the issue in detail — e.g. 'Kitchen tap is leaking continuously and needs a washer replacement.'" required></textarea>
+            <div class="d-flex justify-content-between mt-1">
+              <div class="invalid-feedback d-block-empty">Please describe the problem.</div>
+              <span class="char-counter"><span id="charCount">0</span>/500</span>
+            </div>
+          </div>
+
+          <!-- Estimated Price Display -->
+          <div class="estimate-price-card" id="estimatePriceCard">
+            <div class="estimate-price-left">
+              <span class="estimate-icon"><i class="fa-solid fa-tags"></i></span>
+              <div>
+                <p class="estimate-label">Estimated Price</p>
+                <span class="estimate-note" id="estimateNote">Select a service to see pricing</span>
+              </div>
+            </div>
+            <h3 class="estimate-value" id="estimateValue">Rs. 0</h3>
+          </div>
+
+          <button type="submit" class="btn btn-book-service ripple w-100">
+            <i class="fa-solid fa-calendar-check"></i> Book Service
+          </button>
+        </form>
+      </section>
+
+      <!-- ============================= -->
+      <!-- RIGHT SIDE                    -->
+      <!-- ============================= -->
+      <aside class="booking-aside">
+
+        <!-- Summary Card -->
+        <div class="summary-card glass-card fade-up">
+          <h3 class="summary-title"><i class="fa-solid fa-receipt"></i> Booking Summary</h3>
+
+          <div class="summary-row">
+            <span>Selected Service</span>
+            <strong id="summaryService">Not selected</strong>
+          </div>
+          <div class="summary-row">
+            <span>Provider</span>
+            <strong class="summary-provider"><i class="fa-regular fa-clock"></i> Not Assigned Yet</strong>
+          </div>
+          <div class="summary-row">
+            <span>Preferred Slot</span>
+            <strong id="summarySlot">—</strong>
+          </div>
+
+          <hr class="summary-divider">
+
+          <div class="summary-row">
+            <span>Booking Fee</span>
+            <strong id="summaryBookingFee">Rs. 100</strong>
+          </div>
+          <div class="summary-row">
+            <span>Visit Charge</span>
+            <strong id="summaryVisitCharge">Rs. 150</strong>
+          </div>
+          <div class="summary-row">
+            <span>Emergency Surcharge</span>
+            <strong id="summaryEmergencyFee">Rs. 0</strong>
+          </div>
+
+          <hr class="summary-divider">
+
+          <div class="summary-row summary-total">
+            <span>Estimated Total</span>
+            <strong id="summaryTotal">Rs. 250</strong>
+          </div>
+
+          <p class="summary-fineprint"><i class="fa-solid fa-circle-info"></i> Final price may vary based on the provider's on-site assessment.</p>
+        </div>
+
+        <!-- Trust Section -->
+        <div class="trust-card glass-card fade-up">
+          <div class="trust-item">
+            <span class="trust-icon trust-icon-blue"><i class="fa-solid fa-user-shield"></i></span>
+            <div>
+              <p class="trust-title">Verified Professionals</p>
+              <p class="trust-text">Background-checked &amp; licensed experts</p>
+            </div>
+          </div>
+          <div class="trust-item">
+            <span class="trust-icon trust-icon-amber"><i class="fa-solid fa-lock"></i></span>
+            <div>
+              <p class="trust-title">Secure Payments</p>
+              <p class="trust-text">Encrypted transactions, every time</p>
+            </div>
+          </div>
+          <div class="trust-item">
+            <span class="trust-icon trust-icon-green"><i class="fa-solid fa-headset"></i></span>
+            <div>
+              <p class="trust-title">24/7 Support</p>
+              <p class="trust-text">We're here whenever you need us</p>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+</main>
+
+<!-- ============================= -->
+<!-- BOOKING CONFIRMATION TOAST     -->
+<!-- ============================= -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+  <div id="bookingToast" class="oc-toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <span class="toast-icon"><i class="fa-solid fa-circle-check"></i></span>
+    <div class="toast-body-custom">
+      <p class="toast-title">Booking Requested!</p>
+      <p class="toast-text">We're finding the best provider for you.</p>
+    </div>
+    <button type="button" class="toast-close" id="toastClose" aria-label="Close">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+</div>
+
+<!-- ============================= -->
+<!-- FOOTER                        -->
+<!-- ============================= -->
+<footer class="oc-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="oc-brand" href="#">
+          <span class="brand-icon"><i class="fa-solid fa-bolt"></i></span>
+          <span>OneClick</span>
+        </a>
+        <p>Home services, one click away. Trusted professionals for every job, big or small.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h5>Company</h5>
+        <a href="#">About Us</a>
+        <a href="#">Careers</a>
+        <a href="#">Blog</a>
+        <a href="#">Contact</a>
+      </div>
+
+      <div class="footer-col">
+        <h5>Services</h5>
+        <a href="#">Electrician</a>
+        <a href="#">Plumber</a>
+        <a href="#">Cleaning</a>
+        <a href="#">All Services</a>
+      </div>
+
+      <div class="footer-col">
+        <h5>Support</h5>
+        <a href="#">Help Center</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Cancellation Policy</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 OneClick. All rights reserved.</p>
+      <div class="footer-bottom-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <span class="footer-version">v2.4.1</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Bootstrap Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom Script -->
+<script src="js/booking.js"></script>
+</body>
+</html>

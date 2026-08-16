@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Bookings | OneClick</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- Page CSS -->
+<link rel="stylesheet" href="css/booking-history.css">
+</head>
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar navbar-expand-lg navbar-light oneclick-navbar sticky-top">
+  <div class="container-fluid px-3 px-lg-4">
+    <button class="btn sidebar-toggle-btn d-lg-none" id="sidebarToggleBtn">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <a class="navbar-brand" href="index.html">
+      <i class="fa-solid fa-bolt"></i> OneClick
+    </a>
+    <div class="d-flex align-items-center gap-3 ms-auto">
+      <a href="#" class="nav-icon-btn"><i class="fa-regular fa-bell"></i></a>
+      <a href="customer-dashboard.html" class="btn btn-outline-primary rounded-pill px-3 d-none d-sm-inline-flex">
+        <i class="fa-regular fa-user"></i> My Account
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="app-layout">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="oneclick-sidebar" id="oneclickSidebar">
+    <div class="sidebar-heading">Quick Links</div>
+    <nav class="sidebar-nav">
+      <a href="customer-dashboard.html" class="sidebar-link">
+        <i class="fa-solid fa-gauge-high"></i> <span>Dashboard</span>
+      </a>
+      <a href="booking.html" class="sidebar-link">
+        <i class="fa-solid fa-calendar-plus"></i> <span>Book Service</span>
+      </a>
+      <a href="booking-history.html" class="sidebar-link active">
+        <i class="fa-solid fa-clock-rotate-left"></i> <span>My Bookings</span>
+      </a>
+      <a href="profile.html" class="sidebar-link">
+        <i class="fa-regular fa-user"></i> <span>Profile</span>
+      </a>
+      <a href="settings.html" class="sidebar-link">
+        <i class="fa-solid fa-gear"></i> <span>Settings</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="login.html" class="sidebar-link logout-link">
+        <i class="fa-solid fa-right-from-bracket"></i> <span>Logout</span>
+      </a>
+    </div>
+  </aside>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <main class="app-main">
+    <div class="container-fluid px-3 px-lg-4">
+
+      <!-- Page Header -->
+      <header class="page-header">
+        <h1>My Bookings</h1>
+        <p>View and manage all your service bookings.</p>
+      </header>
+
+      <!-- ================= SUMMARY CARDS ================= -->
+      <section class="summary-cards">
+        <div class="summary-card fade-in-up" style="--delay:0.05s">
+          <div class="summary-icon icon-blue"><i class="fa-solid fa-calendar-check"></i></div>
+          <div class="summary-info">
+            <span class="summary-label">Upcoming Bookings</span>
+            <h3 class="summary-value" data-count="4">0</h3>
+          </div>
+        </div>
+        <div class="summary-card fade-in-up" style="--delay:0.15s">
+          <div class="summary-icon icon-green"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="summary-info">
+            <span class="summary-label">Completed Jobs</span>
+            <h3 class="summary-value" data-count="18">0</h3>
+          </div>
+        </div>
+        <div class="summary-card fade-in-up" style="--delay:0.25s">
+          <div class="summary-icon icon-red"><i class="fa-solid fa-ban"></i></div>
+          <div class="summary-info">
+            <span class="summary-label">Cancelled</span>
+            <h3 class="summary-value" data-count="2">0</h3>
+          </div>
+        </div>
+        <div class="summary-card fade-in-up" style="--delay:0.35s">
+          <div class="summary-icon icon-orange"><i class="fa-solid fa-wallet"></i></div>
+          <div class="summary-info">
+            <span class="summary-label">Total Spent</span>
+            <h3 class="summary-value" data-count="24850" data-prefix="Rs. ">0</h3>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SEARCH & FILTER ================= -->
+      <section class="filter-bar glass-card">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" placeholder="Search by Booking ID, Provider, Service, or Location">
+        </div>
+        <div class="filter-selects">
+          <select class="form-select" id="statusFilter">
+            <option value="all">All Status</option>
+            <option value="upcoming">Upcoming</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <select class="form-select" id="dateFilter">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- ================= BOOKING CARDS GRID ================= -->
+      <section class="booking-grid" id="bookingGrid">
+        <!-- Cards injected by JS -->
+      </section>
+
+      <!-- ================= EMPTY STATE ================= -->
+      <section class="empty-state d-none" id="emptyState">
+        <div class="empty-illustration">
+          <i class="fa-solid fa-calendar-xmark"></i>
+        </div>
+        <h3>No bookings yet.</h3>
+        <p>Book your first service today.</p>
+        <a href="booking.html" class="btn btn-primary-gradient">
+          <i class="fa-solid fa-plus"></i> Book Service
+        </a>
+      </section>
+
+      <!-- ================= PAGINATION ================= -->
+      <nav class="booking-pagination" id="bookingPagination" aria-label="Booking pagination">
+        <ul class="pagination justify-content-center">
+          <li class="page-item disabled" id="prevPageBtn">
+            <a class="page-link" href="#"><i class="fa-solid fa-chevron-left"></i> Previous</a>
+          </li>
+          <li class="page-item active"><a class="page-link" href="#" data-page="1">1</a></li>
+          <li class="page-item"><a class="page-link" href="#" data-page="2">2</a></li>
+          <li class="page-item"><a class="page-link" href="#" data-page="3">3</a></li>
+          <li class="page-item" id="nextPageBtn">
+            <a class="page-link" href="#">Next <i class="fa-solid fa-chevron-right"></i></a>
+          </li>
+        </ul>
+      </nav>
+
+    </div>
+  </main>
+</div>
+
+<!-- ================= FLOATING ACTION BUTTON ================= -->
+<a href="booking.html" class="fab-btn" data-bs-toggle="tooltip" title="Book New Service">
+  <i class="fa-solid fa-plus"></i>
+</a>
+
+<!-- ================= BOOKING DETAILS MODAL ================= -->
+<div class="modal fade" id="bookingDetailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content details-modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-file-lines"></i> Booking Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <div class="modal-provider-row">
+          <img src="" alt="Provider" id="modalProviderImg" class="modal-provider-avatar">
+          <div>
+            <h4 id="modalProviderName">—</h4>
+            <p id="modalProviderProfession">—</p>
+          </div>
+          <span class="status-badge ms-auto" id="modalStatusBadge">—</span>
+        </div>
+
+        <div class="modal-details-grid">
+          <div class="modal-detail-item">
+            <span class="label"><i class="fa-solid fa-hashtag"></i> Booking ID</span>
+            <span class="value" id="modalBookingId">—</span>
+          </div>
+          <div class="modal-detail-item">
+            <span class="label"><i class="fa-solid fa-user"></i> Customer</span>
+            <span class="value" id="modalCustomer">—</span>
+          </div>
+          <div class="modal-detail-item">
+            <span class="label"><i class="fa-regular fa-calendar"></i> Date</span>
+            <span class="value" id="modalDate">—</span>
+          </div>
+          <div class="modal-detail-item">
+            <span class="label"><i class="fa-regular fa-clock"></i> Time</span>
+            <span class="value" id="modalTime">—</span>
+          </div>
+          <div class="modal-detail-item full-width">
+            <span class="label"><i class="fa-solid fa-location-dot"></i> Address</span>
+            <span class="value" id="modalAddress">—</span>
+          </div>
+          <div class="modal-detail-item">
+            <span class="label"><i class="fa-solid fa-credit-card"></i> Payment</span>
+            <span class="value" id="modalPayment">—</span>
+          </div>
+          <div class="modal-detail-item full-width">
+            <span class="label"><i class="fa-regular fa-note-sticky"></i> Notes</span>
+            <span class="value" id="modalNotes">—</span>
+          </div>
+        </div>
+
+        <hr class="modal-divider">
+
+        <h6 class="timeline-heading"><i class="fa-solid fa-timeline"></i> Status Timeline</h6>
+        <div class="status-timeline" id="statusTimeline">
+          <div class="timeline-step" data-step="0">
+            <span class="timeline-dot"><i class="fa-solid fa-check"></i></span>
+            <span class="timeline-label">Booking Requested</span>
+          </div>
+          <div class="timeline-step" data-step="1">
+            <span class="timeline-dot"><i class="fa-solid fa-check"></i></span>
+            <span class="timeline-label">Provider Accepted</span>
+          </div>
+          <div class="timeline-step" data-step="2">
+            <span class="timeline-dot"><i class="fa-solid fa-check"></i></span>
+            <span class="timeline-label">Provider On The Way</span>
+          </div>
+          <div class="timeline-step" data-step="3">
+            <span class="timeline-dot"><i class="fa-solid fa-check"></i></span>
+            <span class="timeline-label">Service Started</span>
+          </div>
+          <div class="timeline-step" data-step="4">
+            <span class="timeline-dot"><i class="fa-solid fa-check"></i></span>
+            <span class="timeline-label">Completed</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Page JS -->
+<script src="js/booking-history.js"></script>
+</body>
+</html>
