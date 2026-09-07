@@ -138,18 +138,57 @@
 
           <form id="customerForm" class="oc-register-form needs-validation" novalidate autocomplete="on">
 
-            <div class="row g-3">
-              <!-- Full Name -->
-              <div class="col-md-6">
-                <label for="custFullName" class="form-label">Full Name</label>
-                <div class="oc-input-group">
-                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
-                  <input type="text" class="form-control oc-form-control" id="custFullName" name="fullName"
-                         placeholder="e.g. Rozit Chhetri" autocomplete="name" required minlength="3"
-                         aria-describedby="custFullNameFeedback">
-                </div>
-                <div id="custFullNameFeedback" class="invalid-feedback">Please enter your full name (at least 3 characters).</div>
-              </div>
+          <!-- First Name -->
+<div class="col-md-6">
+  <label for="custFirstName" class="form-label">First Name</label>
+  <div class="oc-input-group">
+    <span class="oc-input-icon" aria-hidden="true">
+      <i class="fa-solid fa-user"></i>
+    </span>
+
+    <input
+      type="text"
+      class="form-control oc-form-control"
+      id="custFirstName"
+      name="first_name"
+      placeholder="e.g. Rozit"
+      autocomplete="given-name"
+      required
+      minlength="2"
+      aria-describedby="custFirstNameFeedback"
+    >
+  </div>
+
+  <div id="custFirstNameFeedback" class="invalid-feedback">
+    Please enter your first name.
+  </div>
+</div>
+
+<!-- Last Name -->
+<div class="col-md-6">
+  <label for="custLastName" class="form-label">Last Name</label>
+  <div class="oc-input-group">
+    <span class="oc-input-icon" aria-hidden="true">
+      <i class="fa-solid fa-user"></i>
+    </span>
+
+    <input
+      type="text"
+      class="form-control oc-form-control"
+      id="custLastName"
+      name="last_name"
+      placeholder="e.g. Chhetri"
+      autocomplete="family-name"
+      required
+      minlength="2"
+      aria-describedby="custLastNameFeedback"
+    >
+  </div>
+
+  <div id="custLastNameFeedback" class="invalid-feedback">
+    Please enter your last name.
+  </div>
+</div>
 
               <!-- Email -->
               <div class="col-md-6">

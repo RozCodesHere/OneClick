@@ -221,11 +221,20 @@
         <!-- Provider Profile -->
         <div class="topbar-dropdown profile-dropdown">
           <button class="profile-trigger" id="profileBtn">
-            <img src="https://i.pravatar.cc/44?img=68" alt="Ramesh Shrestha" class="profile-avatar">
+            <img
+    src="https://i.pravatar.cc/44?img=68"
+    alt="Provider"
+    class="profile-avatar"
+    id="dashboardProfileImage"
+>
             <span class="profile-meta">
-              <span class="profile-name">Ramesh Shrestha</span>
-              <span class="profile-role">Electrician · Verified <i class="fa-solid fa-circle-check verified-icon"></i></span>
-            </span>
+  <span class="profile-name" id="dashboardProviderName">Loading...</span>
+
+  <span class="profile-role" id="dashboardProviderRole">
+    Loading...
+    <i class="fa-solid fa-circle-check verified-icon"></i>
+  </span>
+</span>
             <i class="fa-solid fa-chevron-down profile-caret"></i>
           </button>
           <div class="dropdown-panel profile-panel" id="profilePanel">
@@ -250,7 +259,10 @@
         <!-- HEADER -->
         <section class="page-header fade-in" id="overview">
           <div>
-            <h1 class="greeting">Good Morning, Ramesh <span class="wave">👋</span></h1>
+            <h1 class="greeting">
+    Good Morning, <span id="dashboardGreetingName">Loading...</span>
+    <span class="wave">👋</span>
+</h1>
             <p class="greeting-sub">Manage your jobs and grow your business.</p>
           </div>
           <div class="header-actions d-none d-md-flex">

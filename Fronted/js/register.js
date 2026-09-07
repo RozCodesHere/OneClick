@@ -1,415 +1,1913 @@
 /* =========================================================
-   ONECLICK — REGISTER PAGE JAVASCRIPT (v2 — Role-Based Flow)
+   ONECLICK — REGISTER PAGE JAVASCRIPT
+   Role-Based Registration Flow
+
    Handles:
-     - AOS init + sticky navbar / back-to-top (shared page chrome)
-     - Step navigation: role selection -> customer/provider form -> back
-     - Show/hide password (both forms, both password fields each)
-     - File upload label updates (citizenship + profile photo)
-     - Full client-side validation for both forms:
-         required fields, email format, phone format,
-         password >= 8 chars, confirm-password match,
-         terms checkbox, provider-only fields (category,
-         experience, address, bio, file uploads)
-     - Bootstrap validation styling (is-valid / is-invalid / was-validated)
-     - Mock "Creating Account..." loading state -> success alert
-   No backend, no fetch — frontend validation only.
+     - AOS initialization
+     - Sticky navbar
+     - Back-to-top button
+     - Customer / Provider role selection
+     - Password show/hide
+     - File upload labels
+     - Client-side validation
+     - Customer registration through Django API
+     - Provider form validation
+     - Bootstrap validation styling
+
+   Backend:
+     Customer registration:
+     POST http://127.0.0.1:8000/api/users/register/
+
 ========================================================= */
 
 document.addEventListener('DOMContentLoaded', function () {
 
-  /* ---------- Init AOS ---------- */
+
+  /* =========================================================
+     INIT AOS
+  ========================================================= */
+
   if (window.AOS) {
+
     AOS.init({
       duration: 650,
       easing: 'ease-out-cubic',
       once: true,
       offset: 40
     });
+
   }
 
-  /* ---------- Footer Year ---------- */
+
+  /* =========================================================
+     FOOTER YEAR
+  ========================================================= */
+
   var yearEl = document.getElementById('year');
+
   if (yearEl) {
     yearEl.textContent = new Date().getFullYear();
   }
 
-  /* ---------- Sticky Navbar Shadow on Scroll (matches landing page) ---------- */
-  var navbar = document.getElementById('mainNavbar');
-  function handleNavbarScroll() {
-    if (window.scrollY > 40) {
-      navbar.classList.add('oc-scrolled');
-    } else {
-      navbar.classList.remove('oc-scrolled');
-    }
-  }
-  if (navbar) {
-    handleNavbarScroll();
-    window.addEventListener('scroll', handleNavbarScroll);
-  }
-
-  /* ---------- Auto-close Mobile Menu on Link Click ---------- */
-  var navMenu = document.getElementById('navMenu');
-  var navLinks = navMenu ? navMenu.querySelectorAll('.nav-link, .oc-nav-actions .btn') : [];
-  navLinks.forEach(function (link) {
-    link.addEventListener('click', function () {
-      if (navMenu.classList.contains('show') && window.bootstrap) {
-        var bsCollapse = bootstrap.Collapse.getOrCreateInstance(navMenu);
-        bsCollapse.hide();
-      }
-    });
-  });
-
-  /* ---------- Back to Top Button ---------- */
-  var backToTop = document.getElementById('backToTop');
-  if (backToTop) {
-    window.addEventListener('scroll', function () {
-      backToTop.classList.toggle('oc-visible', window.scrollY > 500);
-    });
-    backToTop.addEventListener('click', function () {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  }
 
   /* =========================================================
-     STEP NAVIGATION — Role Selection <-> Forms
+     STICKY NAVBAR SHADOW ON SCROLL
   ========================================================= */
-  var roleSelect = document.getElementById('roleSelect');
-  var customerSection = document.getElementById('customerFormSection');
-  var providerSection = document.getElementById('providerFormSection');
 
-  var allPanels = [roleSelect, customerSection, providerSection];
+  var navbar = document.getElementById('mainNavbar');
+
+  function handleNavbarScroll() {
+
+    if (!navbar) {
+      return;
+    }
+
+    if (window.scrollY > 40) {
+
+      navbar.classList.add('oc-scrolled');
+
+    } else {
+
+      navbar.classList.remove('oc-scrolled');
+
+    }
+
+  }
+
+  if (navbar) {
+
+    handleNavbarScroll();
+
+    window.addEventListener(
+      'scroll',
+      handleNavbarScroll
+    );
+
+  }
+
+
+  /* =========================================================
+     AUTO-CLOSE MOBILE MENU
+  ========================================================= */
+
+  var navMenu = document.getElementById('navMenu');
+
+  var navLinks = navMenu
+    ? navMenu.querySelectorAll(
+        '.nav-link, .oc-nav-actions .btn'
+      )
+    : [];
+
+  navLinks.forEach(function (link) {
+
+    link.addEventListener('click', function () {
+
+      if (
+        navMenu.classList.contains('show') &&
+        window.bootstrap
+      ) {
+
+        var bsCollapse =
+          bootstrap.Collapse.getOrCreateInstance(
+            navMenu
+          );
+
+        bsCollapse.hide();
+
+      }
+
+    });
+
+  });
+
+
+  /* =========================================================
+     BACK TO TOP BUTTON
+  ========================================================= */
+
+  var backToTop =
+    document.getElementById('backToTop');
+
+  if (backToTop) {
+
+    window.addEventListener(
+      'scroll',
+      function () {
+
+        backToTop.classList.toggle(
+          'oc-visible',
+          window.scrollY > 500
+        );
+
+      }
+    );
+
+    backToTop.addEventListener(
+      'click',
+      function () {
+
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+
+      }
+    );
+
+  }
+
+
+  /* =========================================================
+     STEP NAVIGATION
+     
+     Role Selection
+          ↓
+     Customer Form
+          OR
+     Provider Form
+  ========================================================= */
+
+  var roleSelect =
+    document.getElementById('roleSelect');
+
+  var customerSection =
+    document.getElementById(
+      'customerFormSection'
+    );
+
+  var providerSection =
+    document.getElementById(
+      'providerFormSection'
+    );
+
+  var allPanels = [
+    roleSelect,
+    customerSection,
+    providerSection
+  ];
+
 
   function showPanel(panelToShow) {
+
     allPanels.forEach(function (panel) {
-      if (!panel) return;
-      panel.classList.toggle('d-none', panel !== panelToShow);
+
+      if (!panel) {
+        return;
+      }
+
+      panel.classList.toggle(
+        'd-none',
+        panel !== panelToShow
+      );
+
     });
-    // Scroll to the top of the form area for a clean transition on mobile.
-    window.scrollTo({ top: panelToShow.offsetTop - 100, behavior: 'smooth' });
+
+
+    /* Scroll to form area */
+
+    if (panelToShow) {
+
+      window.scrollTo({
+        top: panelToShow.offsetTop - 100,
+        behavior: 'smooth'
+      });
+
+    }
+
+
+    /* Refresh AOS */
+
     if (window.AOS) {
       window.AOS.refreshHard();
     }
+
   }
 
-  var chooseCustomerBtn = document.getElementById('chooseCustomerBtn');
-  var chooseProviderBtn = document.getElementById('chooseProviderBtn');
+
+  /* =========================================================
+     CUSTOMER ROLE BUTTON
+  ========================================================= */
+
+  var chooseCustomerBtn =
+    document.getElementById(
+      'chooseCustomerBtn'
+    );
 
   if (chooseCustomerBtn) {
-    chooseCustomerBtn.addEventListener('click', function () {
-      showPanel(customerSection);
-    });
+
+    chooseCustomerBtn.addEventListener(
+      'click',
+      function () {
+
+        showPanel(customerSection);
+
+      }
+    );
+
   }
+
+
+  /* =========================================================
+     PROVIDER ROLE BUTTON
+  ========================================================= */
+
+  var chooseProviderBtn =
+    document.getElementById(
+      'chooseProviderBtn'
+    );
+
   if (chooseProviderBtn) {
-    chooseProviderBtn.addEventListener('click', function () {
-      showPanel(providerSection);
-    });
+
+    chooseProviderBtn.addEventListener(
+      'click',
+      function () {
+
+        showPanel(providerSection);
+
+      }
+    );
+
   }
 
-  document.querySelectorAll('.oc-back-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      showPanel(roleSelect);
-    });
-  });
 
   /* =========================================================
-     SHOW / HIDE PASSWORD (applies to every toggle on the page)
+     BACK BUTTONS
   ========================================================= */
-  document.querySelectorAll('.oc-password-toggle').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var targetId = btn.getAttribute('data-target');
-      var input = document.getElementById(targetId);
-      var icon = btn.querySelector('i');
-      var isHidden = input.type === 'password';
 
-      input.type = isHidden ? 'text' : 'password';
-      icon.classList.toggle('fa-eye', !isHidden);
-      icon.classList.toggle('fa-eye-slash', isHidden);
+  document
+    .querySelectorAll('.oc-back-btn')
+    .forEach(function (btn) {
 
-      btn.setAttribute('aria-pressed', String(isHidden));
-      btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+      btn.addEventListener(
+        'click',
+        function () {
+
+          showPanel(roleSelect);
+
+        }
+      );
+
     });
-  });
+
 
   /* =========================================================
-     FILE UPLOAD — reflect the chosen filename on the visible label
+     SHOW / HIDE PASSWORD
   ========================================================= */
-  function wireFileUpload(inputId, labelId, defaultText) {
-    var input = document.getElementById(inputId);
-    var label = document.getElementById(labelId);
-    if (!input || !label) return;
 
-    input.addEventListener('change', function () {
-      var span = label.querySelector('span');
-      if (input.files && input.files.length > 0) {
-        span.textContent = input.files[0].name;
-        label.classList.add('oc-file-selected');
-      } else {
-        span.textContent = defaultText;
-        label.classList.remove('oc-file-selected');
-      }
-      if (input.classList.contains('is-invalid') || input.classList.contains('is-valid')) {
-        validateFileInput(input);
-      }
+  document
+    .querySelectorAll('.oc-password-toggle')
+    .forEach(function (btn) {
+
+      btn.addEventListener(
+        'click',
+        function () {
+
+          var targetId =
+            btn.getAttribute('data-target');
+
+          var input =
+            document.getElementById(targetId);
+
+          var icon =
+            btn.querySelector('i');
+
+
+          if (!input || !icon) {
+            return;
+          }
+
+
+          var isHidden =
+            input.type === 'password';
+
+
+          input.type =
+            isHidden
+              ? 'text'
+              : 'password';
+
+
+          icon.classList.toggle(
+            'fa-eye',
+            !isHidden
+          );
+
+          icon.classList.toggle(
+            'fa-eye-slash',
+            isHidden
+          );
+
+
+          btn.setAttribute(
+            'aria-pressed',
+            String(isHidden)
+          );
+
+
+          btn.setAttribute(
+            'aria-label',
+            isHidden
+              ? 'Hide password'
+              : 'Show password'
+          );
+
+        }
+      );
+
     });
+
+
+  /* =========================================================
+     FILE UPLOAD
+  ========================================================= */
+
+  function wireFileUpload(
+    inputId,
+    labelId,
+    defaultText
+  ) {
+
+    var input =
+      document.getElementById(inputId);
+
+    var label =
+      document.getElementById(labelId);
+
+
+    if (!input || !label) {
+      return;
+    }
+
+
+    input.addEventListener(
+      'change',
+      function () {
+
+        var span =
+          label.querySelector('span');
+
+
+        if (
+          input.files &&
+          input.files.length > 0
+        ) {
+
+          span.textContent =
+            input.files[0].name;
+
+          label.classList.add(
+            'oc-file-selected'
+          );
+
+        } else {
+
+          span.textContent =
+            defaultText;
+
+          label.classList.remove(
+            'oc-file-selected'
+          );
+
+        }
+
+
+        if (
+          input.classList.contains(
+            'is-invalid'
+          ) ||
+          input.classList.contains(
+            'is-valid'
+          )
+        ) {
+
+          validateFileInput(input);
+
+        }
+
+      }
+    );
+
   }
 
-  wireFileUpload('provCitizenship', 'provCitizenshipLabel', 'Choose file — JPG, PNG or PDF');
-  wireFileUpload('provPhoto', 'provPhotoLabel', 'Choose file — JPG or PNG');
+
+  wireFileUpload(
+    'provCitizenship',
+    'provCitizenshipLabel',
+    'Choose file — JPG, PNG or PDF'
+  );
+
+
+  wireFileUpload(
+    'provPhoto',
+    'provPhotoLabel',
+    'Choose file — JPG or PNG'
+  );
+
 
   /* =========================================================
-     SHARED VALIDATION HELPERS
+     VALIDATION HELPERS
   ========================================================= */
+
+
+  /* ---------- Email ---------- */
 
   function isValidEmail(value) {
-    var pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return pattern.test(value.trim());
+
+    var pattern =
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    return pattern.test(
+      value.trim()
+    );
+
   }
+
+
+  /* ---------- Phone ---------- */
 
   function isValidPhone(value) {
-    // Accepts a 10-digit local number (common for Nepali mobile numbers),
-    // optionally prefixed with +977 and/or spaces/dashes.
-    var cleaned = value.trim().replace(/[\s-]/g, '');
-    var pattern = /^(?:\+977)?[9][6-9]\d{8}$|^\d{10}$/;
+
+    var cleaned =
+      value
+        .trim()
+        .replace(/[\s-]/g, '');
+
+
+    /*
+      Accept:
+        9812345678
+        +9779812345678
+    */
+
+    var pattern =
+      /^(?:\+977)?[9][6-9]\d{8}$/;
+
+
     return pattern.test(cleaned);
+
   }
 
-  function setFieldValidity(input, valid) {
-    input.classList.toggle('is-valid', valid);
-    input.classList.toggle('is-invalid', !valid);
+
+  /* ---------- Field validity ---------- */
+
+  function setFieldValidity(
+    input,
+    valid
+  ) {
+
+    if (!input) {
+      return;
+    }
+
+    input.classList.toggle(
+      'is-valid',
+      valid
+    );
+
+    input.classList.toggle(
+      'is-invalid',
+      !valid
+    );
+
   }
 
-  function validateRequiredText(input, minLength) {
-    var valid = input.value.trim().length >= (minLength || 1);
-    setFieldValidity(input, valid);
+
+  /* ---------- Required text ---------- */
+
+  function validateRequiredText(
+    input,
+    minLength
+  ) {
+
+    if (!input) {
+      return false;
+    }
+
+    var valid =
+      input.value.trim().length >=
+      (minLength || 1);
+
+
+    setFieldValidity(
+      input,
+      valid
+    );
+
+
     return valid;
+
   }
+
+
+  /* ---------- Email validation ---------- */
 
   function validateEmailField(input) {
-    var valid = isValidEmail(input.value);
-    setFieldValidity(input, valid);
+
+    if (!input) {
+      return false;
+    }
+
+    var valid =
+      isValidEmail(input.value);
+
+
+    setFieldValidity(
+      input,
+      valid
+    );
+
+
     return valid;
+
   }
+
+
+  /* ---------- Phone validation ---------- */
 
   function validatePhoneField(input) {
-    var valid = isValidPhone(input.value);
-    setFieldValidity(input, valid);
+
+    if (!input) {
+      return false;
+    }
+
+    var valid =
+      isValidPhone(input.value);
+
+
+    setFieldValidity(
+      input,
+      valid
+    );
+
+
     return valid;
+
   }
+
+
+  /* ---------- Password validation ---------- */
 
   function validatePasswordField(input) {
-    var valid = input.value.length >= 8;
-    setFieldValidity(input, valid);
+
+    if (!input) {
+      return false;
+    }
+
+    var valid =
+      input.value.length >= 8;
+
+
+    setFieldValidity(
+      input,
+      valid
+    );
+
+
     return valid;
+
   }
 
-  function validateConfirmField(passwordInput, confirmInput) {
-    var valid = confirmInput.value.length > 0 && confirmInput.value === passwordInput.value;
-    setFieldValidity(confirmInput, valid);
+
+  /* ---------- Confirm password ---------- */
+
+  function validateConfirmField(
+    passwordInput,
+    confirmInput
+  ) {
+
+    if (
+      !passwordInput ||
+      !confirmInput
+    ) {
+
+      return false;
+
+    }
+
+
+    var valid =
+      confirmInput.value.length > 0 &&
+      confirmInput.value ===
+      passwordInput.value;
+
+
+    setFieldValidity(
+      confirmInput,
+      valid
+    );
+
+
     return valid;
+
   }
+
+
+  /* ---------- Select ---------- */
 
   function validateSelectField(select) {
-    var valid = select.value !== '';
-    setFieldValidity(select, valid);
+
+    if (!select) {
+      return false;
+    }
+
+    var valid =
+      select.value !== '';
+
+
+    setFieldValidity(
+      select,
+      valid
+    );
+
+
     return valid;
+
   }
 
-  function validateNumberField(input, min, max) {
-    var value = input.value.trim();
-    var num = Number(value);
-    var valid = value !== '' && !isNaN(num) && num >= min && num <= max;
-    setFieldValidity(input, valid);
+
+  /* ---------- Number ---------- */
+
+  function validateNumberField(
+    input,
+    min,
+    max
+  ) {
+
+    if (!input) {
+      return false;
+    }
+
+
+    var value =
+      input.value.trim();
+
+
+    var num =
+      Number(value);
+
+
+    var valid =
+      value !== '' &&
+      !isNaN(num) &&
+      num >= min &&
+      num <= max;
+
+
+    setFieldValidity(
+      input,
+      valid
+    );
+
+
     return valid;
+
   }
+
+
+  /* ---------- File ---------- */
 
   function validateFileInput(input) {
-    var valid = input.files && input.files.length > 0;
-    input.classList.toggle('is-valid', valid);
-    input.classList.toggle('is-invalid', !valid);
-    var feedback = document.getElementById(input.getAttribute('aria-describedby'));
-    if (feedback) {
-      feedback.classList.toggle('d-block', !valid);
+
+    if (!input) {
+      return false;
     }
+
+
+    var valid =
+      input.files &&
+      input.files.length > 0;
+
+
+    input.classList.toggle(
+      'is-valid',
+      valid
+    );
+
+    input.classList.toggle(
+      'is-invalid',
+      !valid
+    );
+
+
+    var feedback =
+      document.getElementById(
+        input.getAttribute(
+          'aria-describedby'
+        )
+      );
+
+
+    if (feedback) {
+
+      feedback.classList.toggle(
+        'd-block',
+        !valid
+      );
+
+    }
+
+
     return valid;
+
   }
+
+
+  /* ---------- Checkbox ---------- */
 
   function validateCheckbox(input) {
-    var valid = input.checked;
-    setFieldValidity(input, valid);
+
+    if (!input) {
+      return false;
+    }
+
+
+    var valid =
+      input.checked;
+
+
+    setFieldValidity(
+      input,
+      valid
+    );
+
+
     return valid;
+
   }
 
-  /* Wires "live" re-validation: once a field has been touched (shows a
-     valid/invalid state), keep re-checking it as the user types/blurs. */
-  function wireLiveValidation(input, validateFn) {
-    input.addEventListener('input', function () {
-      if (input.classList.contains('is-invalid') || input.classList.contains('is-valid')) {
-        validateFn();
+
+  /* =========================================================
+     LIVE VALIDATION
+  ========================================================= */
+
+  function wireLiveValidation(
+    input,
+    validateFn
+  ) {
+
+    if (!input) {
+      return;
+    }
+
+
+    input.addEventListener(
+      'input',
+      function () {
+
+        if (
+          input.classList.contains(
+            'is-invalid'
+          ) ||
+          input.classList.contains(
+            'is-valid'
+          )
+        ) {
+
+          validateFn();
+
+        }
+
       }
-    });
-    input.addEventListener('blur', validateFn);
+    );
+
+
+    input.addEventListener(
+      'blur',
+      validateFn
+    );
+
   }
+
+
+  /* =========================================================
+     SUBMIT BUTTON LOADING
+  ========================================================= */
+
+  function setSubmitLoading(
+    form,
+    isLoading,
+    loadingText,
+    idleText
+  ) {
+
+    if (!form) {
+      return;
+    }
+
+
+    var btn =
+      form.querySelector(
+        '.oc-form-submit'
+      );
+
+
+    if (!btn) {
+      return;
+    }
+
+
+    var btnText =
+      btn.querySelector(
+        '.oc-btn-text'
+      );
+
+
+    var btnSpinner =
+      btn.querySelector(
+        '.oc-btn-spinner'
+      );
+
+
+    btn.disabled =
+      isLoading;
+
+
+    if (btnText) {
+
+      btnText.textContent =
+        isLoading
+          ? loadingText
+          : idleText;
+
+    }
+
+
+    if (btnSpinner) {
+
+      btnSpinner.classList.toggle(
+        'd-none',
+        !isLoading
+      );
+
+    }
+
+  }
+
 
   /* =========================================================
      CUSTOMER FORM
   ========================================================= */
-  var customerForm = document.getElementById('customerForm');
-  var custFullName = document.getElementById('custFullName');
-  var custEmail = document.getElementById('custEmail');
-  var custPhone = document.getElementById('custPhone');
-  var custPassword = document.getElementById('custPassword');
-  var custConfirmPassword = document.getElementById('custConfirmPassword');
-  var custAgreeTerms = document.getElementById('custAgreeTerms');
-  var customerSuccessAlert = document.getElementById('customerSuccessAlert');
 
-  wireLiveValidation(custFullName, function () { return validateRequiredText(custFullName, 3); });
-  wireLiveValidation(custEmail, function () { return validateEmailField(custEmail); });
-  wireLiveValidation(custPhone, function () { return validatePhoneField(custPhone); });
-  wireLiveValidation(custPassword, function () {
-    var valid = validatePasswordField(custPassword);
-    if (custConfirmPassword.value.length > 0) {
-      validateConfirmField(custPassword, custConfirmPassword);
+  var customerForm =
+    document.getElementById(
+      'customerForm'
+    );
+
+
+  var custFirstName =
+    document.getElementById(
+      'custFirstName'
+    );
+
+
+  var custLastName =
+    document.getElementById(
+      'custLastName'
+    );
+
+
+  var custEmail =
+    document.getElementById(
+      'custEmail'
+    );
+
+
+  var custPhone =
+    document.getElementById(
+      'custPhone'
+    );
+
+
+  var custPassword =
+    document.getElementById(
+      'custPassword'
+    );
+
+
+  var custConfirmPassword =
+    document.getElementById(
+      'custConfirmPassword'
+    );
+
+
+  var custAgreeTerms =
+    document.getElementById(
+      'custAgreeTerms'
+    );
+
+
+  var customerSuccessAlert =
+    document.getElementById(
+      'customerSuccessAlert'
+    );
+
+
+  /* =========================================================
+     CUSTOMER LIVE VALIDATION
+  ========================================================= */
+
+  wireLiveValidation(
+    custFirstName,
+    function () {
+
+      return validateRequiredText(
+        custFirstName,
+        2
+      );
+
     }
-    return valid;
-  });
-  wireLiveValidation(custConfirmPassword, function () { return validateConfirmField(custPassword, custConfirmPassword); });
-  custAgreeTerms.addEventListener('change', function () { validateCheckbox(custAgreeTerms); });
+  );
 
-  function setSubmitLoading(form, isLoading, loadingText, idleText) {
-    var btn = form.querySelector('.oc-form-submit');
-    var btnText = btn.querySelector('.oc-btn-text');
-    var btnSpinner = btn.querySelector('.oc-btn-spinner');
-    btn.disabled = isLoading;
-    btnText.textContent = isLoading ? loadingText : idleText;
-    btnSpinner.classList.toggle('d-none', !isLoading);
+
+  wireLiveValidation(
+    custLastName,
+    function () {
+
+      return validateRequiredText(
+        custLastName,
+        2
+      );
+
+    }
+  );
+
+
+  wireLiveValidation(
+    custEmail,
+    function () {
+
+      return validateEmailField(
+        custEmail
+      );
+
+    }
+  );
+
+
+  wireLiveValidation(
+    custPhone,
+    function () {
+
+      return validatePhoneField(
+        custPhone
+      );
+
+    }
+  );
+
+
+  wireLiveValidation(
+    custPassword,
+    function () {
+
+      var valid =
+        validatePasswordField(
+          custPassword
+        );
+
+
+      if (
+        custConfirmPassword &&
+        custConfirmPassword.value.length > 0
+      ) {
+
+        validateConfirmField(
+          custPassword,
+          custConfirmPassword
+        );
+
+      }
+
+
+      return valid;
+
+    }
+  );
+
+
+  wireLiveValidation(
+    custConfirmPassword,
+    function () {
+
+      return validateConfirmField(
+        custPassword,
+        custConfirmPassword
+      );
+
+    }
+  );
+
+
+  if (custAgreeTerms) {
+
+    custAgreeTerms.addEventListener(
+      'change',
+      function () {
+
+        validateCheckbox(
+          custAgreeTerms
+        );
+
+      }
+    );
+
   }
 
-  customerForm.addEventListener('submit', function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-    customerSuccessAlert.classList.add('d-none');
 
-    var nameValid = validateRequiredText(custFullName, 3);
-    var emailValid = validateEmailField(custEmail);
-    var phoneValid = validatePhoneField(custPhone);
-    var passwordValid = validatePasswordField(custPassword);
-    var confirmValid = validateConfirmField(custPassword, custConfirmPassword);
-    var termsValid = validateCheckbox(custAgreeTerms);
+  /* =========================================================
+     CUSTOMER FORM SUBMIT
+     
+     This sends the registration data
+     to Django REST Framework.
+  ========================================================= */
 
-    customerForm.classList.add('was-validated');
+  if (customerForm) {
 
-    var allValid = nameValid && emailValid && phoneValid && passwordValid && confirmValid && termsValid;
+    customerForm.addEventListener(
+      'submit',
+      function (event) {
 
-    if (!allValid) {
-      var firstInvalid = customerForm.querySelector('.is-invalid');
-      if (firstInvalid) firstInvalid.focus();
-      return;
+        event.preventDefault();
+
+        event.stopPropagation();
+
+
+        /* Hide previous success message */
+
+        if (customerSuccessAlert) {
+
+          customerSuccessAlert.classList.add(
+            'd-none'
+          );
+
+        }
+
+
+        /* ---------- Validate fields ---------- */
+
+        var firstNameValid =
+          validateRequiredText(
+            custFirstName,
+            2
+          );
+
+
+        var lastNameValid =
+          validateRequiredText(
+            custLastName,
+            2
+          );
+
+
+        var emailValid =
+          validateEmailField(
+            custEmail
+          );
+
+
+        var phoneValid =
+          validatePhoneField(
+            custPhone
+          );
+
+
+        var passwordValid =
+          validatePasswordField(
+            custPassword
+          );
+
+
+        var confirmValid =
+          validateConfirmField(
+            custPassword,
+            custConfirmPassword
+          );
+
+
+        var termsValid =
+          validateCheckbox(
+            custAgreeTerms
+          );
+
+
+        customerForm.classList.add(
+          'was-validated'
+        );
+
+
+        /* ---------- Check all fields ---------- */
+
+        var allValid =
+          firstNameValid &&
+          lastNameValid &&
+          emailValid &&
+          phoneValid &&
+          passwordValid &&
+          confirmValid &&
+          termsValid;
+
+
+        if (!allValid) {
+
+          var firstInvalid =
+            customerForm.querySelector(
+              '.is-invalid'
+            );
+
+
+          if (firstInvalid) {
+
+            firstInvalid.focus();
+
+          }
+
+
+          return;
+
+        }
+
+
+        /* =====================================================
+           REAL DJANGO REGISTRATION
+        ===================================================== */
+
+        setSubmitLoading(
+          customerForm,
+          true,
+          'Creating Account...',
+          'Create Customer Account'
+        );
+
+
+        fetch(
+          'http://127.0.0.1:8000/api/users/register/',
+          {
+
+            method: 'POST',
+
+            headers: {
+
+              'Content-Type':
+                'application/json'
+
+            },
+
+          body: JSON.stringify({
+
+  first_name:
+    custFirstName.value.trim(),
+
+  last_name:
+    custLastName.value.trim(),
+
+  email:
+    custEmail.value.trim(),
+
+  phone:
+    custPhone.value.trim(),
+
+  password:
+    custPassword.value
+
+})
+
+          }
+        )
+
+
+        /* =====================================================
+           HANDLE DJANGO RESPONSE
+        ===================================================== */
+
+        .then(
+  async function (response) {
+
+    // Read the response as plain text first
+    var responseText = await response.text();
+
+    console.log("Django status:", response.status);
+    console.log("Django response:", responseText);
+
+    // Try to convert response into JSON
+    var data;
+
+    try {
+      data = JSON.parse(responseText);
+    } catch (error) {
+      throw new Error(
+        "Django returned something that is not JSON. Check the browser console."
+      );
     }
 
-    // ---- Mock registration flow (no backend wired up yet) ----
-    setSubmitLoading(customerForm, true, 'Creating Account...', 'Create Customer Account');
+    // Handle Django validation errors
+    if (!response.ok) {
+      throw new Error(
+        data.email?.[0] ||
+        data.password?.[0] ||
+        data.first_name?.[0] ||
+        data.last_name?.[0] ||
+        data.phone?.[0] ||
+        data.detail ||
+        "Registration failed."
+      );
+    }
 
-    window.setTimeout(function () {
-      setSubmitLoading(customerForm, false, 'Creating Account...', 'Create Customer Account');
-      customerSuccessAlert.classList.remove('d-none');
-      customerSuccessAlert.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return data;
+  }
+)
 
-      customerForm.reset();
-      customerForm.classList.remove('was-validated');
-      [custFullName, custEmail, custPhone, custPassword, custConfirmPassword].forEach(function (input) {
-        input.classList.remove('is-valid', 'is-invalid');
-      });
-      custAgreeTerms.classList.remove('is-valid', 'is-invalid');
-    }, 1500);
-  });
+
+        /* =====================================================
+           REGISTRATION SUCCESS
+        ===================================================== */
+
+        .then(
+          function (data) {
+
+            console.log(
+              'Registration successful:',
+              data
+            );
+
+
+            setSubmitLoading(
+              customerForm,
+              false,
+              'Creating Account...',
+              'Create Customer Account'
+            );
+
+
+            /* Show success message */
+
+            if (customerSuccessAlert) {
+
+              customerSuccessAlert.classList.remove(
+                'd-none'
+              );
+
+
+              customerSuccessAlert.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+
+            }
+
+
+            /* Reset form */
+
+            customerForm.reset();
+
+
+            customerForm.classList.remove(
+              'was-validated'
+            );
+
+
+            /* Remove validation styling */
+
+            [
+              custFirstName,
+              custLastName,
+              custEmail,
+              custPhone,
+              custPassword,
+              custConfirmPassword
+            ].forEach(
+              function (input) {
+
+                if (input) {
+
+                  input.classList.remove(
+                    'is-valid',
+                    'is-invalid'
+                  );
+
+                }
+
+              }
+            );
+
+
+            if (custAgreeTerms) {
+
+              custAgreeTerms.classList.remove(
+                'is-valid',
+                'is-invalid'
+              );
+
+            }
+
+          }
+        )
+
+
+        /* =====================================================
+           REGISTRATION ERROR
+        ===================================================== */
+
+        .catch(
+          function (error) {
+
+            console.error(
+              'Registration error:',
+              error
+            );
+
+
+            setSubmitLoading(
+              customerForm,
+              false,
+              'Creating Account...',
+              'Create Customer Account'
+            );
+
+
+            alert(
+              error.message ||
+              'Something went wrong during registration.'
+            );
+
+          }
+        );
+
+      }
+    );
+
+  }
+
 
   /* =========================================================
      PROVIDER FORM
+     
+     Provider backend integration will be connected later.
   ========================================================= */
-  var providerForm = document.getElementById('providerForm');
-  var provFullName = document.getElementById('provFullName');
-  var provEmail = document.getElementById('provEmail');
-  var provPhone = document.getElementById('provPhone');
-  var provCategory = document.getElementById('provCategory');
-  var provPassword = document.getElementById('provPassword');
-  var provConfirmPassword = document.getElementById('provConfirmPassword');
-  var provExperience = document.getElementById('provExperience');
-  var provAddress = document.getElementById('provAddress');
-  var provBio = document.getElementById('provBio');
-  var provCitizenship = document.getElementById('provCitizenship');
-  var provPhoto = document.getElementById('provPhoto');
-  var provAgreeTerms = document.getElementById('provAgreeTerms');
-  var providerSuccessAlert = document.getElementById('providerSuccessAlert');
 
-  wireLiveValidation(provFullName, function () { return validateRequiredText(provFullName, 3); });
-  wireLiveValidation(provEmail, function () { return validateEmailField(provEmail); });
-  wireLiveValidation(provPhone, function () { return validatePhoneField(provPhone); });
-  provCategory.addEventListener('change', function () { validateSelectField(provCategory); });
-  wireLiveValidation(provPassword, function () {
-    var valid = validatePasswordField(provPassword);
-    if (provConfirmPassword.value.length > 0) {
-      validateConfirmField(provPassword, provConfirmPassword);
+  var providerForm =
+    document.getElementById(
+      'providerForm'
+    );
+
+
+  var provFullName =
+    document.getElementById(
+      'provFullName'
+    );
+
+
+  var provEmail =
+    document.getElementById(
+      'provEmail'
+    );
+
+
+  var provPhone =
+    document.getElementById(
+      'provPhone'
+    );
+
+
+  var provCategory =
+    document.getElementById(
+      'provCategory'
+    );
+
+
+  var provPassword =
+    document.getElementById(
+      'provPassword'
+    );
+
+
+  var provConfirmPassword =
+    document.getElementById(
+      'provConfirmPassword'
+    );
+
+
+  var provExperience =
+    document.getElementById(
+      'provExperience'
+    );
+
+
+  var provAddress =
+    document.getElementById(
+      'provAddress'
+    );
+
+
+  var provBio =
+    document.getElementById(
+      'provBio'
+    );
+
+
+  var provCitizenship =
+    document.getElementById(
+      'provCitizenship'
+    );
+
+
+  var provPhoto =
+    document.getElementById(
+      'provPhoto'
+    );
+
+
+  var provAgreeTerms =
+    document.getElementById(
+      'provAgreeTerms'
+    );
+
+
+  var providerSuccessAlert =
+    document.getElementById(
+      'providerSuccessAlert'
+    );
+
+
+  /* =========================================================
+     PROVIDER LIVE VALIDATION
+  ========================================================= */
+
+  wireLiveValidation(
+    provFullName,
+    function () {
+
+      return validateRequiredText(
+        provFullName,
+        3
+      );
+
     }
-    return valid;
-  });
-  wireLiveValidation(provConfirmPassword, function () { return validateConfirmField(provPassword, provConfirmPassword); });
-  wireLiveValidation(provExperience, function () { return validateNumberField(provExperience, 0, 60); });
-  wireLiveValidation(provAddress, function () { return validateRequiredText(provAddress, 5); });
-  wireLiveValidation(provBio, function () { return validateRequiredText(provBio, 20); });
-  provAgreeTerms.addEventListener('change', function () { validateCheckbox(provAgreeTerms); });
+  );
 
-  providerForm.addEventListener('submit', function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-    providerSuccessAlert.classList.add('d-none');
 
-    var nameValid = validateRequiredText(provFullName, 3);
-    var emailValid = validateEmailField(provEmail);
-    var phoneValid = validatePhoneField(provPhone);
-    var categoryValid = validateSelectField(provCategory);
-    var passwordValid = validatePasswordField(provPassword);
-    var confirmValid = validateConfirmField(provPassword, provConfirmPassword);
-    var experienceValid = validateNumberField(provExperience, 0, 60);
-    var addressValid = validateRequiredText(provAddress, 5);
-    var bioValid = validateRequiredText(provBio, 20);
-    var citizenshipValid = validateFileInput(provCitizenship);
-    var photoValid = validateFileInput(provPhoto);
-    var termsValid = validateCheckbox(provAgreeTerms);
+  wireLiveValidation(
+    provEmail,
+    function () {
 
-    providerForm.classList.add('was-validated');
+      return validateEmailField(
+        provEmail
+      );
 
-    var allValid = nameValid && emailValid && phoneValid && categoryValid && passwordValid &&
-      confirmValid && experienceValid && addressValid && bioValid && citizenshipValid &&
-      photoValid && termsValid;
-
-    if (!allValid) {
-      var firstInvalid = providerForm.querySelector('.is-invalid');
-      if (firstInvalid) firstInvalid.focus();
-      return;
     }
+  );
 
-    // ---- Mock application flow (no backend wired up yet) ----
-    setSubmitLoading(providerForm, true, 'Creating Account...', 'Apply as Provider');
 
-    window.setTimeout(function () {
-      setSubmitLoading(providerForm, false, 'Creating Account...', 'Apply as Provider');
-      providerSuccessAlert.classList.remove('d-none');
-      providerSuccessAlert.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  wireLiveValidation(
+    provPhone,
+    function () {
 
-      providerForm.reset();
-      providerForm.classList.remove('was-validated');
-      [provFullName, provEmail, provPhone, provCategory, provPassword, provConfirmPassword,
-        provExperience, provAddress, provBio, provCitizenship, provPhoto].forEach(function (input) {
-        input.classList.remove('is-valid', 'is-invalid');
-      });
-      provAgreeTerms.classList.remove('is-valid', 'is-invalid');
+      return validatePhoneField(
+        provPhone
+      );
 
-      // Reset file upload labels back to their default text.
-      document.getElementById('provCitizenshipLabel').querySelector('span').textContent = 'Choose file — JPG, PNG or PDF';
-      document.getElementById('provCitizenshipLabel').classList.remove('oc-file-selected');
-      document.getElementById('provPhotoLabel').querySelector('span').textContent = 'Choose file — JPG or PNG';
-      document.getElementById('provPhotoLabel').classList.remove('oc-file-selected');
-    }, 1500);
-  });
+    }
+  );
+
+
+  if (provCategory) {
+
+    provCategory.addEventListener(
+      'change',
+      function () {
+
+        validateSelectField(
+          provCategory
+        );
+
+      }
+    );
+
+  }
+
+
+  wireLiveValidation(
+    provPassword,
+    function () {
+
+      var valid =
+        validatePasswordField(
+          provPassword
+        );
+
+
+      if (
+        provConfirmPassword &&
+        provConfirmPassword.value.length > 0
+      ) {
+
+        validateConfirmField(
+          provPassword,
+          provConfirmPassword
+        );
+
+      }
+
+
+      return valid;
+
+    }
+  );
+
+
+  wireLiveValidation(
+    provConfirmPassword,
+    function () {
+
+      return validateConfirmField(
+        provPassword,
+        provConfirmPassword
+      );
+
+    }
+  );
+
+
+  wireLiveValidation(
+    provExperience,
+    function () {
+
+      return validateNumberField(
+        provExperience,
+        0,
+        60
+      );
+
+    }
+  );
+
+
+  wireLiveValidation(
+    provAddress,
+    function () {
+
+      return validateRequiredText(
+        provAddress,
+        5
+      );
+
+    }
+  );
+
+
+  wireLiveValidation(
+    provBio,
+    function () {
+
+      return validateRequiredText(
+        provBio,
+        20
+      );
+
+    }
+  );
+
+
+  if (provAgreeTerms) {
+
+    provAgreeTerms.addEventListener(
+      'change',
+      function () {
+
+        validateCheckbox(
+          provAgreeTerms
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =========================================================
+     PROVIDER FORM SUBMIT
+     
+     Still frontend-only for now.
+  ========================================================= */
+
+  if (providerForm) {
+
+    providerForm.addEventListener(
+      'submit',
+      function (event) {
+
+        event.preventDefault();
+
+        event.stopPropagation();
+
+
+        if (providerSuccessAlert) {
+
+          providerSuccessAlert.classList.add(
+            'd-none'
+          );
+
+        }
+
+
+        /* ---------- Validate fields ---------- */
+
+        var nameValid =
+          validateRequiredText(
+            provFullName,
+            3
+          );
+
+
+        var emailValid =
+          validateEmailField(
+            provEmail
+          );
+
+
+        var phoneValid =
+          validatePhoneField(
+            provPhone
+          );
+
+
+        var categoryValid =
+          validateSelectField(
+            provCategory
+          );
+
+
+        var passwordValid =
+          validatePasswordField(
+            provPassword
+          );
+
+
+        var confirmValid =
+          validateConfirmField(
+            provPassword,
+            provConfirmPassword
+          );
+
+
+        var experienceValid =
+          validateNumberField(
+            provExperience,
+            0,
+            60
+          );
+
+
+        var addressValid =
+          validateRequiredText(
+            provAddress,
+            5
+          );
+
+
+        var bioValid =
+          validateRequiredText(
+            provBio,
+            20
+          );
+
+
+        var citizenshipValid =
+          validateFileInput(
+            provCitizenship
+          );
+
+
+        var photoValid =
+          validateFileInput(
+            provPhoto
+          );
+
+
+        var termsValid =
+          validateCheckbox(
+            provAgreeTerms
+          );
+
+
+        providerForm.classList.add(
+          'was-validated'
+        );
+
+
+        var allValid =
+          nameValid &&
+          emailValid &&
+          phoneValid &&
+          categoryValid &&
+          passwordValid &&
+          confirmValid &&
+          experienceValid &&
+          addressValid &&
+          bioValid &&
+          citizenshipValid &&
+          photoValid &&
+          termsValid;
+
+
+        if (!allValid) {
+
+          var firstInvalid =
+            providerForm.querySelector(
+              '.is-invalid'
+            );
+
+
+          if (firstInvalid) {
+
+            firstInvalid.focus();
+
+          }
+
+
+          return;
+
+        }
+
+
+        /* =====================================================
+           MOCK PROVIDER APPLICATION
+           
+           Provider backend integration comes later.
+        ===================================================== */
+
+        setSubmitLoading(
+          providerForm,
+          true,
+          'Creating Account...',
+          'Apply as Provider'
+        );
+
+
+        window.setTimeout(
+          function () {
+
+            setSubmitLoading(
+              providerForm,
+              false,
+              'Creating Account...',
+              'Apply as Provider'
+            );
+
+
+            if (providerSuccessAlert) {
+
+              providerSuccessAlert.classList.remove(
+                'd-none'
+              );
+
+
+              providerSuccessAlert.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+
+            }
+
+
+            providerForm.reset();
+
+
+            providerForm.classList.remove(
+              'was-validated'
+            );
+
+
+            [
+              provFullName,
+              provEmail,
+              provPhone,
+              provCategory,
+              provPassword,
+              provConfirmPassword,
+              provExperience,
+              provAddress,
+              provBio,
+              provCitizenship,
+              provPhoto
+            ].forEach(
+              function (input) {
+
+                if (input) {
+
+                  input.classList.remove(
+                    'is-valid',
+                    'is-invalid'
+                  );
+
+                }
+
+              }
+            );
+
+
+            if (provAgreeTerms) {
+
+              provAgreeTerms.classList.remove(
+                'is-valid',
+                'is-invalid'
+              );
+
+            }
+
+
+            /* Reset citizenship label */
+
+            var citizenshipLabel =
+              document.getElementById(
+                'provCitizenshipLabel'
+              );
+
+
+            if (citizenshipLabel) {
+
+              citizenshipLabel
+                .querySelector('span')
+                .textContent =
+                  'Choose file — JPG, PNG or PDF';
+
+
+              citizenshipLabel.classList.remove(
+                'oc-file-selected'
+              );
+
+            }
+
+
+            /* Reset profile photo label */
+
+            var photoLabel =
+              document.getElementById(
+                'provPhotoLabel'
+              );
+
+
+            if (photoLabel) {
+
+              photoLabel
+                .querySelector('span')
+                .textContent =
+                  'Choose file — JPG or PNG';
+
+
+              photoLabel.classList.remove(
+                'oc-file-selected'
+              );
+
+            }
+
+          },
+          1500
+        );
+
+      }
+    );
+
+  }
+
 
 });
