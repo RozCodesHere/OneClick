@@ -786,3 +786,436 @@ input:focus-visible{
   .gallery-grid{ grid-template-columns: repeat(2, 1fr); }
   .profile-header-actions .btn{ flex: 1 1 calc(50% - 5px); justify-content: center; }
 }
+
+/* =========================================================
+   ONECLICK — GLOBAL DARK THEME
+   Provider Profile
+   ========================================================= */
+
+html[data-theme="dark"] {
+  --oc-bg: #0B1220;
+  --oc-dark: #E2E8F0;
+
+  --oc-white: #111827;
+  --oc-slate-50: #0F172A;
+  --oc-slate-100: #1E293B;
+  --oc-slate-200: #334155;
+  --oc-slate-300: #475569;
+  --oc-slate-400: #64748B;
+  --oc-slate-500: #94A3B8;
+  --oc-slate-600: #CBD5E1;
+
+  --oc-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --oc-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.30);
+  --oc-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.40);
+}
+
+/* Page */
+html[data-theme="dark"] body {
+  background: var(--oc-bg);
+  color: var(--oc-dark);
+}
+
+/* Scrollbar */
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+/* =========================================================
+   NAVBAR
+   ========================================================= */
+
+html[data-theme="dark"] .oc-navbar {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .oc-brand {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .oc-nav-links .nav-link {
+  color: #CBD5E1;
+}
+
+html[data-theme="dark"] .oc-nav-links .nav-link:hover {
+  background: rgba(37, 99, 235, 0.15);
+}
+
+html[data-theme="dark"] .navbar-toggler {
+  background: #111827;
+  color: #CBD5E1;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .icon-btn {
+  background: #111827;
+  color: #CBD5E1;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .icon-btn:hover {
+  background: #1E293B;
+}
+
+html[data-theme="dark"] .nav-user {
+  background: #111827;
+  color: #E2E8F0;
+  border-color: #334155;
+}
+
+/* =========================================================
+   GLASS CARDS
+   ========================================================= */
+
+html[data-theme="dark"] .glass-card {
+  background: rgba(17, 24, 39, 0.82);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* =========================================================
+   BREADCRUMB
+   ========================================================= */
+
+html[data-theme="dark"] .oc-breadcrumb {
+  color: #64748B;
+}
+
+html[data-theme="dark"] .oc-breadcrumb a {
+  color: #94A3B8;
+}
+
+html[data-theme="dark"] .oc-breadcrumb span {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .oc-breadcrumb i {
+  color: #475569;
+}
+
+/* =========================================================
+   PROFILE HEADER
+   ========================================================= */
+
+html[data-theme="dark"] .profile-name-row h1 {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .profile-profession {
+  color: #CBD5E1;
+}
+
+html[data-theme="dark"] .profile-meta-item {
+  color: #CBD5E1;
+}
+
+html[data-theme="dark"] .profile-meta-item strong {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .profile-photo {
+  border-color: #1E293B;
+}
+
+html[data-theme="dark"] .status-indicator {
+  border-color: #1E293B;
+}
+
+/* =========================================================
+   ACTION BUTTONS
+   ========================================================= */
+
+html[data-theme="dark"] .btn-message,
+html[data-theme="dark"] .btn-save,
+html[data-theme="dark"] .btn-outline-more {
+  background: #111827;
+  color: #CBD5E1;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .btn-message:hover,
+html[data-theme="dark"] .btn-outline-more:hover {
+  background: rgba(37, 99, 235, 0.12);
+}
+
+html[data-theme="dark"] .btn-save:hover {
+  background: rgba(245, 158, 11, 0.10);
+}
+
+html[data-theme="dark"] .btn-save.saved {
+  background: rgba(245, 158, 11, 0.14);
+}
+
+/* =========================================================
+   STAT CARDS
+   ========================================================= */
+
+html[data-theme="dark"] .mini-stat-card {
+  background: #111827;
+  border-color: #1E293B;
+}
+
+html[data-theme="dark"] .mini-stat-value {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .mini-stat-card p {
+  color: #94A3B8;
+}
+
+/* =========================================================
+   PANEL CARDS
+   ========================================================= */
+
+html[data-theme="dark"] .panel-card {
+  background: #111827;
+  border-color: #1E293B;
+}
+
+html[data-theme="dark"] .panel-title {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .about-text {
+  color: #CBD5E1;
+}
+
+/* =========================================================
+   SKILLS
+   ========================================================= */
+
+html[data-theme="dark"] .skill-badge {
+  background: rgba(37, 99, 235, 0.14);
+  border-color: rgba(37, 99, 235, 0.30);
+}
+
+html[data-theme="dark"] .skill-badge-accent {
+  background: rgba(245, 158, 11, 0.12);
+  color: #FBBF24;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+/* =========================================================
+   AVAILABILITY
+   ========================================================= */
+
+html[data-theme="dark"] .availability-day {
+  background: #0F172A;
+  color: #CBD5E1;
+}
+
+html[data-theme="dark"] .availability-day strong {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .availability-day:hover {
+  background: rgba(37, 99, 235, 0.12);
+}
+
+html[data-theme="dark"] .availability-today {
+  background: rgba(34, 197, 94, 0.10);
+}
+
+html[data-theme="dark"] .availability-note {
+  color: #64748B;
+}
+
+/* =========================================================
+   PRICING
+   ========================================================= */
+
+html[data-theme="dark"] .pricing-card {
+  background: #111827;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .pricing-label {
+  color: #94A3B8;
+}
+
+html[data-theme="dark"] .pricing-value {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .pricing-sub {
+  color: #64748B;
+}
+
+/* Highlighted pricing card stays blue */
+html[data-theme="dark"] .pricing-card-highlight {
+  background: var(--oc-gradient);
+  border-color: transparent;
+}
+
+html[data-theme="dark"] .pricing-card-highlight .pricing-value {
+  color: #fff;
+}
+
+/* =========================================================
+   REVIEWS
+   ========================================================= */
+
+html[data-theme="dark"] .review-item {
+  border-color: #1E293B;
+  background: #111827;
+}
+
+html[data-theme="dark"] .review-item:hover {
+  background: #0F172A;
+}
+
+html[data-theme="dark"] .review-top h5 {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .review-text {
+  color: #CBD5E1;
+}
+
+html[data-theme="dark"] .review-date {
+  color: #64748B;
+}
+
+/* =========================================================
+   FLOATING SUMMARY
+   ========================================================= */
+
+html[data-theme="dark"] .floating-summary-top h4 {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .floating-summary-top p {
+  color: #94A3B8;
+}
+
+html[data-theme="dark"] .floating-summary-rating {
+  color: #94A3B8;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .floating-summary-rating strong {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .floating-summary-list li {
+  color: #94A3B8;
+}
+
+html[data-theme="dark"] .floating-summary-list li strong {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .floating-summary-note {
+  color: #64748B;
+}
+
+/* =========================================================
+   MOBILE ACTION BAR
+   ========================================================= */
+
+html[data-theme="dark"] .mobile-action-bar {
+  background: rgba(15, 23, 42, 0.94);
+  border-color: #1E293B;
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.35);
+}
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+
+html[data-theme="dark"] .oc-toast {
+  background: #111827;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .toast-title {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .toast-text {
+  color: #94A3B8;
+}
+
+html[data-theme="dark"] .toast-close {
+  color: #64748B;
+}
+
+html[data-theme="dark"] .toast-close:hover {
+  color: #E2E8F0;
+}
+
+/* =========================================================
+   BOOTSTRAP COMMON ELEMENTS
+   ========================================================= */
+
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] .form-select {
+  background-color: #0F172A;
+  color: #E2E8F0;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .form-control::placeholder {
+  color: #64748B;
+}
+
+html[data-theme="dark"] .modal-content {
+  background: #111827;
+  color: #E2E8F0;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .dropdown-menu {
+  background: #111827;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .dropdown-menu .dropdown-item {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .dropdown-menu .dropdown-item:hover {
+  background: #1E293B;
+}
+
+html[data-theme="dark"] .bg-white {
+  background-color: #111827 !important;
+}
+
+html[data-theme="dark"] .text-dark {
+  color: #E2E8F0 !important;
+}
+
+/* =========================================================
+   EMPTY COMPLETED WORK STATE
+   ========================================================= */
+
+.empty-gallery-state {
+    width: 100%;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+    border: 1px dashed #d9dee7;
+    border-radius: 16px;
+    background: #fafbfc;
+}
+
+.empty-gallery-state i {
+    font-size: 42px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-gallery-state h4 {
+    margin-bottom: 8px;
+    font-size: 18px;
+}
+
+.empty-gallery-state p {
+    margin: 0;
+    opacity: 0.7;
+}

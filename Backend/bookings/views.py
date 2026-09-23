@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 
 from .models import Booking
 from .serializers import BookingSerializer
+from services.models import ProviderService
 
 
 class BookingListCreateView(APIView):
@@ -12,38 +13,64 @@ class BookingListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+
         bookings = Booking.objects.filter(
             customer=request.user
         ).order_by("-created_at")
 
         serializer = BookingSerializer(
             bookings,
-            many=True
+            many=True,
+            context={"request": request},
         )
 
         return Response(serializer.data)
 
     def post(self, request):
+
         serializer = BookingSerializer(
             data=request.data
         )
 
-        if serializer.is_valid():
-          booking = serializer.save(
-    customer=request.user,
-    total_price=serializer.validated_data[
-        "service"
-    ].base_price,
-)
+        if not serializer.is_valid():
 
-        return Response(
-                BookingSerializer(booking).data,
-                status=status.HTTP_201_CREATED,
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
+        provider = serializer.validated_data["provider"]
+        service = serializer.validated_data["service"]
+
+        provider_service = ProviderService.objects.filter(
+            provider=provider,
+            service=service,
+            is_active=True,
+        ).first()
+
+        if not provider_service:
+
+            return Response(
+                {
+                    "error": (
+                        "This provider does not offer "
+                        "the selected service."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        booking = serializer.save(
+            customer=request.user,
+            total_price=provider_service.price,
+        )
+
         return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST,
+            BookingSerializer(
+                booking,
+                context={"request": request},
+            ).data,
+            status=status.HTTP_201_CREATED,
         )
 
 
@@ -52,34 +79,49 @@ class BookingDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self, request, pk):
+
         return Booking.objects.filter(
             id=pk,
             customer=request.user
         ).first()
 
     def get(self, request, pk):
-        booking = self.get_object(request, pk)
+
+        booking = self.get_object(
+            request,
+            pk
+        )
 
         if booking is None:
+
             return Response(
                 {"error": "Booking not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer = BookingSerializer(booking)
+        serializer = BookingSerializer(
+            booking,
+            context={"request": request},
+        )
 
         return Response(serializer.data)
 
     def patch(self, request, pk):
-        booking = self.get_object(request, pk)
+
+        booking = self.get_object(
+            request,
+            pk
+        )
 
         if booking is None:
+
             return Response(
                 {"error": "Booking not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
         if request.data.get("status") != "cancelled":
+
             return Response(
                 {
                     "error": "You can only cancel a booking."
@@ -88,17 +130,24 @@ class BookingDetailView(APIView):
             )
 
         if booking.status == "completed":
+
             return Response(
                 {
-                    "error": "Completed bookings cannot be cancelled."
+                    "error": (
+                        "Completed bookings cannot be cancelled."
+                    )
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         booking.status = "cancelled"
+
         booking.save()
 
-        serializer = BookingSerializer(booking)
+        serializer = BookingSerializer(
+            booking,
+            context={"request": request},
+        )
 
         return Response(serializer.data)
 
@@ -110,9 +159,13 @@ class ProviderBookingListView(APIView):
     def get(self, request):
 
         if request.user.role != "provider":
+
             return Response(
                 {
-                    "error": "Only providers can access this endpoint."
+                    "error": (
+                        "Only providers can access "
+                        "this endpoint."
+                    )
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
@@ -123,7 +176,8 @@ class ProviderBookingListView(APIView):
 
         serializer = BookingSerializer(
             bookings,
-            many=True
+            many=True,
+            context={"request": request},
         )
 
         return Response(serializer.data)
@@ -136,9 +190,13 @@ class ProviderBookingActionView(APIView):
     def patch(self, request, pk):
 
         if request.user.role != "provider":
+
             return Response(
                 {
-                    "error": "Only providers can perform this action."
+                    "error": (
+                        "Only providers can perform "
+                        "this action."
+                    )
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
@@ -149,6 +207,7 @@ class ProviderBookingActionView(APIView):
         ).first()
 
         if booking is None:
+
             return Response(
                 {"error": "Booking not found."},
                 status=status.HTTP_404_NOT_FOUND,
@@ -156,46 +215,49 @@ class ProviderBookingActionView(APIView):
 
         new_status = request.data.get("status")
 
-        if new_status not in ["accepted", "rejected", "completed"]:
-         return Response(
-        {
-            "error": (
-                "Provider can only set "
-                "accepted, rejected or completed."
+        allowed_transitions = {
+            "pending": [
+                "accepted",
+                "rejected",
+            ],
+            "accepted": [
+                "completed",
+            ],
+        }
+
+        allowed_next_states = allowed_transitions.get(
+            booking.status,
+            []
+        )
+
+        if new_status not in allowed_next_states:
+
+            return Response(
+                {
+                    "error": (
+                        f"Cannot change booking from "
+                        f"'{booking.status}' to "
+                        f"'{new_status}'."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        },
-        status=status.HTTP_400_BAD_REQUEST,
-    )
-
-        if new_status == "accepted":
-
-            if booking.status != "pending":
-                return Response(
-                    {
-                        "error": (
-                            "Only pending bookings "
-                            "can be accepted."
-                        )
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-        if new_status == "completed":
-
-            if booking.status != "accepted":
-                return Response(
-                    {
-                        "error": (
-                            "Only accepted bookings "
-                            "can be completed."
-                        )
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
 
         booking.status = new_status
-        booking.save()
 
-        serializer = BookingSerializer(booking)
+        booking.save(
+            update_fields=[
+                "status",
+                "updated_at",
+            ]
+        )
 
-        return Response(serializer.data)
+        serializer = BookingSerializer(
+            booking,
+            context={"request": request},
+        )
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )

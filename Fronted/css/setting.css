@@ -696,20 +696,156 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 
 /* =========================================================
-   Dark theme (data attribute driven, toggled via JS)
+   Dark Theme
 ========================================================= */
-body[data-theme="dark"] {
+
+html[data-theme="dark"] {
   --oc-bg: #0B1220;
   --oc-text: #E2E8F0;
   --oc-text-muted: #94A3B8;
   --oc-border: #1E293B;
-  background-color: #0B1220;
+
+  --oc-primary-light: #1E3A8A;
+
+  --oc-shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.25);
+  --oc-shadow-md: 0 10px 30px rgba(0, 0, 0, 0.30);
+  --oc-shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.40);
 }
-body[data-theme="dark"] .oc-card { background: rgba(30, 41, 59, 0.65); border-color: rgba(255,255,255,0.06); }
-body[data-theme="dark"] .oc-navbar { background: rgba(15, 23, 42, 0.85); border-color: rgba(255,255,255,0.06); }
-body[data-theme="dark"] .oc-input { background: rgba(15, 23, 42, 0.5); color: #E2E8F0; border-color: #1E293B; }
-body[data-theme="dark"] .oc-info-tile,
-body[data-theme="dark"] .oc-payment-card { background: rgba(15, 23, 42, 0.4); }
+
+html[data-theme="dark"] body {
+  background-color: #0B1220;
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .oc-card {
+  background: rgba(30, 41, 59, 0.65);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+html[data-theme="dark"] .oc-navbar {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+html[data-theme="dark"] .oc-input {
+  background: rgba(15, 23, 42, 0.5);
+  color: #E2E8F0;
+  border-color: #1E293B;
+}
+
+html[data-theme="dark"] .oc-info-tile,
+html[data-theme="dark"] .oc-payment-card {
+  background: rgba(15, 23, 42, 0.4);
+}
+
+/* Text */
+html[data-theme="dark"] .oc-page-title,
+html[data-theme="dark"] .form-label,
+html[data-theme="dark"] .oc-info-value,
+html[data-theme="dark"] .oc-activity-list strong,
+html[data-theme="dark"] .oc-toggle-row strong {
+  color: #E2E8F0;
+}
+
+/* Secondary text */
+html[data-theme="dark"] .oc-page-subtitle,
+html[data-theme="dark"] .oc-section-sub,
+html[data-theme="dark"] .oc-hint,
+html[data-theme="dark"] .oc-label-sm,
+html[data-theme="dark"] .oc-sidebar-heading,
+html[data-theme="dark"] .oc-info-label,
+html[data-theme="dark"] .oc-toggle-row small,
+html[data-theme="dark"] .oc-activity-list small {
+  color: #94A3B8;
+}
+
+/* Theme buttons */
+html[data-theme="dark"] .oc-theme-option {
+  background: #0F172A;
+  border-color: #334155;
+  color: #94A3B8;
+}
+
+html[data-theme="dark"] .oc-theme-option:hover {
+  border-color: #3B82F6;
+}
+
+html[data-theme="dark"] .oc-theme-option.active {
+  background: rgba(37, 99, 235, 0.15);
+  border-color: #3B82F6;
+  color: #60A5FA;
+}
+
+/* Ghost button */
+html[data-theme="dark"] .oc-btn-ghost {
+  background: rgba(15, 23, 42, 0.7);
+  border-color: #334155;
+  color: #E2E8F0;
+}
+
+/* Checkbox */
+html[data-theme="dark"] .oc-check-item {
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .oc-check-item:hover {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+/* Payment */
+html[data-theme="dark"] .oc-badge-default {
+  background: #1E3A8A;
+  color: #BFDBFE;
+}
+
+html[data-theme="dark"] .oc-badge-active {
+  background: #064E3B;
+  color: #6EE7B7;
+}
+
+/* Avatar borders */
+html[data-theme="dark"] .oc-avatar,
+html[data-theme="dark"] .oc-avatar-edit {
+  border-color: #1E293B;
+}
+
+/* Sidebar */
+html[data-theme="dark"] .oc-nav-item {
+  color: #94A3B8;
+}
+
+html[data-theme="dark"] .oc-nav-item i {
+  color: #94A3B8;
+}
+
+html[data-theme="dark"] .oc-nav-item:hover {
+  background: rgba(37, 99, 235, 0.08);
+  color: #60A5FA;
+}
+
+html[data-theme="dark"] .oc-nav-item:hover i {
+  color: #60A5FA;
+}
+
+/* Password eye */
+html[data-theme="dark"] .oc-eye-toggle {
+  color: #94A3B8;
+}
+
+/* Modal */
+html[data-theme="dark"] .oc-modal {
+  background: #111827;
+  color: #E2E8F0;
+}
+
+/* Bootstrap helpers */
+html[data-theme="dark"] .text-dark {
+  color: #E2E8F0 !important;
+}
+
+html[data-theme="dark"] .bg-white {
+  background-color: #111827 !important;
+}
 
 /* =========================================================
    Responsive

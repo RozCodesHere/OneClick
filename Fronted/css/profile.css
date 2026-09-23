@@ -1,0 +1,196 @@
+/* =========================================================
+   ONECLICK — CUSTOMER PROFILE
+========================================================= */
+
+
+body {
+
+    background: #f7f8fc;
+
+    color: #212529;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+
+/* =========================================================
+   NAVBAR
+========================================================= */
+
+.navbar-brand {
+
+    font-size: 1.35rem;
+
+}
+
+
+/* =========================================================
+   PROFILE CARD
+========================================================= */
+
+.profile-card {
+
+    border-radius: 18px;
+
+}
+
+
+/* =========================================================
+   PROFILE HEADER
+========================================================= */
+
+.profile-header {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 18px;
+
+}
+
+
+.profile-avatar {
+
+    width: 82px;
+
+    height: 82px;
+
+    border-radius: 50%;
+
+    background: #e9f0ff;
+
+    color: #0d6efd;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 32px;
+
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.form-label {
+
+    margin-bottom: 8px;
+
+}
+
+
+.input-group-text {
+
+    background: #f8f9fa;
+
+    border-color: #dee2e6;
+
+}
+
+
+.form-control {
+
+    min-height: 46px;
+
+}
+
+
+.form-control:focus {
+
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.profile-actions {
+
+    display: flex;
+
+    gap: 12px;
+
+}
+
+
+/* =========================================================
+   ACCOUNT INFORMATION
+========================================================= */
+
+.account-info {
+
+    border-top: 1px solid #eeeeee;
+
+}
+
+
+.info-row {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 14px 0;
+
+    border-bottom: 1px solid #eeeeee;
+
+}
+
+
+.info-row:last-child {
+
+    border-bottom: none;
+
+}
+
+
+.info-row span {
+
+    color: #6c757d;
+
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 576px) {
+
+    .profile-actions {
+
+        flex-direction: column;
+
+    }
+
+
+    .profile-actions button {
+
+        width: 100%;
+
+    }
+
+
+    .info-row {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 5px;
+
+    }
+
+}

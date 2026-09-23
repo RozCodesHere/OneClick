@@ -330,16 +330,18 @@ document.addEventListener('DOMContentLoaded', function () {
                STEP 7: Save JWT tokens
             -------------------------------------------- */
 
-            localStorage.setItem(
-                'access_token',
-                accessToken
-            );
+         localStorage.removeItem('access_token');
+localStorage.removeItem('refresh_token');
 
-            localStorage.setItem(
-                'refresh_token',
-                refreshToken
-            );
+localStorage.setItem(
+    'access_token',
+    accessToken
+);
 
+localStorage.setItem(
+    'refresh_token',
+    refreshToken
+);
 
             /* -------------------------------------------
                STEP 8: Save user information

@@ -5,7 +5,6 @@
 
 const API_BASE = "http://127.0.0.1:8000/api";
 
-
 /* =========================================================
    PAGE INITIALIZATION
    ========================================================= */
@@ -25,7 +24,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
-
 /* =========================================================
    GET PROVIDER ID FROM URL
    Example:
@@ -34,12 +32,53 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function getProviderId() {
 
-    const params = new URLSearchParams(window.location.search);
+    const params =
+        new URLSearchParams(window.location.search);
 
     return params.get("id");
 
 }
 
+/* =========================================================
+   GET SERVICE ID FROM URL
+   Example:
+   provider-profile.html?id=1&service_id=2
+   ========================================================= */
+
+function getServiceId() {
+
+    const params =
+        new URLSearchParams(window.location.search);
+
+    const serviceId =
+        params.get("service_id");
+
+    if (!serviceId || !/^\d+$/.test(serviceId)) {
+        return null;
+    }
+
+    return serviceId;
+
+}
+
+/* =========================================================
+   BOOKING URL
+   ========================================================= */
+
+function getBookingUrl(providerId) {
+
+    const serviceId =
+        getServiceId();
+
+    if (serviceId) {
+
+        return `booking.html?provider_id=${providerId}&service_id=${serviceId}`;
+
+    }
+
+    return `booking.html?provider_id=${providerId}`;
+
+}
 
 /* =========================================================
    SAFE TEXT HELPER
@@ -47,65 +86,147 @@ function getProviderId() {
 
 function setText(selector, value) {
 
-    const element = document.querySelector(selector);
+    const element =
+        document.querySelector(selector);
 
     if (element) {
-        element.textContent = value ?? "";
+
+        element.textContent =
+            value ?? "";
+
     }
 
 }
 
-
 /* =========================================================
    LOAD PROVIDER PROFILE
+   =========================================================
+   
+   CASE 1:
+   Public provider profile
+   provider-profile.html?id=1
+
+   CASE 2:
+   Logged-in provider profile
+   provider-profile.html
+
+   IMPORTANT:
+   Logged-in provider uses /providers/dashboard/
+   directly because the public provider endpoint only
+   exposes verified providers.
    ========================================================= */
 
 async function loadProviderProfile() {
 
-    const providerId = getProviderId();
-
-    if (!providerId) {
-
-        console.error("Provider ID not found in URL.");
-
-        showToast(
-            "Error",
-            "Provider ID is missing from the URL."
-        );
-
-        return;
-    }
-
+    const providerId =
+        getProviderId();
 
     try {
 
-        const response = await fetch(
-            `${API_BASE}/providers/${providerId}/`
-        );
+        /* =====================================================
+           CASE 1 — PUBLIC PROVIDER PROFILE
+           ===================================================== */
 
+        if (providerId) {
 
-        if (!response.ok) {
+            const response =
+                await fetch(
+                    `${API_BASE}/providers/${providerId}/`
+                );
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `Provider API returned ${response.status}`
+                );
+
+            }
+
+            const provider =
+                await response.json();
+
+            console.log(
+                "PUBLIC PROVIDER PROFILE:",
+                provider
+            );
+
+           renderProviderProfile(provider);
+
+await loadProviderReviews(provider.id);
+
+return;
+        }
+
+        /* =====================================================
+           CASE 2 — LOGGED-IN PROVIDER
+           ===================================================== */
+
+        const token =
+            localStorage.getItem("access_token");
+
+        if (!token) {
+
+            console.error(
+                "Access token not found."
+            );
+
+            showToast(
+                "Login Required",
+                "Please log in to view your provider profile."
+            );
+
+            return;
+
+        }
+
+        const dashboardResponse =
+            await fetch(
+                `${API_BASE}/providers/dashboard/`,
+                {
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+        if (!dashboardResponse.ok) {
 
             throw new Error(
-                `Provider API returned ${response.status}`
+                `Provider dashboard API returned ${dashboardResponse.status}`
             );
 
         }
 
-
-        const provider = await response.json();
-
+        const dashboardData =
+            await dashboardResponse.json();
 
         console.log(
-            "Provider profile data:",
+            "Provider dashboard data:",
+            dashboardData
+        );
+
+        const provider =
+            dashboardData.provider;
+
+        if (!provider) {
+
+            throw new Error(
+                "Provider information was not found in dashboard response."
+            );
+
+        }
+
+        console.log(
+            "LOGGED-IN PROVIDER PROFILE:",
             provider
         );
 
+        /* =====================================================
+           RENDER REAL PROVIDER
+           ===================================================== */
 
         renderProviderProfile(provider);
-
-        loadProviderReviews(provider.id);
-
 
     } catch (error) {
 
@@ -113,7 +234,6 @@ async function loadProviderProfile() {
             "Error loading provider profile:",
             error
         );
-
 
         showToast(
             "Error",
@@ -124,16 +244,11 @@ async function loadProviderProfile() {
 
 }
 
-
 /* =========================================================
    RENDER PROVIDER PROFILE
    ========================================================= */
 
 function renderProviderProfile(provider) {
-
-    /* -----------------------------------------------------
-       BASIC DATA
-       ----------------------------------------------------- */
 
     const providerName =
         provider.full_name || "Provider";
@@ -141,18 +256,32 @@ function renderProviderProfile(provider) {
     const category =
         provider.category_name || "Service Provider";
 
+        const serviceName =
+    provider.service_name ||
+    null;
+
     const experience =
         provider.experience ?? 0;
 
     const address =
-        provider.address || "Location not available";
+        provider.address ||
+        "Location not available";
 
     const bio =
         provider.bio ||
         "No description available.";
 
-    const price =
-        provider.hourly_rate ?? "0.00";
+   const servicePrice =
+    provider.service_price;
+
+const price =
+    servicePrice !== null &&
+    servicePrice !== undefined
+        ? servicePrice
+        : (
+            provider.hourly_rate ??
+            "0.00"
+        );
 
     const rating =
         Number(
@@ -168,10 +297,9 @@ function renderProviderProfile(provider) {
             0
         );
 
-
-    /* -----------------------------------------------------
-       NAME
-       ----------------------------------------------------- */
+    /* =====================================================
+       BASIC PROFILE INFORMATION
+       ===================================================== */
 
     setText(
         "#providerName",
@@ -183,11 +311,6 @@ function renderProviderProfile(provider) {
         providerName
     );
 
-
-    /* -----------------------------------------------------
-       CATEGORY
-       ----------------------------------------------------- */
-
     setText(
         "#providerCategory",
         category
@@ -198,20 +321,15 @@ function renderProviderProfile(provider) {
         category
     );
 
-
-    /* -----------------------------------------------------
-       EXPERIENCE
-       ----------------------------------------------------- */
+    setText(
+    "#providerService",
+    serviceName || category
+);
 
     setText(
         "#providerExperience",
         `${experience}+`
     );
-
-
-    /* -----------------------------------------------------
-       ADDRESS
-       ----------------------------------------------------- */
 
     setText(
         "#providerAddress",
@@ -223,11 +341,6 @@ function renderProviderProfile(provider) {
         address
     );
 
-
-    /* -----------------------------------------------------
-       BREADCRUMB
-       ----------------------------------------------------- */
-
     setText(
         "#breadcrumbCategory",
         category
@@ -238,37 +351,19 @@ function renderProviderProfile(provider) {
         providerName
     );
 
-
-    /* -----------------------------------------------------
-       ABOUT
-       ----------------------------------------------------- */
-
     setText(
         ".about-text",
         bio
     );
 
-
-    /* -----------------------------------------------------
+    /* =====================================================
        PRICING
-       ----------------------------------------------------- */
+       ===================================================== */
 
     const pricingValues =
         document.querySelectorAll(
             ".pricing-value"
         );
-
-
-    /*
-       Your HTML currently has:
-
-       1. Service Charge
-       2. Starting Price
-       3. Emergency Charge
-
-       We only have hourly_rate from the API,
-       so we update Starting Price.
-    */
 
     if (pricingValues.length >= 2) {
 
@@ -277,20 +372,17 @@ function renderProviderProfile(provider) {
 
     }
 
-
     setText(
         "#floatingPrice",
         `Rs. ${price}`
     );
 
-
-    /* -----------------------------------------------------
+    /* =====================================================
        RATING
-       ----------------------------------------------------- */
+       ===================================================== */
 
     const formattedRating =
         rating.toFixed(1);
-
 
     setText(
         "#providerRating",
@@ -307,16 +399,14 @@ function renderProviderProfile(provider) {
         formattedRating
     );
 
-
-    /* -----------------------------------------------------
-       REVIEW COUNT
-       ----------------------------------------------------- */
+    /* =====================================================
+       REVIEWS COUNT
+       ===================================================== */
 
     const reviewText =
         reviewCount === 1
             ? "review"
             : "reviews";
-
 
     setText(
         "#providerReviews",
@@ -333,10 +423,9 @@ function renderProviderProfile(provider) {
         `Based on ${reviewCount} ${reviewText}`
     );
 
-
-    /* -----------------------------------------------------
+    /* =====================================================
        RATING STARS
-       ----------------------------------------------------- */
+       ===================================================== */
 
     updateRatingStars(
         rating,
@@ -347,10 +436,9 @@ function renderProviderProfile(provider) {
         rating
     );
 
-
-    /* -----------------------------------------------------
+    /* =====================================================
        PROFILE IMAGE
-       ----------------------------------------------------- */
+       ===================================================== */
 
     if (provider.profile_image) {
 
@@ -364,7 +452,6 @@ function renderProviderProfile(provider) {
                 "#floatingAvatar"
             );
 
-
         if (profilePhoto) {
 
             profilePhoto.src =
@@ -374,7 +461,6 @@ function renderProviderProfile(provider) {
                 `${providerName} profile photo`;
 
         }
-
 
         if (floatingAvatar) {
 
@@ -388,10 +474,9 @@ function renderProviderProfile(provider) {
 
     }
 
-
-    /* -----------------------------------------------------
-       VERIFIED STATUS
-       ----------------------------------------------------- */
+    /* =====================================================
+       VERIFICATION BADGE
+       ===================================================== */
 
     const verifyBadge =
         document.querySelector(
@@ -403,7 +488,6 @@ function renderProviderProfile(provider) {
             "#floatingVerifyBadge"
         );
 
-
     if (provider.verified) {
 
         if (verifyBadge) {
@@ -412,7 +496,6 @@ function renderProviderProfile(provider) {
                 "inline-flex";
 
         }
-
 
         if (floatingVerifyBadge) {
 
@@ -430,7 +513,6 @@ function renderProviderProfile(provider) {
 
         }
 
-
         if (floatingVerifyBadge) {
 
             floatingVerifyBadge.style.display =
@@ -440,17 +522,49 @@ function renderProviderProfile(provider) {
 
     }
 
-
-    /* -----------------------------------------------------
+    /* =====================================================
        AVAILABILITY
-       ----------------------------------------------------- */
+       ===================================================== */
 
     updateAvailability(
         provider.available
     );
-
+cleanCompletedWorkGallery();
 }
 
+/* =========================================================
+   COMPLETED WORK
+   ========================================================= */
+
+function cleanCompletedWorkGallery() {
+
+    const gallery =
+        document.querySelector(
+            ".gallery-grid"
+        );
+
+    if (!gallery) {
+        return;
+    }
+
+    gallery.innerHTML = `
+        <div class="empty-gallery-state">
+
+            <i class="fa-regular fa-images"></i>
+
+            <h4>
+                No completed work photos yet
+            </h4>
+
+            <p>
+                This provider has not uploaded
+                any work photos yet.
+            </p>
+
+        </div>
+    `;
+
+}
 
 /* =========================================================
    UPDATE AVAILABILITY
@@ -468,10 +582,7 @@ function updateAvailability(isAvailable) {
             "#statusPill"
         );
 
-
     if (isAvailable) {
-
-        /* Indicator */
 
         if (statusIndicator) {
 
@@ -487,9 +598,6 @@ function updateAvailability(isAvailable) {
                 "Available now";
 
         }
-
-
-        /* Status pill */
 
         if (statusPill) {
 
@@ -510,8 +618,6 @@ function updateAvailability(isAvailable) {
 
     } else {
 
-        /* Indicator */
-
         if (statusIndicator) {
 
             statusIndicator.classList.remove(
@@ -526,9 +632,6 @@ function updateAvailability(isAvailable) {
                 "Currently unavailable";
 
         }
-
-
-        /* Status pill */
 
         if (statusPill) {
 
@@ -551,7 +654,6 @@ function updateAvailability(isAvailable) {
 
 }
 
-
 /* =========================================================
    RATING STAR SYSTEM
    ========================================================= */
@@ -562,88 +664,28 @@ function updateRatingStars(
 ) {
 
     const container =
-        document.querySelector(selector);
+        document.querySelector(
+            selector
+        );
 
     if (!container) {
         return;
     }
 
-
     const stars =
         container.querySelectorAll("i");
 
-
-    stars.forEach(function (star, index) {
-
-        const starNumber = index + 1;
-
-        star.classList.remove(
-            "fa-solid",
-            "fa-regular",
-            "fa-star-half-stroke"
-        );
-
-
-        if (rating >= starNumber) {
-
-            star.classList.add(
-                "fa-solid",
-                "fa-star"
-            );
-
-        } else if (
-            rating >= starNumber - 0.5
-        ) {
-
-            star.classList.add(
-                "fa-solid",
-                "fa-star-half-stroke"
-            );
-
-        } else {
-
-            star.classList.add(
-                "fa-regular",
-                "fa-star"
-            );
-
-        }
-
-    });
-
-}
-
-
-/* =========================================================
-   UPDATE ALL RATING STAR GROUPS
-   ========================================================= */
-
-function updateAllRatingStars(rating) {
-
-    const starGroups =
-        document.querySelectorAll(
-            ".meta-stars"
-        );
-
-
-    starGroups.forEach(function (group) {
-
-        const stars =
-            group.querySelectorAll("i");
-
-
-        stars.forEach(function (star, index) {
+    stars.forEach(
+        function (star, index) {
 
             const starNumber =
                 index + 1;
-
 
             star.classList.remove(
                 "fa-solid",
                 "fa-regular",
                 "fa-star-half-stroke"
             );
-
 
             if (rating >= starNumber) {
 
@@ -670,12 +712,77 @@ function updateAllRatingStars(rating) {
 
             }
 
-        });
-
-    });
+        }
+    );
 
 }
 
+/* =========================================================
+   UPDATE ALL RATING STAR GROUPS
+   ========================================================= */
+
+function updateAllRatingStars(
+    rating
+) {
+
+    const starGroups =
+        document.querySelectorAll(
+            ".meta-stars"
+        );
+
+    starGroups.forEach(
+        function (group) {
+
+            const stars =
+                group.querySelectorAll("i");
+
+            stars.forEach(
+                function (star, index) {
+
+                    const starNumber =
+                        index + 1;
+
+                    star.classList.remove(
+                        "fa-solid",
+                        "fa-regular",
+                        "fa-star-half-stroke"
+                    );
+
+                    if (
+                        rating >= starNumber
+                    ) {
+
+                        star.classList.add(
+                            "fa-solid",
+                            "fa-star"
+                        );
+
+                    } else if (
+                        rating >=
+                        starNumber - 0.5
+                    ) {
+
+                        star.classList.add(
+                            "fa-solid",
+                            "fa-star-half-stroke"
+                        );
+
+                    } else {
+
+                        star.classList.add(
+                            "fa-regular",
+                            "fa-star"
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+}
 
 /* =========================================================
    LOAD PROVIDER REVIEWS
@@ -689,7 +796,6 @@ async function loadProviderReviews(providerId) {
             `${API_BASE}/reviews/?provider=${providerId}`
         );
 
-
         if (!response.ok) {
 
             throw new Error(
@@ -698,48 +804,40 @@ async function loadProviderReviews(providerId) {
 
         }
 
-
-        const data =
+        const reviews =
             await response.json();
 
-
         console.log(
-            "Provider reviews:",
-            data
-        );
-
-
-        /*
-           DRF can return either:
-
-           [
-               {...},
-               {...}
-           ]
-
-           OR:
-
-           {
-               count: 1,
-               results: [...]
-           }
-        */
-
-        const reviews =
-            Array.isArray(data)
-                ? data
-                : data.results || [];
-
-
-        renderReviews(
+            "REAL PROVIDER REVIEWS:",
             reviews
         );
 
+        /*
+         * Django may return either:
+         *
+         * [
+         *     {...},
+         *     {...}
+         * ]
+         *
+         * or:
+         *
+         * {
+         *     results: [...]
+         * }
+         */
+
+        const reviewList =
+            Array.isArray(reviews)
+                ? reviews
+                : (reviews.results || []);
+
+        renderReviews(reviewList);
 
     } catch (error) {
 
         console.error(
-            "Error loading reviews:",
+            "Error loading provider reviews:",
             error
         );
 
@@ -761,18 +859,11 @@ function renderReviews(reviews) {
             "#reviewsContainer"
         );
 
-
     if (!container) {
         return;
     }
 
-
     container.innerHTML = "";
-
-
-    /* -----------------------------------------------------
-       NO REVIEWS
-       ----------------------------------------------------- */
 
     if (!reviews.length) {
 
@@ -799,35 +890,31 @@ function renderReviews(reviews) {
             </div>
         `;
 
-
         const loadMore =
             document.querySelector(
                 "#loadMoreReviews"
             );
 
         if (loadMore) {
-            loadMore.style.display = "none";
+
+            loadMore.style.display =
+                "none";
+
         }
 
-
         return;
-
     }
 
+    reviews.forEach(
+        function (review) {
 
-    /* -----------------------------------------------------
-       RENDER REAL REVIEWS
-       ----------------------------------------------------- */
+            container.insertAdjacentHTML(
+                "beforeend",
+                renderReview(review)
+            );
 
-    reviews.forEach(function (review) {
-
-        container.insertAdjacentHTML(
-            "beforeend",
-            renderReview(review)
-        );
-
-    });
-
+        }
+    );
 
     const loadMore =
         document.querySelector(
@@ -835,11 +922,6 @@ function renderReviews(reviews) {
         );
 
     if (loadMore) {
-
-        /*
-           For now we already receive all reviews,
-           so Load More is hidden.
-        */
 
         loadMore.style.display =
             "none";
@@ -858,43 +940,35 @@ function renderReview(review) {
     const customerName =
         escapeHtml(
             review.customer_name ||
+            review.customer?.full_name ||
+            review.customer?.name ||
             "Customer"
         );
-
 
     const comment =
         escapeHtml(
             review.comment ||
+            review.review ||
             "No comment provided."
         );
-
 
     const rating =
         Number(
             review.rating || 0
         );
 
-
     const date =
         formatReviewDate(
             review.created_at
         );
-
 
     const stars =
         generateReviewStars(
             rating
         );
 
-
     return `
         <div class="review-item">
-
-            <img
-                src="https://i.pravatar.cc/50?img=32"
-                alt="Customer"
-                class="review-avatar"
-            >
 
             <div class="review-body">
 
@@ -934,33 +1008,32 @@ function generateReviewStars(rating) {
 
     let html = "";
 
-
-    for (let i = 1; i <= 5; i++) {
+    for (
+        let i = 1;
+        i <= 5;
+        i++
+    ) {
 
         if (rating >= i) {
 
-            html += `
-                <i class="fa-solid fa-star"></i>
-            `;
+            html +=
+                `<i class="fa-solid fa-star"></i>`;
 
         } else if (
             rating >= i - 0.5
         ) {
 
-            html += `
-                <i class="fa-solid fa-star-half-stroke"></i>
-            `;
+            html +=
+                `<i class="fa-solid fa-star-half-stroke"></i>`;
 
         } else {
 
-            html += `
-                <i class="fa-regular fa-star"></i>
-            `;
+            html +=
+                `<i class="fa-regular fa-star"></i>`;
 
         }
 
     }
-
 
     return html;
 
@@ -974,18 +1047,19 @@ function generateReviewStars(rating) {
 function formatReviewDate(dateString) {
 
     if (!dateString) {
-        return "—";
-    }
 
+        return "—";
+
+    }
 
     const date =
         new Date(dateString);
 
-
     if (isNaN(date.getTime())) {
-        return "—";
-    }
 
+        return "—";
+
+    }
 
     return date.toLocaleDateString(
         "en-US",
@@ -998,23 +1072,180 @@ function formatReviewDate(dateString) {
 
 }
 
-
 /* =========================================================
-   HTML ESCAPE
-   Prevents unsafe HTML from API data
+   RENDER SINGLE REVIEW
    ========================================================= */
 
-function escapeHtml(value) {
+function renderReview(
+    review
+) {
 
-    return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    const customerName =
+        escapeHtml(
+            review.customer_name ||
+            "Customer"
+        );
+
+    const comment =
+        escapeHtml(
+            review.comment ||
+            "No comment provided."
+        );
+
+    const rating =
+        Number(
+            review.rating || 0
+        );
+
+    const date =
+        formatReviewDate(
+            review.created_at
+        );
+
+    const stars =
+        generateReviewStars(
+            rating
+        );
+
+    return `
+        <div class="review-item">
+
+            <div class="review-body">
+
+                <div class="review-top">
+
+                    <h5>
+                        ${customerName}
+                    </h5>
+
+                    <div class="review-stars">
+                        ${stars}
+                    </div>
+
+                </div>
+
+                <p class="review-text">
+                    ${comment}
+                </p>
+
+                <span class="review-date">
+                    ${date}
+                </span>
+
+            </div>
+
+        </div>
+    `;
 
 }
 
+/* =========================================================
+   GENERATE REVIEW STARS
+   ========================================================= */
+
+function generateReviewStars(
+    rating
+) {
+
+    let html =
+        "";
+
+    for (
+        let i = 1;
+        i <= 5;
+        i++
+    ) {
+
+        if (rating >= i) {
+
+            html +=
+                `<i class="fa-solid fa-star"></i>`;
+
+        } else if (
+            rating >= i - 0.5
+        ) {
+
+            html +=
+                `<i class="fa-solid fa-star-half-stroke"></i>`;
+
+        } else {
+
+            html +=
+                `<i class="fa-regular fa-star"></i>`;
+
+        }
+
+    }
+
+    return html;
+
+}
+
+/* =========================================================
+   FORMAT REVIEW DATE
+   ========================================================= */
+
+function formatReviewDate(
+    dateString
+) {
+
+    if (!dateString) {
+
+        return "—";
+
+    }
+
+    const date =
+        new Date(dateString);
+
+    if (isNaN(date.getTime())) {
+
+        return "—";
+
+    }
+
+    return date.toLocaleDateString(
+        "en-US",
+        {
+            month: "short",
+            day: "numeric",
+            year: "numeric"
+        }
+    );
+
+}
+
+/* =========================================================
+   HTML ESCAPE
+   ========================================================= */
+
+function escapeHtml(
+    value
+) {
+
+    return String(value)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
 
 /* =========================================================
    ANIMATED COUNTERS
@@ -1027,22 +1258,16 @@ function initAnimatedCounters() {
             ".mini-stat-value"
         );
 
+    counters.forEach(
+        function (counter) {
 
-    counters.forEach(function (counter) {
+            counter.textContent =
+                "—";
 
-        /*
-           These values are not available
-           from the current API yet.
-
-           Keep them as —
-        */
-
-        counter.textContent = "—";
-
-    });
+        }
+    );
 
 }
-
 
 /* =========================================================
    SAVE PROVIDER
@@ -1055,11 +1280,9 @@ function initSaveProvider() {
             "#saveProviderBtn"
         );
 
-
     if (!saveButton) {
         return;
     }
-
 
     saveButton.addEventListener(
         "click",
@@ -1069,7 +1292,6 @@ function initSaveProvider() {
                 saveButton.getAttribute(
                     "aria-pressed"
                 ) === "true";
-
 
             const icon =
                 saveButton.querySelector(
@@ -1081,14 +1303,12 @@ function initSaveProvider() {
                     "span"
                 );
 
-
             if (isSaved) {
 
                 saveButton.setAttribute(
                     "aria-pressed",
                     "false"
                 );
-
 
                 if (icon) {
 
@@ -1102,11 +1322,12 @@ function initSaveProvider() {
 
                 }
 
-
                 if (text) {
-                    text.textContent = "Save";
-                }
 
+                    text.textContent =
+                        "Save";
+
+                }
 
                 showToast(
                     "Provider Removed",
@@ -1120,7 +1341,6 @@ function initSaveProvider() {
                     "true"
                 );
 
-
                 if (icon) {
 
                     icon.classList.remove(
@@ -1133,11 +1353,12 @@ function initSaveProvider() {
 
                 }
 
-
                 if (text) {
-                    text.textContent = "Saved";
-                }
 
+                    text.textContent =
+                        "Saved";
+
+                }
 
                 showToast(
                     "Provider Saved",
@@ -1151,7 +1372,6 @@ function initSaveProvider() {
 
 }
 
-
 /* =========================================================
    ACTION BUTTONS
    ========================================================= */
@@ -1159,63 +1379,86 @@ function initSaveProvider() {
 function initActionButtons() {
 
     document
-        .querySelectorAll(".btn-book-now")
-        .forEach(function (button) {
+        .querySelectorAll(
+            ".btn-book-now"
+        )
+        .forEach(
+            function (button) {
 
-            button.addEventListener(
-                "click",
-                function () {
+                button.addEventListener(
+                    "click",
+                    function () {
 
-                    showToast(
-                        "Booking",
-                        "Booking feature will be connected next."
-                    );
+                        const providerId =
+                            getProviderId();
 
-                }
-            );
+                        if (!providerId) {
 
-        });
+                            showToast(
+                                "Error",
+                                "Provider information is missing."
+                            );
 
+                            return;
 
-    document
-        .querySelectorAll(".btn-message")
-        .forEach(function (button) {
+                        }
 
-            button.addEventListener(
-                "click",
-                function () {
+                        window.location.href =
+                            getBookingUrl(
+                                providerId
+                            );
 
-                    showToast(
-                        "Message",
-                        "Messaging feature will be connected next."
-                    );
+                    }
+                );
 
-                }
-            );
-
-        });
-
+            }
+        );
 
     document
-        .querySelectorAll(".btn-call")
-        .forEach(function (button) {
+        .querySelectorAll(
+            ".btn-message"
+        )
+        .forEach(
+            function (button) {
 
-            button.addEventListener(
-                "click",
-                function () {
+                button.addEventListener(
+                    "click",
+                    function () {
 
-                    showToast(
-                        "Call Provider",
-                        "Calling feature will be connected next."
-                    );
+                        showToast(
+                            "Message",
+                            "Messaging feature will be connected next."
+                        );
 
-                }
-            );
+                    }
+                );
 
-        });
+            }
+        );
+
+    document
+        .querySelectorAll(
+            ".btn-call"
+        )
+        .forEach(
+            function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        showToast(
+                            "Call Provider",
+                            "Calling feature will be connected next."
+                        );
+
+                    }
+                );
+
+            }
+        );
 
 }
-
 
 /* =========================================================
    LOAD MORE REVIEWS
@@ -1228,11 +1471,9 @@ function initLoadMoreReviews() {
             "#loadMoreReviews"
         );
 
-
     if (!button) {
         return;
     }
-
 
     button.addEventListener(
         "click",
@@ -1247,7 +1488,6 @@ function initLoadMoreReviews() {
     );
 
 }
-
 
 /* =========================================================
    MOBILE ACTION BAR
@@ -1270,23 +1510,35 @@ function initMobileActionBar() {
             "#mobileCall"
         );
 
-
     if (mobileBookNow) {
 
         mobileBookNow.addEventListener(
             "click",
             function () {
 
-                showToast(
-                    "Booking",
-                    "Booking feature will be connected next."
-                );
+                const providerId =
+                    getProviderId();
+
+                if (!providerId) {
+
+                    showToast(
+                        "Error",
+                        "Provider information is missing."
+                    );
+
+                    return;
+
+                }
+
+                window.location.href =
+                    getBookingUrl(
+                        providerId
+                    );
 
             }
         );
 
     }
-
 
     if (mobileMessage) {
 
@@ -1303,7 +1555,6 @@ function initMobileActionBar() {
         );
 
     }
-
 
     if (mobileCall) {
 
@@ -1323,67 +1574,69 @@ function initMobileActionBar() {
 
 }
 
-
 /* =========================================================
    TOAST
    ========================================================= */
 
-function showToast(title, message) {
+function showToast(
+    title,
+    message
+) {
 
     const toast =
         document.querySelector(
             "#actionToast"
         );
 
-
     const toastTitle =
         document.querySelector(
             "#toastTitle"
         );
-
 
     const toastText =
         document.querySelector(
             "#toastText"
         );
 
-
     if (!toast) {
         return;
     }
 
-
     if (toastTitle) {
-        toastTitle.textContent = title;
-    }
 
+        toastTitle.textContent =
+            title;
+
+    }
 
     if (toastText) {
-        toastText.textContent = message;
-    }
 
+        toastText.textContent =
+            message;
+
+    }
 
     toast.classList.add(
         "show"
     );
 
-
     clearTimeout(
         window.oneClickToastTimer
     );
 
-
     window.oneClickToastTimer =
-        setTimeout(function () {
+        setTimeout(
+            function () {
 
-            toast.classList.remove(
-                "show"
-            );
+                toast.classList.remove(
+                    "show"
+                );
 
-        }, 3000);
+            },
+            3000
+        );
 
 }
-
 
 /* =========================================================
    TOAST CLOSE
@@ -1417,7 +1670,6 @@ document.addEventListener(
     }
 );
 
-
 /* =========================================================
    GALLERY LIGHTBOX
    ========================================================= */
@@ -1439,56 +1691,53 @@ function initGalleryLightbox() {
             "#lightboxClose"
         );
 
-
     if (
         !lightbox ||
         !lightboxImage
     ) {
-        return;
-    }
 
+        return;
+
+    }
 
     document
         .querySelectorAll(
             ".gallery-item"
         )
-        .forEach(function (item) {
+        .forEach(
+            function (item) {
 
-            item.addEventListener(
-                "click",
-                function () {
+                item.addEventListener(
+                    "click",
+                    function () {
 
-                    const image =
-                        item.querySelector(
-                            "img"
+                        const image =
+                            item.querySelector(
+                                "img"
+                            );
+
+                        if (!image) {
+                            return;
+                        }
+
+                        lightboxImage.src =
+                            image.src;
+
+                        lightboxImage.alt =
+                            image.alt;
+
+                        lightbox.classList.add(
+                            "active"
                         );
 
+                        document.body.style.overflow =
+                            "hidden";
 
-                    if (!image) {
-                        return;
                     }
+                );
 
-
-                    lightboxImage.src =
-                        image.src;
-
-                    lightboxImage.alt =
-                        image.alt;
-
-
-                    lightbox.classList.add(
-                        "active"
-                    );
-
-
-                    document.body.style.overflow =
-                        "hidden";
-
-                }
-            );
-
-        });
-
+            }
+        );
 
     function closeLightbox() {
 
@@ -1496,12 +1745,10 @@ function initGalleryLightbox() {
             "active"
         );
 
-
         document.body.style.overflow =
             "";
 
     }
-
 
     if (lightboxClose) {
 
@@ -1511,7 +1758,6 @@ function initGalleryLightbox() {
         );
 
     }
-
 
     lightbox.addEventListener(
         "click",
@@ -1529,13 +1775,13 @@ function initGalleryLightbox() {
         }
     );
 
-
     document.addEventListener(
         "keydown",
         function (event) {
 
             if (
-                event.key === "Escape"
+                event.key ===
+                "Escape"
             ) {
 
                 closeLightbox();
@@ -1547,7 +1793,6 @@ function initGalleryLightbox() {
 
 }
 
-
 /* =========================================================
    RIPPLE EFFECT
    ========================================================= */
@@ -1558,69 +1803,63 @@ function initRippleButtons() {
         .querySelectorAll(
             ".ripple"
         )
-        .forEach(function (button) {
+        .forEach(
+            function (button) {
 
-            button.addEventListener(
-                "click",
-                function (event) {
+                button.addEventListener(
+                    "click",
+                    function (event) {
 
-                    const ripple =
-                        document.createElement(
-                            "span"
+                        const ripple =
+                            document.createElement(
+                                "span"
+                            );
+
+                        const rect =
+                            button.getBoundingClientRect();
+
+                        const size =
+                            Math.max(
+                                rect.width,
+                                rect.height
+                            );
+
+                        ripple.style.width =
+                            `${size}px`;
+
+                        ripple.style.height =
+                            `${size}px`;
+
+                        ripple.style.left =
+                            `${event.clientX - rect.left - size / 2}px`;
+
+                        ripple.style.top =
+                            `${event.clientY - rect.top - size / 2}px`;
+
+                        ripple.classList.add(
+                            "ripple-effect"
                         );
 
-
-                    const rect =
-                        button.getBoundingClientRect();
-
-
-                    const size =
-                        Math.max(
-                            rect.width,
-                            rect.height
+                        button.appendChild(
+                            ripple
                         );
 
+                        setTimeout(
+                            function () {
 
-                    ripple.style.width =
-                        `${size}px`;
+                                ripple.remove();
 
-                    ripple.style.height =
-                        `${size}px`;
+                            },
+                            600
+                        );
 
+                    }
+                );
 
-                    ripple.style.left =
-                        `${event.clientX - rect.left - size / 2}px`;
-
-                    ripple.style.top =
-                        `${event.clientY - rect.top - size / 2}px`;
-
-
-                    ripple.classList.add(
-                        "ripple-effect"
-                    );
-
-
-                    button.appendChild(
-                        ripple
-                    );
-
-
-                    setTimeout(
-                        function () {
-
-                            ripple.remove();
-
-                        },
-                        600
-                    );
-
-                }
-            );
-
-        });
+            }
+        );
 
 }
-
 
 /* =========================================================
    SCROLL ANIMATIONS
@@ -1633,9 +1872,11 @@ function initScrollAnimations() {
             ".fade-up"
         );
 
-
     if (
-        !("IntersectionObserver" in window)
+        !(
+            "IntersectionObserver"
+            in window
+        )
     ) {
 
         elements.forEach(
@@ -1651,7 +1892,6 @@ function initScrollAnimations() {
         return;
 
     }
-
 
     const observer =
         new IntersectionObserver(
@@ -1682,7 +1922,6 @@ function initScrollAnimations() {
                 threshold: 0.1
             }
         );
-
 
     elements.forEach(
         function (element) {

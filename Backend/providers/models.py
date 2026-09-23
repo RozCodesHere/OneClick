@@ -53,3 +53,32 @@ class ProviderProfile(models.Model):
 
     def __str__(self):
         return self.user.email
+
+
+class SavedProvider(models.Model):
+    customer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saved_providers",
+    )
+
+    provider = models.ForeignKey(
+        ProviderProfile,
+        on_delete=models.CASCADE,
+        related_name="saved_by",
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["customer", "provider"],
+                name="unique_saved_provider",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.customer.email} saved {self.provider.user.email}"

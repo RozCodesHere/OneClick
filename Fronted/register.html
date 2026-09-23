@@ -334,29 +334,36 @@
               </div>
 
               <!-- Service Category -->
-              <div class="col-md-6">
-                <label for="provCategory" class="form-label">Service Category</label>
-                <div class="oc-input-group">
-                  <span class="oc-input-icon" aria-hidden="true"><i class="fa-solid fa-list-check"></i></span>
-                  <select class="form-select oc-form-control oc-form-select" id="provCategory" name="serviceCategory" required
-                          aria-describedby="provCategoryFeedback">
-                    <option value="" selected disabled>Select your service category</option>
-                    <option value="electrician">Electrician</option>
-                    <option value="plumber">Plumber</option>
-                    <option value="cleaner">Cleaner</option>
-                    <option value="painter">Painter</option>
-                    <option value="carpenter">Carpenter</option>
-                    <option value="gardener">Gardener</option>
-                    <option value="ac-repair">AC Repair</option>
-                    <option value="beauty-service">Beauty Service</option>
-                    <option value="laundry">Laundry</option>
-                    <option value="computer-repair">Computer Repair</option>
-                    <option value="vehicle-repair">Vehicle Repair</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div id="provCategoryFeedback" class="invalid-feedback">Please select a service category.</div>
-              </div>
+<div class="col-md-6">
+  <label for="provCategory" class="form-label">Service Category</label>
+
+  <div class="oc-input-group">
+    <span class="oc-input-icon" aria-hidden="true">
+      <i class="fa-solid fa-list-check"></i>
+    </span>
+
+    <select
+      class="form-select oc-form-control oc-form-select"
+      id="provCategory"
+      name="serviceCategory"
+      required
+      aria-describedby="provCategoryFeedback"
+    >
+      <option value="" selected disabled>
+        Select your service category
+      </option>
+
+      <option value="1">Home Repair</option>
+      <option value="2">Cleaning</option>
+      <option value="3">Vehicle Services</option>
+      <option value="4">Electrical</option>
+    </select>
+  </div>
+
+  <div id="provCategoryFeedback" class="invalid-feedback">
+    Please select a service category.
+  </div>
+</div>
 
               <!-- Password -->
               <div class="col-md-6">
@@ -399,7 +406,32 @@
                 </div>
                 <div id="provExperienceFeedback" class="invalid-feedback">Please enter your years of experience (0–60).</div>
               </div>
+<!-- Hourly Rate -->
+<div class="col-md-6">
+  <label for="provHourlyRate" class="form-label">Hourly Rate (Rs.)</label>
+  <div class="oc-input-group">
+    <span class="oc-input-icon" aria-hidden="true">
+      <i class="fa-solid fa-money-bill-wave"></i>
+    </span>
 
+    <input
+      type="number"
+      class="form-control oc-form-control"
+      id="provHourlyRate"
+      name="hourlyRate"
+      placeholder="e.g. 800"
+      min="1"
+      max="100000"
+      step="0.01"
+      required
+      aria-describedby="provHourlyRateFeedback"
+    >
+  </div>
+
+  <div id="provHourlyRateFeedback" class="invalid-feedback">
+    Please enter your hourly rate.
+  </div>
+</div>
               <!-- Address -->
               <div class="col-md-6">
                 <label for="provAddress" class="form-label">Address</label>

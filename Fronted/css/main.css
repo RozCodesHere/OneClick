@@ -738,3 +738,254 @@ html { scroll-behavior: smooth; }
   .oc-hero-card-float { display: none; }
   .oc-footer-bottom { flex-direction: column; text-align: center; }
 }
+
+/* =========================================================
+   ONECLICK — GLOBAL DARK THEME
+========================================================= */
+
+html[data-theme="dark"] {
+  --oc-bg: #0B1220;
+  --oc-dark: #E2E8F0;
+  --oc-text-muted: #94A3B8;
+  --oc-border: #1E293B;
+  --oc-white: #111827;
+
+  --oc-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --oc-shadow-md: 0 12px 32px rgba(0, 0, 0, 0.30);
+  --oc-shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.40);
+}
+
+/* ---------- Base ---------- */
+
+html[data-theme="dark"] body {
+  background-color: var(--oc-bg);
+  color: var(--oc-dark);
+}
+
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6 {
+  color: var(--oc-dark);
+}
+
+html[data-theme="dark"] p {
+  color: var(--oc-text-muted);
+}
+
+/* ---------- Navbar ---------- */
+
+html[data-theme="dark"] .oc-navbar {
+  background: rgba(15, 23, 42, 0.88);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+html[data-theme="dark"] .oc-navbar.oc-scrolled {
+  background: rgba(15, 23, 42, 0.96);
+  border-bottom-color: var(--oc-border);
+}
+
+html[data-theme="dark"] .oc-brand {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .oc-nav-links .nav-link {
+  color: #CBD5E1;
+}
+
+html[data-theme="dark"] .oc-nav-links .nav-link:hover,
+html[data-theme="dark"] .oc-nav-links .nav-link.active {
+  color: #60A5FA;
+}
+
+html[data-theme="dark"] .oc-toggler-bar {
+  background: #E2E8F0;
+}
+
+/* ---------- Hero ---------- */
+
+html[data-theme="dark"] .oc-hero {
+  background: linear-gradient(
+    180deg,
+    #111827 0%,
+    #0B1220 100%
+  );
+}
+
+html[data-theme="dark"] .oc-hero-trust p {
+  color: #CBD5E1;
+}
+
+html[data-theme="dark"] .oc-hero-card {
+  background: var(--oc-white);
+  border: 1px solid var(--oc-border);
+}
+
+html[data-theme="dark"] .oc-hero-card-main h6 {
+  color: #E2E8F0;
+}
+
+/* ---------- Sections ---------- */
+
+html[data-theme="dark"] .oc-section-alt {
+  background: #111827;
+}
+
+/* ---------- Category Cards ---------- */
+
+html[data-theme="dark"] .oc-cat-card {
+  background: var(--oc-white);
+  border-color: var(--oc-border);
+}
+
+html[data-theme="dark"] .oc-cat-card h6 {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .oc-cat-card p {
+  color: #94A3B8;
+}
+
+html[data-theme="dark"] .oc-cat-card-more {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+/* ---------- How It Works ---------- */
+
+html[data-theme="dark"] .oc-step-card {
+  background: var(--oc-white);
+  border: 1px solid var(--oc-border);
+}
+
+html[data-theme="dark"] .oc-step-card h5 {
+  color: #E2E8F0;
+}
+
+/* ---------- Feature Cards ---------- */
+
+html[data-theme="dark"] .oc-feature-card {
+  background: var(--oc-white);
+  border-color: var(--oc-border);
+}
+
+html[data-theme="dark"] .oc-feature-card h6 {
+  color: #E2E8F0;
+}
+
+/* ---------- Provider Cards ---------- */
+
+html[data-theme="dark"] .oc-provider-card {
+  background: var(--oc-white);
+  border-color: var(--oc-border);
+}
+
+html[data-theme="dark"] .oc-provider-card h6 {
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .oc-provider-meta {
+  color: #94A3B8;
+}
+
+/* ---------- Testimonials ---------- */
+
+html[data-theme="dark"] .oc-testimonial-card {
+  background: var(--oc-white);
+  border: 1px solid var(--oc-border);
+}
+
+html[data-theme="dark"] .oc-testimonial-card p {
+  color: #CBD5E1;
+}
+
+/* ---------- Phone Mockup ---------- */
+
+html[data-theme="dark"] .oc-phone-screen {
+  background: #0F172A;
+}
+
+html[data-theme="dark"] .oc-phone-card {
+  background: #1E293B;
+  color: #E2E8F0;
+}
+
+/* ---------- Bootstrap / Common Elements ---------- */
+
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] .form-select {
+  background-color: #0F172A;
+  color: #E2E8F0;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .form-control::placeholder {
+  color: #64748B;
+}
+
+html[data-theme="dark"] .form-control:focus,
+html[data-theme="dark"] .form-select:focus {
+  background-color: #0F172A;
+  color: #E2E8F0;
+  border-color: #3B82F6;
+}
+
+html[data-theme="dark"] .dropdown-menu {
+  background: #111827;
+  border-color: #1E293B;
+}
+
+html[data-theme="dark"] .dropdown-item {
+  color: #CBD5E1;
+}
+
+html[data-theme="dark"] .dropdown-item:hover {
+  background: #1E293B;
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .modal-content {
+  background: #111827;
+  color: #E2E8F0;
+  border-color: #1E293B;
+}
+
+html[data-theme="dark"] .offcanvas {
+  background: #111827;
+  color: #E2E8F0;
+}
+
+html[data-theme="dark"] .text-dark {
+  color: #E2E8F0 !important;
+}
+
+html[data-theme="dark"] .bg-white {
+  background-color: #111827 !important;
+}
+
+/* ---------- Footer ---------- */
+
+html[data-theme="dark"] .oc-footer {
+  background: #080D17;
+}
+
+html[data-theme="dark"] .oc-footer-title {
+  color: #E2E8F0;
+}
+
+/* ---------- Smooth Theme Change ---------- */
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] .oc-navbar,
+html[data-theme="dark"] .oc-card,
+html[data-theme="dark"] .oc-cat-card,
+html[data-theme="dark"] .oc-step-card,
+html[data-theme="dark"] .oc-feature-card,
+html[data-theme="dark"] .oc-provider-card,
+html[data-theme="dark"] .oc-testimonial-card {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}

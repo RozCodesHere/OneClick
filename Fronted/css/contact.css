@@ -603,7 +603,11 @@ textarea.oc-input{ resize: vertical; min-height: 130px; }
 [data-animate="fade-up"]{ transform: translateY(36px); }
 [data-animate="fade-right"]{ transform: translateX(-40px); }
 [data-animate="fade-left"]{ transform: translateX(40px); }
-[data-animate="zoom-in"]{ transform: scale(.92); }
+
+[data-animate].animated {
+    opacity: 1;
+    transform: none;
+}
 
 [data-animate].in-view{
   opacity: 1;

@@ -1,977 +1,1417 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>Dashboard | OneClick</title>
 
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-    >
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
 
-    <!-- Bootstrap -->
+    <!-- Bootstrap 5 -->
     <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
 
     <!-- Font Awesome -->
     <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
 
     <!-- AOS -->
     <link
-        href="https://cdn.jsdelivr.net/npm/aos@2.3.1/dist/aos.css"
-        rel="stylesheet"
-    >
+      href="https://cdn.jsdelivr.net/npm/aos@2.3.1/dist/aos.css"
+      rel="stylesheet"
+    />
+
+    <!-- Theme -->
+    <script src="js/theme.js"></script>
 
     <!-- Dashboard CSS -->
-    <link rel="stylesheet" href="css/customer-dashboard.css">
-</head>
+    <link rel="stylesheet" href="css/customer-dashboard.css" />
+  </head>
 
-<body>
+  <body>
 
-<!-- =========================================================
-     NAVBAR
-========================================================== -->
-
-<nav class="oc-navbar navbar navbar-expand-lg sticky-top">
-
-    <div class="container-fluid px-3 px-lg-4">
+    <!-- =========================================================
+         NAVBAR
+    ========================================================== -->
+    <nav class="oc-navbar navbar navbar-expand-lg sticky-top">
+      <div class="container-fluid px-3 px-lg-4">
 
         <!-- Brand -->
-        <a
-            class="oc-brand navbar-brand d-flex align-items-center gap-2"
-            href="#"
-        >
-            <span class="oc-brand-icon">
-                <i class="fa-solid fa-bolt"></i>
-            </span>
+       <a
+  class="oc-brand navbar-brand d-flex align-items-center gap-2"
+  href="customer-dashboard.html"
+>
+  <span class="oc-brand-mark">
+    <i class="fa-solid fa-bolt"></i>
+  </span>
 
-            <span class="oc-brand-text">
-                One<span>Click</span>
-            </span>
-        </a>
+  One<span class="text-accent">Click</span>
+</a>
 
 
-        <!-- Mobile menu -->
+        <!-- Mobile Menu Button -->
         <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#ocNav"
-            aria-label="Toggle navigation"
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#ocNav"
         >
-            <i class="fa-solid fa-bars"></i>
+          <i class="fa-solid fa-bars"></i>
         </button>
 
 
-        <!-- Navbar content -->
+        <!-- Navbar Content -->
         <div class="collapse navbar-collapse" id="ocNav">
 
-            <!-- Search -->
-            <div class="oc-search mx-lg-auto my-3 my-lg-0">
+          <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2 gap-3">
 
-                <i class="fa-solid fa-magnifying-glass"></i>
+            <!-- =================================================
+                 NOTIFICATIONS
+            ================================================== -->
+            <li class="nav-item dropdown">
 
-                <input
-                    type="text"
-                    class="form-control"
-                    placeholder="Search for a service, e.g. Electrician"
-                    id="navbarSearch"
+              <a
+                href="notifications.html"
+                class="oc-icon-btn"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                aria-label="Notifications"
+                title="Notifications"
+              >
+                <i class="fa-regular fa-bell"></i>
+              </a>
+
+              <ul
+                class="dropdown-menu dropdown-menu-end oc-dropdown oc-notif-dropdown"
+              >
+
+                <li class="oc-dropdown-header">
+                  Notifications
+                </li>
+
+                <li>
+                  <div
+                    class="dropdown-item text-muted justify-content-center py-4"
+                  >
+                    <i class="fa-regular fa-bell-slash"></i>
+                    <span>No new notifications</span>
+                  </div>
+                </li>
+
+              </ul>
+
+            </li>
+
+
+            <!-- =================================================
+                 MESSAGES
+            ================================================== -->
+            <li class="nav-item">
+
+              <a
+                href="chat.html"
+                class="oc-icon-btn"
+                aria-label="Messages"
+                title="Messages"
+              >
+                <i class="fa-regular fa-message"></i>
+              </a>
+
+            </li>
+
+
+            <!-- =================================================
+                 PROFILE
+            ================================================== -->
+            <li class="nav-item dropdown">
+
+              <a
+                href="#"
+                class="oc-profile"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+
+                <span
+                  class="oc-avatar"
+                  id="customerAvatar"
                 >
+                  --
+                </span>
 
-            </div>
+                <span class="oc-profile-name d-none d-md-block">
+
+                  <span id="profileName">
+                    Loading...
+                  </span>
+
+                  <small>
+                    Customer
+                  </small>
+
+                </span>
+
+                <i
+                  class="fa-solid fa-chevron-down d-none d-md-block"
+                ></i>
+
+              </a>
 
 
-            <ul class="navbar-nav align-items-lg-center gap-lg-2 gap-3">
+              <ul class="dropdown-menu dropdown-menu-end oc-dropdown">
 
-                <!-- Notifications -->
-                <li class="nav-item dropdown">
-
-                    <a
-                        href="#"
-                        class="oc-icon-btn"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                    >
-                        <i class="fa-regular fa-bell"></i>
-
-                        <span class="oc-badge-dot">
-                            3
-                        </span>
-                    </a>
-
-                    <ul
-                        class="dropdown-menu dropdown-menu-end oc-dropdown oc-notif-dropdown"
-                    >
-
-                        <li class="oc-dropdown-header">
-                            Notifications
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item" href="#">
-
-                                <i class="fa-solid fa-check-circle text-success"></i>
-
-                                <div>
-                                    <strong>Booking confirmed</strong>
-
-                                    <span>
-                                        Your booking has been confirmed
-                                    </span>
-                                </div>
-
-                            </a>
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item" href="#">
-
-                                <i class="fa-solid fa-star text-warning"></i>
-
-                                <div>
-                                    <strong>Rate your service</strong>
-
-                                    <span>
-                                        Tell us about your recent service
-                                    </span>
-                                </div>
-
-                            </a>
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item" href="#">
-
-                                <i class="fa-solid fa-tag text-primary"></i>
-
-                                <div>
-                                    <strong>Special offer</strong>
-
-                                    <span>
-                                        Check out available services
-                                    </span>
-                                </div>
-
-                            </a>
-                        </li>
-
-                    </ul>
-
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="profile.html"
+                  >
+                    <i class="fa-regular fa-user"></i>
+                    My Profile
+                  </a>
                 </li>
 
-
-                <!-- Profile -->
-                <li class="nav-item dropdown">
-
-                    <a
-                        href="#"
-                        class="oc-profile"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                    >
-
-                        <span
-                            class="oc-avatar"
-                            id="customerAvatar"
-                        >
-                            --
-                        </span>
-
-                        <span class="oc-profile-name d-none d-md-flex">
-
-                            <span id="profileName">
-                                Loading...
-                            </span>
-
-                            <small>
-                                Customer
-                            </small>
-
-                        </span>
-
-                        <i class="fa-solid fa-chevron-down d-none d-md-block"></i>
-
-                    </a>
-
-
-                    <ul class="dropdown-menu dropdown-menu-end oc-dropdown">
-
-                        <li>
-                            <a class="dropdown-item" href="#">
-                                <i class="fa-regular fa-user"></i>
-                                My Profile
-                            </a>
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item" href="#">
-                                <i class="fa-solid fa-calendar-check"></i>
-                                My Bookings
-                            </a>
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item" href="#">
-                                <i class="fa-regular fa-heart"></i>
-                                Saved Providers
-                            </a>
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item" href="#">
-                                <i class="fa-solid fa-gear"></i>
-                                Settings
-                            </a>
-                        </li>
-
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-
-                        <li>
-                            <a
-                                class="dropdown-item text-danger js-logout"
-                                href="#"
-                            >
-                                <i class="fa-solid fa-right-from-bracket"></i>
-                                Logout
-                            </a>
-                        </li>
-
-                    </ul>
-
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="booking-history.html"
+                  >
+                    <i class="fa-solid fa-calendar-check"></i>
+                    My Bookings
+                  </a>
                 </li>
 
-
-                <!-- Desktop logout -->
-                <li class="nav-item">
-
-                    <a
-                        href="#"
-                        class="btn oc-btn-logout d-none d-lg-inline-flex js-logout"
-                    >
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                        Logout
-                    </a>
-
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="saved-provider.html"
+                  >
+                    <i class="fa-regular fa-heart"></i>
+                    Saved Providers
+                  </a>
                 </li>
 
-            </ul>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="setting.html"
+                  >
+                    <i class="fa-solid fa-gear"></i>
+                    Settings
+                  </a>
+                </li>
+
+                <li>
+                  <hr class="dropdown-divider" />
+                </li>
+
+                <li>
+                  <a
+                    class="dropdown-item text-danger js-logout"
+                    href="#"
+                  >
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    Logout
+                  </a>
+                </li>
+
+              </ul>
+
+            </li>
+
+
+            <!-- Desktop Logout -->
+            <a
+              href="#"
+              class="btn oc-btn-logout js-logout d-none d-lg-inline-flex"
+            >
+              <i class="fa-solid fa-right-from-bracket"></i>
+              Logout
+            </a>
+
+          </ul>
 
         </div>
 
-    </div>
+      </div>
+    </nav>
 
-</nav>
 
 
-<!-- =========================================================
-     WELCOME BANNER
-========================================================== -->
+    <!-- =========================================================
+         WELCOME BANNER
+    ========================================================== -->
+    <section class="oc-banner">
 
-<section class="oc-banner">
-
-    <div class="container">
+      <div class="container">
 
         <div
-            class="oc-banner-inner"
-            data-aos="fade-up"
+          class="oc-banner-inner"
+          data-aos="fade-up"
         >
 
-            <div class="oc-banner-text">
+          <!-- Banner Text -->
+          <div class="oc-banner-text">
 
-                <p
-                    class="oc-greeting"
-                    id="greetingText"
-                >
-                    <i class="fa-regular fa-sun"></i>
-                    Good Morning
-                </p>
+            <p
+              class="oc-greeting"
+              id="greetingText"
+            >
+              <i class="fa-regular fa-sun"></i>
+              Good Morning
+            </p>
 
+            <h1>
+              Welcome back,
+              <span id="customerName">
+                Loading...
+              </span>
+              👋
+            </h1>
 
-                <h1>
-                    Welcome back,
-                    <span id="customerName">
-                        Loading...
-                    </span>
-                    👋
-                </h1>
-
-
-                <p class="oc-banner-sub">
-                    What service do you need today?
-                </p>
-
-
-                <div class="oc-banner-search">
-
-                    <i class="fa-solid fa-magnifying-glass"></i>
-
-                    <input
-                        type="text"
-                        id="bannerSearch"
-                        placeholder="Try 'Plumber near me' or 'Deep cleaning'"
-                    >
-
-                    <button
-                        class="btn oc-btn-accent"
-                        id="bannerSearchButton"
-                        type="button"
-                    >
-                        Search
-                    </button>
-
-                </div>
-
-            </div>
+            <p class="oc-banner-sub">
+              What service do you need today?
+            </p>
 
 
-            <!-- Banner artwork -->
-            <div class="oc-banner-art d-none d-lg-flex">
+            <!-- Banner Search -->
+            <div class="oc-banner-search">
 
-                <div class="oc-banner-orb oc-orb-1">
-                    <i class="fa-solid fa-screwdriver-wrench"></i>
-                </div>
+              <i class="fa-solid fa-magnifying-glass"></i>
 
-                <div class="oc-banner-orb oc-orb-2">
-                    <i class="fa-solid fa-broom"></i>
-                </div>
+              <input
+                type="text"
+                id="dashboardServiceSearch"
+                placeholder="Try 'Plumber near me' or 'Car Wash'"
+                autocomplete="off"
+              />
 
-                <div class="oc-banner-orb oc-orb-3">
-                    <i class="fa-solid fa-bolt"></i>
-                </div>
+              <button
+                class="btn oc-btn-accent"
+                type="button"
+                id="dashboardSearchButton"
+              >
+                Search
+              </button>
 
             </div>
+
+          </div>
+
+
+          <!-- Banner Artwork -->
+          <div class="oc-banner-art d-none d-lg-flex">
+
+            <div class="oc-banner-orb oc-orb-1">
+              <i class="fa-solid fa-screwdriver-wrench"></i>
+            </div>
+
+            <div class="oc-banner-orb oc-orb-2">
+              <i class="fa-solid fa-broom"></i>
+            </div>
+
+            <div class="oc-banner-orb oc-orb-3">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+
+          </div>
 
         </div>
 
-    </div>
+      </div>
+
+    </section>
+
+
+
+    <!-- =========================================================
+         MAIN CONTENT
+    ========================================================== -->
+    <main class="container oc-main">
+
+
+      <!-- =======================================================
+     QUICK ACTIONS
+======================================================== -->
+<section class="oc-section">
+
+  <div
+    class="oc-section-head"
+    data-aos="fade-up"
+  >
+
+    <h2>
+      Quick Actions
+    </h2>
+
+    <p>
+      Your most booked services, one tap away
+    </p>
+
+  </div>
+
+
+  <div class="d-flex justify-content-end mb-3">
+
+    <button
+      type="button"
+      class="btn oc-btn-accent"
+      data-bs-toggle="modal"
+      data-bs-target="#serviceRequestModal"
+    >
+      <i class="fa-solid fa-plus me-2"></i>
+      Request a Service
+    </button>
+
+  </div>
+
+
+  <!-- Quick Actions will be loaded from the database -->
+  <div
+    class="row g-3 g-lg-4"
+    id="quickServicesGrid"
+  >
+  </div>
 
 </section>
 
-
-<!-- =========================================================
-     MAIN CONTENT
-========================================================== -->
-
-<main class="container oc-main">
+       
 
 
-    <!-- =======================================================
-         QUICK ACTIONS
-    ======================================================== -->
+       
+        
 
-    <section class="oc-section">
+      <!-- =======================================================
+           ALL SERVICES
+      ======================================================== -->
+      <section class="oc-section">
 
         <div
-            class="oc-section-head"
-            data-aos="fade-up"
+          class="oc-section-head"
+          data-aos="fade-up"
         >
 
-            <h2>
-                Quick Actions
-            </h2>
+          <h2>
+            All Services
+          </h2>
 
-            <p>
-                Your most booked services, one tap away
-            </p>
+          <p>
+            Browse everything OneClick has to offer
+          </p>
+
+        </div>
+
+
+        <!--
+          Services will be inserted here
+          by customer-dashboard.js
+        -->
+        <div
+          class="row g-3"
+          id="servicesGrid"
+        >
+        </div>
+
+      </section>
+
+
+
+      <!-- =======================================================
+           YOUR ACTIVITY / STATISTICS
+      ======================================================== -->
+      <section class="oc-section">
+
+        <div
+          class="oc-section-head"
+          data-aos="fade-up"
+        >
+
+          <h2>
+            Your Activity
+          </h2>
+
+          <p>
+            A quick snapshot of your OneClick journey
+          </p>
 
         </div>
 
 
         <div class="row g-3 g-lg-4">
 
-            <!-- Electrician -->
-            <div
-                class="col-6 col-lg-3"
-                data-aos="fade-up"
-                data-aos-delay="0"
-            >
 
-                <a
-                    href="#"
-                    class="oc-quick-card"
-                    data-service="Electrician"
+          <!-- Total Bookings -->
+          <div
+            class="col-6 col-lg-3"
+            data-aos="zoom-in"
+            data-aos-delay="0"
+          >
+
+            <div class="oc-stat-card">
+
+              <div class="oc-stat-icon oc-stat-1">
+                <i class="fa-solid fa-calendar-check"></i>
+              </div>
+
+              <h3>
+                <span
+                  class="oc-counter"
+                  id="totalBookings"
+                  data-count="0"
                 >
+                  0
+                </span>
+              </h3>
 
-                    <div class="oc-quick-icon oc-quick-1">
-                        <i class="fa-solid fa-bolt"></i>
-                    </div>
-
-                    <div class="oc-quick-content">
-
-                        <h5>
-                            Electrician
-                        </h5>
-
-                        <p>
-                            Wiring, repairs &amp; installs
-                        </p>
-
-                    </div>
-
-                    <span class="oc-quick-arrow">
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </span>
-
-                </a>
+              <p>
+                Total Bookings
+              </p>
 
             </div>
 
+          </div>
 
-            <!-- Plumber -->
-            <div
-                class="col-6 col-lg-3"
-                data-aos="fade-up"
-                data-aos-delay="100"
-            >
 
-                <a
-                    href="#"
-                    class="oc-quick-card"
-                    data-service="Plumber"
+          <!-- Completed Jobs -->
+          <div
+            class="col-6 col-lg-3"
+            data-aos="zoom-in"
+            data-aos-delay="100"
+          >
+
+            <div class="oc-stat-card">
+
+              <div class="oc-stat-icon oc-stat-2">
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
+
+              <h3>
+                <span
+                  class="oc-counter"
+                  id="completedJobs"
+                  data-count="0"
                 >
+                  0
+                </span>
+              </h3>
 
-                    <div class="oc-quick-icon oc-quick-2">
-                        <i class="fa-solid fa-faucet-drip"></i>
-                    </div>
-
-                    <div class="oc-quick-content">
-
-                        <h5>
-                            Plumber
-                        </h5>
-
-                        <p>
-                            Leaks, pipes &amp; fittings
-                        </p>
-
-                    </div>
-
-                    <span class="oc-quick-arrow">
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </span>
-
-                </a>
+              <p>
+                Completed Jobs
+              </p>
 
             </div>
 
+          </div>
 
-            <!-- Cleaning -->
-            <div
-                class="col-6 col-lg-3"
-                data-aos="fade-up"
-                data-aos-delay="200"
-            >
 
-                <a
-                    href="#"
-                    class="oc-quick-card"
-                    data-service="Cleaning"
+          <!-- Pending -->
+          <div
+            class="col-6 col-lg-3"
+            data-aos="zoom-in"
+            data-aos-delay="200"
+          >
+
+            <div class="oc-stat-card">
+
+              <div class="oc-stat-icon oc-stat-3">
+                <i class="fa-solid fa-hourglass-half"></i>
+              </div>
+
+              <h3>
+                <span
+                  class="oc-counter"
+                  id="pendingBookings"
+                  data-count="0"
                 >
+                  0
+                </span>
+              </h3>
 
-                    <div class="oc-quick-icon oc-quick-3">
-                        <i class="fa-solid fa-broom"></i>
-                    </div>
-
-                    <div class="oc-quick-content">
-
-                        <h5>
-                            Cleaning
-                        </h5>
-
-                        <p>
-                            Home &amp; office cleaning
-                        </p>
-
-                    </div>
-
-                    <span class="oc-quick-arrow">
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </span>
-
-                </a>
+              <p>
+                Pending
+              </p>
 
             </div>
 
+          </div>
 
-            <!-- Painting -->
-            <div
-                class="col-6 col-lg-3"
-                data-aos="fade-up"
-                data-aos-delay="300"
-            >
 
-                <a
-                    href="#"
-                    class="oc-quick-card"
-                    data-service="Painting"
+          <!-- Favourite Providers -->
+          <div
+            class="col-6 col-lg-3"
+            data-aos="zoom-in"
+            data-aos-delay="300"
+          >
+
+            <div class="oc-stat-card">
+
+              <div class="oc-stat-icon oc-stat-4">
+                <i class="fa-solid fa-heart"></i>
+              </div>
+
+              <h3>
+                <span
+                  class="oc-counter"
+                  id="favoriteProviders"
+                  data-count="0"
                 >
+                  0
+                </span>
+              </h3>
 
-                    <div class="oc-quick-icon oc-quick-4">
-                        <i class="fa-solid fa-paint-roller"></i>
-                    </div>
-
-                    <div class="oc-quick-content">
-
-                        <h5>
-                            Painting
-                        </h5>
-
-                        <p>
-                            Interior &amp; exterior paint
-                        </p>
-
-                    </div>
-
-                    <span class="oc-quick-arrow">
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </span>
-
-                </a>
+              <p>
+                Favourite Providers
+              </p>
 
             </div>
+
+          </div>
 
         </div>
 
-    </section>
+      </section>
 
 
-    <!-- =======================================================
-         ALL SERVICES
-    ======================================================== -->
 
-    <section class="oc-section">
+      <!-- =======================================================
+           RECENT BOOKINGS
+      ======================================================== -->
+      <section class="oc-section">
 
         <div
-            class="oc-section-head"
-            data-aos="fade-up"
+          class="oc-section-head"
+          data-aos="fade-up"
         >
 
-            <h2>
-                All Services
-            </h2>
+          <h2>
+            Recent Bookings
+          </h2>
 
-            <p>
-                Browse everything OneClick has to offer
-            </p>
+          <p>
+            Your latest service bookings
+          </p>
 
         </div>
 
 
         <div
-            class="row g-3"
-            id="servicesGrid"
-        ></div>
-
-    </section>
-
-
-    <!-- =======================================================
-         YOUR ACTIVITY
-    ======================================================== -->
-
-    <section class="oc-section">
-
-        <div
-            class="oc-section-head"
-            data-aos="fade-up"
+          class="oc-recent-bookings"
+          id="recentBookings"
         >
 
-            <h2>
-                Your Activity
-            </h2>
+          <div
+            class="oc-recent-bookings-list"
+            id="recentBookingsBody"
+          >
 
-            <p>
-                A quick snapshot of your OneClick journey
-            </p>
+            <div
+              class="text-center py-4"
+              id="recentBookingsLoading"
+            >
+
+              <i class="fa-solid fa-spinner fa-spin"></i>
+
+              <span class="ms-2">
+                Loading bookings...
+              </span>
+
+            </div>
+
+          </div>
 
         </div>
 
-
-        <div class="row g-3 g-lg-4">
-
-            <!-- Total -->
-            <div
-                class="col-6 col-lg-3"
-                data-aos="zoom-in"
-            >
-
-                <div class="oc-stat-card">
-
-                    <div class="oc-stat-icon oc-stat-1">
-                        <i class="fa-solid fa-calendar-check"></i>
-                    </div>
-
-                    <h3>
-                        <span
-                            class="oc-counter"
-                            id="totalBookings"
-                            data-count="0"
-                        >
-                            0
-                        </span>
-                    </h3>
-
-                    <p>
-                        Total Bookings
-                    </p>
-
-                </div>
-
-            </div>
+      </section>
 
 
-            <!-- Completed -->
-            <div
-                class="col-6 col-lg-3"
-                data-aos="zoom-in"
-                data-aos-delay="100"
-            >
 
-                <div class="oc-stat-card">
+      <!-- =======================================================
+           RECOMMENDED PROVIDERS
+      ======================================================== -->
+     <section class="oc-section">
 
-                    <div class="oc-stat-icon oc-stat-2">
-                        <i class="fa-solid fa-circle-check"></i>
-                    </div>
+  <div
+    class="oc-section-head d-flex justify-content-between align-items-center flex-wrap gap-3"
+    data-aos="fade-up"
+  >
 
-                    <h3>
-                        <span
-                            class="oc-counter"
-                            id="completedJobs"
-                            data-count="0"
-                        >
-                            0
-                        </span>
-                    </h3>
+    <div>
+      <h2>
+        Recommended Providers
+      </h2>
 
-                    <p>
-                        Completed Jobs
-                    </p>
+      <p id="providersSectionSubtitle">
+        Available providers on OneClick
+      </p>
+    </div>
 
-                </div>
+    <a
+      href="providers.html"
+      class="btn oc-btn-accent"
+    >
+      View All Providers
+      <i class="fa-solid fa-arrow-right ms-2"></i>
+    </a>
 
-            </div>
+  </div>
+<div
+    class="row g-3 g-lg-4"
+    id="providersGrid"
+></div>
 
+        <!--
+          IMPORTANT:
 
-            <!-- Pending -->
-            <div
-                class="col-6 col-lg-3"
-                data-aos="zoom-in"
-                data-aos-delay="200"
-            >
+          This container is intentionally empty.
 
-                <div class="oc-stat-card">
+          customer-dashboard.js will call:
 
-                    <div class="oc-stat-icon oc-stat-3">
-                        <i class="fa-solid fa-hourglass-half"></i>
-                    </div>
+              loadRecommendedProviders();
 
-                    <h3>
-                        <span
-                            class="oc-counter"
-                            id="pendingBookings"
-                            data-count="0"
-                        >
-                            0
-                        </span>
-                    </h3>
+          The JavaScript will fetch:
 
-                    <p>
-                        Pending
-                    </p>
+              GET /api/providers/
 
-                </div>
-
-            </div>
-
-
-            <!-- Favourite -->
-            <div
-                class="col-6 col-lg-3"
-                data-aos="zoom-in"
-                data-aos-delay="300"
-            >
-
-                <div class="oc-stat-card">
-
-                    <div class="oc-stat-icon oc-stat-4">
-                        <i class="fa-solid fa-heart"></i>
-                    </div>
-
-                    <h3>
-                        <span
-                            class="oc-counter"
-                            id="favoriteProviders"
-                            data-count="0"
-                        >
-                            0
-                        </span>
-                    </h3>
-
-                    <p>
-                        Favourite Providers
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <!-- =======================================================
-         RECENT BOOKINGS
-    ======================================================== -->
-
-    <section class="oc-section">
-
+          and create the provider cards here.
+        -->
         <div
-            class="oc-section-head oc-section-head-flex"
-            data-aos="fade-up"
+          class="row g-3 g-lg-4"
+          id="providersGrid"
         >
+        </div>
+
+      </section>
+
+    </main>
+
+
+
+    <!-- =========================================================
+         CREATE SERVICE REQUEST MODAL
+    ========================================================== -->
+    <div
+      class="modal fade"
+      id="serviceRequestModal"
+      tabindex="-1"
+      aria-labelledby="serviceRequestModalLabel"
+      aria-hidden="true"
+    >
+
+      <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+
+          <!-- Modal Header -->
+          <div class="modal-header">
 
             <div>
 
-                <h2>
-                    Recent Bookings
-                </h2>
+              <h5
+                class="modal-title"
+                id="serviceRequestModalLabel"
+              >
+                Request a Service
+              </h5>
 
-                <p>
-                    Your latest OneClick service bookings
-                </p>
+              <small class="text-muted">
+                Tell providers what service you need.
+              </small>
 
             </div>
 
-            <a
-                href="#"
-                class="oc-link-all"
-                id="viewAllBookings"
-            >
-                View all
-                <i class="fa-solid fa-arrow-right"></i>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+
+          </div>
+
+
+          <!-- Request Form -->
+          <form id="serviceRequestForm">
+
+            <div class="modal-body">
+
+
+              <!-- Service -->
+              <div class="mb-3">
+
+                <label
+                  for="requestService"
+                  class="form-label"
+                >
+                  Service
+                </label>
+
+                <select
+                  class="form-select"
+                  id="requestService"
+                  required
+                >
+
+                  <option value="">
+                    Select a service
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <!-- Description -->
+              <div class="mb-3">
+
+                <label
+                  for="requestDescription"
+                  class="form-label"
+                >
+                  Describe your problem
+                </label>
+
+                <textarea
+                  class="form-control"
+                  id="requestDescription"
+                  rows="4"
+                  placeholder="Example: My kitchen sink is leaking..."
+                  required
+                ></textarea>
+
+              </div>
+
+
+              <!-- Address -->
+              <div class="mb-3">
+
+                <label
+                  for="requestAddress"
+                  class="form-label"
+                >
+                  Service Address
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  id="requestAddress"
+                  placeholder="Enter your address"
+                  required
+                />
+
+              </div>
+
+
+              <!-- Image -->
+              <div class="mb-3">
+
+                <label
+                  for="requestImage"
+                  class="form-label"
+                >
+                  Problem Image
+                  <span class="text-muted">
+                    (Optional)
+                  </span>
+                </label>
+
+                <input
+                  type="file"
+                  class="form-control"
+                  id="requestImage"
+                  accept="image/*"
+                />
+
+              </div>
+
+
+              <!-- Error -->
+              <div
+                id="serviceRequestError"
+                class="alert alert-danger d-none"
+              ></div>
+
+
+              <!-- Success -->
+              <div
+                id="serviceRequestSuccess"
+                class="alert alert-success d-none"
+              ></div>
+
+            </div>
+
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                class="btn oc-btn-accent"
+                id="submitServiceRequestBtn"
+              >
+                <i class="fa-solid fa-paper-plane me-2"></i>
+                Send Request
+              </button>
+
+            </div>
+
+          </form>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- =========================================================
+         FOOTER
+    ========================================================== -->
+    <footer class="oc-footer">
+
+      <div class="container">
+
+        <div class="oc-footer-top">
+
+
+          <!-- Footer Brand -->
+          <div class="oc-footer-brand">
+
+            <span class="oc-brand-icon">
+              <i class="fa-solid fa-bolt"></i>
+            </span>
+
+            <span class="oc-brand-text">
+              One<span>Click</span>
+            </span>
+
+          </div>
+
+
+          <!-- Footer Links -->
+          <div class="oc-footer-links">
+
+            <a href="about.html">
+              About
             </a>
 
+            <a href="services.html">
+              Services
+            </a>
+
+           <a href="privacy.html">
+  Privacy Policy
+</a>
+
+<a href="term.html">
+  Terms
+</a>
+          </div>
+
+
+          <!-- Social Links -->
+          <div class="oc-footer-social">
+
+            <a
+              href="social.html?platform=facebook"
+              aria-label="Facebook"
+              title="Facebook"
+            >
+              <i class="fa-brands fa-facebook-f"></i>
+            </a>
+
+            <a
+              href="social.html?platform=instagram"
+              aria-label="Instagram"
+              title="Instagram"
+            >
+              <i class="fa-brands fa-instagram"></i>
+            </a>
+
+            <a
+              href="social.html?platform=twitter"
+              aria-label="Twitter"
+              title="Twitter"
+            >
+              <i class="fa-brands fa-x-twitter"></i>
+            </a>
+
+            <a
+              href="social.html?platform=linkedin"
+              aria-label="LinkedIn"
+              title="LinkedIn"
+            >
+              <i class="fa-brands fa-linkedin-in"></i>
+            </a>
+
+          </div>
+
         </div>
 
 
-        <div
-            class="oc-table-card"
-            data-aos="fade-up"
-        >
+        <hr />
 
-            <div class="table-responsive">
 
-                <table class="table oc-table">
+        <p class="oc-footer-copy">
+          &copy; 2026 OneClick. All rights reserved.
+        </p>
 
-                    <thead>
+      </div>
 
-                        <tr>
+    </footer>
 
-                            <th>
-                                Booking
-                            </th>
 
-                            <th>
-                                Service
-                            </th>
 
-                            <th>
-                                Provider
-                            </th>
+    <!-- =========================================================
+         BOOTSTRAP JS
+    ========================================================== -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    ></script>
 
-                            <th>
-                                Address
-                            </th>
 
-                            <th>
-                                Date &amp; Time
-                            </th>
+    <!-- =========================================================
+         AOS
+    ========================================================== -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/aos@2.3.1/dist/aos.js"
+    ></script>
 
-                            <th>
-                                Price
-                            </th>
 
-                            <th>
-                                Status
-                            </th>
+    <!-- =========================================================
+         CUSTOMER DASHBOARD JS
+    ========================================================== -->
+    <script src="js/customer-dashboard.js"></script>
 
-                            <th>
-                                Action
-                            </th>
+    <!-- =========================================================
+     SEND QUOTATION MODAL
+========================================================= -->
+<div
+  class="modal fade"
+  id="quotationModal"
+  tabindex="-1"
+  aria-labelledby="quotationModalLabel"
+  aria-hidden="true"
+>
 
-                        </tr>
+  <div class="modal-dialog modal-dialog-centered">
 
-                    </thead>
+    <div class="modal-content">
 
-                    <tbody id="recentBookingsBody">
+      <!-- Header -->
+      <div class="modal-header">
 
-                        <tr>
+        <div>
+          <h5
+            class="modal-title"
+            id="quotationModalLabel"
+          >
+            Send Quotation
+          </h5>
 
-                            <td
-                                colspan="8"
-                                class="oc-table-loading"
-                            >
+          <small class="text-muted">
+            Enter the price you want to offer the customer.
+          </small>
+        </div>
 
-                                <i class="fa-solid fa-spinner fa-spin"></i>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
 
-                                Loading bookings...
+      </div>
 
-                            </td>
 
-                        </tr>
+      <!-- Form -->
+      <form id="quotationForm">
 
-                    </tbody>
+        <div class="modal-body">
 
-                </table>
+          <!-- Request ID -->
+          <input
+            type="hidden"
+            id="quotationRequestId"
+          />
+
+
+          <!-- Price -->
+          <div class="mb-3">
+
+            <label
+              for="quotationPrice"
+              class="form-label"
+            >
+              Your Price
+            </label>
+
+            <div class="input-group">
+
+              <span class="input-group-text">
+                Rs.
+              </span>
+
+              <input
+                type="number"
+                class="form-control"
+                id="quotationPrice"
+                min="1"
+                step="0.01"
+                placeholder="Enter your price"
+                required
+              />
+
+            </div>
+
+          </div>
+
+
+          <!-- Message -->
+          <div class="mb-3">
+
+            <label
+              for="quotationMessage"
+              class="form-label"
+            >
+              Message
+              <span class="text-muted">
+                (Optional)
+              </span>
+            </label>
+
+            <textarea
+              class="form-control"
+              id="quotationMessage"
+              rows="3"
+              placeholder="Example: I can complete this service for Rs. 1000."
+            ></textarea>
+
+          </div>
+
+
+          <!-- Error -->
+          <div
+            id="quotationError"
+            class="alert alert-danger d-none"
+          ></div>
+
+
+          <!-- Success -->
+          <div
+            id="quotationSuccess"
+            class="alert alert-success d-none"
+          ></div>
+
+        </div>
+
+
+        <!-- Footer -->
+        <div class="modal-footer">
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            class="btn oc-btn-accent"
+            id="submitQuotationBtn"
+          >
+            <i class="fa-solid fa-paper-plane me-2"></i>
+            Send Quote
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- =========================================================
+     ONECLICK — ACCEPT QUOTATION / BOOKING MODAL
+========================================================= -->
+
+<div
+    class="modal fade"
+    id="acceptQuotationModal"
+    tabindex="-1"
+    aria-labelledby="acceptQuotationModalLabel"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5
+                    class="modal-title"
+                    id="acceptQuotationModalLabel"
+                >
+                    Confirm Booking
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div
+                    id="acceptQuotationError"
+                    class="alert alert-danger d-none"
+                ></div>
+
+                <p class="mb-3">
+                    Please choose your preferred date and time
+                    for this service.
+                </p>
+
+                <input
+                    type="hidden"
+                    id="acceptQuotationId"
+                >
+
+                <!-- Booking Date -->
+                <div class="mb-3">
+                    <label
+                        for="bookingDate"
+                        class="form-label"
+                    >
+                        Booking Date
+                    </label>
+
+                    <input
+                        type="date"
+                        class="form-control"
+                        id="bookingDate"
+                        required
+                    >
+                </div>
+
+                <!-- Booking Time -->
+                <div class="mb-3">
+                    <label
+                        for="bookingTime"
+                        class="form-label"
+                    >
+                        Booking Time
+                    </label>
+
+                    <input
+                        type="time"
+                        class="form-control"
+                        id="bookingTime"
+                        required
+                    >
+                </div>
+
+                <!-- Note -->
+                <div class="mb-3">
+                    <label
+                        for="bookingNote"
+                        class="form-label"
+                    >
+                        Note
+                        <span class="text-muted">
+                            (Optional)
+                        </span>
+                    </label>
+
+                    <textarea
+                        class="form-control"
+                        id="bookingNote"
+                        rows="3"
+                        placeholder="Any additional instructions for the provider..."
+                    ></textarea>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="confirmQuotationBookingBtn"
+                >
+                    <i class="fa-solid fa-calendar-check"></i>
+                    Confirm Booking
+                </button>
 
             </div>
 
         </div>
+    </div>
+</div>
 
-    </section>
+<!-- =========================================================
+     ONECLICK — CUSTOMER COUNTER OFFER MODAL
+========================================================= -->
 
+<div
+    class="modal fade"
+    id="counterOfferModal"
+    tabindex="-1"
+    aria-labelledby="counterOfferModalLabel"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
 
-    <!-- =======================================================
-         RECOMMENDED PROVIDERS
-    ======================================================== -->
+            <div class="modal-header">
 
-    <section class="oc-section">
+                <h5
+                    class="modal-title"
+                    id="counterOfferModalLabel"
+                >
+                    Make a Counter Offer
+                </h5>
 
-        <div
-            class="oc-section-head"
-            data-aos="fade-up"
-        >
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
 
-            <h2>
-                Recommended Providers
-            </h2>
+            </div>
 
-            <p>
-                Top-rated professionals picked for you
-            </p>
+            <div class="modal-body">
 
-        </div>
+                <div
+                    id="counterOfferError"
+                    class="alert alert-danger d-none"
+                ></div>
 
+                <p class="mb-3">
+                    Enter the price you would like to offer
+                    the provider.
+                </p>
 
-        <div
-            class="row g-3 g-lg-4"
-            id="providersGrid"
-        >
+                <input
+                    type="hidden"
+                    id="counterQuotationId"
+                >
 
-            <div class="col-12">
+                <!-- Counter Price -->
+                <div class="mb-3">
 
-                <div class="oc-loading-state">
+                    <label
+                        for="counterPrice"
+                        class="form-label"
+                    >
+                        Your Offer Price
+                    </label>
 
-                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <div class="input-group">
 
-                    Loading providers...
+                        <span class="input-group-text">
+                            Rs.
+                        </span>
+
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="counterPrice"
+                            min="1"
+                            step="0.01"
+                            placeholder="Enter your offer"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+                <!-- Counter Message -->
+                <div class="mb-3">
+
+                    <label
+                        for="counterMessage"
+                        class="form-label"
+                    >
+                        Message
+                        <span class="text-muted">
+                            (Optional)
+                        </span>
+                    </label>
+
+                    <textarea
+                        class="form-control"
+                        id="counterMessage"
+                        rows="3"
+                        placeholder="Explain your offer to the provider..."
+                    ></textarea>
 
                 </div>
 
             </div>
 
-        </div>
+            <div class="modal-footer">
 
-    </section>
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Cancel
+                </button>
 
-</main>
-
-
-<!-- =========================================================
-     FOOTER
-========================================================== -->
-
-<footer class="oc-footer">
-
-    <div class="container">
-
-        <div class="oc-footer-top">
-
-            <div class="oc-footer-brand">
-
-                <span class="oc-brand-icon">
-                    <i class="fa-solid fa-bolt"></i>
-                </span>
-
-                <span class="oc-brand-text">
-                    One<span>Click</span>
-                </span>
-
-            </div>
-
-
-            <div class="oc-footer-links">
-
-                <a href="#">About</a>
-                <a href="#">Services</a>
-                <a href="#">Help Center</a>
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms</a>
-
-            </div>
-
-
-            <div class="oc-footer-social">
-
-                <a href="#">
-                    <i class="fa-brands fa-facebook-f"></i>
-                </a>
-
-                <a href="#">
-                    <i class="fa-brands fa-instagram"></i>
-                </a>
-
-                <a href="#">
-                    <i class="fa-brands fa-x-twitter"></i>
-                </a>
-
-                <a href="#">
-                    <i class="fa-brands fa-linkedin-in"></i>
-                </a>
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="submitCounterOfferBtn"
+                >
+                    <i class="fa-solid fa-handshake"></i>
+                    Send Counter Offer
+                </button>
 
             </div>
 
         </div>
-
-
-        <hr>
-
-        <p class="oc-footer-copy">
-            &copy; 2026 OneClick. All rights reserved.
-        </p>
-
     </div>
-
-</footer>
-
-
-<!-- Bootstrap -->
-<script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-></script>
+</div>
 
 
-<!-- AOS -->
-<script
-    src="https://cdn.jsdelivr.net/npm/aos@2.3.1/dist/aos.js"
-></script>
-
-
-<!-- Dashboard JS -->
-<script src="js/customer-dashboard.js"></script>
-
-</body>
+  </body>
 </html>
+

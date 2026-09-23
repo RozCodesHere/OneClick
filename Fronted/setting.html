@@ -16,6 +16,11 @@
 <!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
+<!-- Global Theme -->
+<script src="js/theme.js"></script>
+
+<!-- Custom CSS -->
+<link rel="stylesheet" href="css/setting.css">
 <!-- Custom CSS -->
 <link rel="stylesheet" href="css/setting.css">
 </head>
@@ -24,30 +29,86 @@
 <!-- ============ NAVBAR ============ -->
 <nav class="navbar navbar-expand-lg oc-navbar sticky-top">
   <div class="container-fluid px-3 px-lg-4">
-    <a class="navbar-brand oc-brand" href="#">
-      <span class="oc-brand-icon"><i class="fa-solid fa-bolt"></i></span>
+
+    <a class="navbar-brand oc-brand" href="customer-dashboard.html">
+      <span class="oc-brand-icon">
+        <i class="fa-solid fa-bolt"></i>
+      </span>
       OneClick
     </a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ocNavbar" aria-controls="ocNavbar" aria-expanded="false" aria-label="Toggle navigation">
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#ocNavbar"
+      aria-controls="ocNavbar"
+      aria-expanded="false"
+      aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="ocNavbar">
+
+      <!-- MAIN NAVIGATION -->
       <ul class="navbar-nav mx-auto oc-nav-links">
-        <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-grip me-1"></i>Dashboard</a></li>
-        <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-calendar-check me-1"></i>Bookings</a></li>
-        <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-comment-dots me-1"></i>Messages</a></li>
-        <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-bell me-1"></i>Notifications</a></li>
-        <li class="nav-item"><a class="nav-link active" href="#"><i class="fa-solid fa-gear me-1"></i>Settings</a></li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="customer-dashboard.html">
+            <i class="fa-solid fa-grip me-1"></i>
+            Dashboard
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="booking-history.html">
+            <i class="fa-solid fa-calendar-check me-1"></i>
+            Bookings
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="chat.html">
+            <i class="fa-solid fa-comment-dots me-1"></i>
+            Messages
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="notifications.html">
+            <i class="fa-solid fa-bell me-1"></i>
+            Notifications
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link active" href="seeting.html">
+            <i class="fa-solid fa-gear me-1"></i>
+            Settings
+          </a>
+        </li>
+
       </ul>
 
+      <!-- RIGHT NAVIGATION -->
       <ul class="navbar-nav ms-auto align-items-lg-center oc-nav-right">
-        <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-user me-1"></i>Profile</a></li>
+
         <li class="nav-item">
-          <a class="nav-link oc-logout-link" href="#"><i class="fa-solid fa-right-from-bracket me-1"></i>Logout</a>
+          <a class="nav-link" href="customer-dashboard.html">
+            <i class="fa-solid fa-user me-1"></i>
+            Profile
+          </a>
         </li>
+
+        <li class="nav-item">
+          <a class="nav-link oc-logout-link" href="login.html">
+            <i class="fa-solid fa-right-from-bracket me-1"></i>
+            Logout
+          </a>
+        </li>
+
       </ul>
+
     </div>
   </div>
 </nav>

@@ -1,15 +1,6 @@
 /* ==========================================================================
    ONECLICK — PROVIDER DASHBOARD
    Connected to Django REST API
-
-   APIs:
-
-   GET   /api/providers/{id}/
-   GET   /api/bookings/provider/
-   PATCH /api/bookings/provider/{booking_id}/
-
-   JWT:
-   localStorage["access_token"]
    ========================================================================== */
 
 const API_BASE = "http://127.0.0.1:8000/api";
@@ -20,52 +11,47 @@ const API_BASE = "http://127.0.0.1:8000/api";
    ========================================================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
+    const dashboardDate =
+    document.getElementById("dashboardDate");
 
-    /*
-     * Load real provider + booking data.
-     */
+if (dashboardDate) {
+
+    const today =
+        new Date();
+
+    dashboardDate.textContent =
+        today.toLocaleDateString(
+            "en-US",
+            {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+                year: "numeric"
+            }
+        );
+}
+
     loadProviderDashboard();
 
-    /*
-     * Existing UI functionality.
-     */
     initSidebarToggle();
     initDropdowns();
     initOnlineToggle();
     initAvailabilitySwitches();
-    initAnimatedCounters();
+
     initProgressBars();
     initRadialProgress();
     initEarningsChart();
-    initRippleButtons();
-    initJobRequestActions();
-    initSearchInteraction();
+
+   initRippleButtons();
+initJobRequestActions();
+
+
+initSearchInteraction();
     initBackToTop();
     initNavActiveState();
+
+    setupQuotationForm();
 });
-
-
-/* ==========================================================================
-   GET PROVIDER ID
-   ========================================================================== */
-
-function getProviderId() {
-
-    const params =
-        new URLSearchParams(window.location.search);
-
-    /*
-     * Temporary provider ID.
-     *
-     * Example:
-     * provider-dashboard.html?id=1
-     *
-     * Later we will completely replace this
-     * with the logged-in provider's JWT.
-     */
-
-    return params.get("id") || "1";
-}
 
 
 /* ==========================================================================
@@ -84,43 +70,104 @@ function getAccessToken() {
 
 async function loadProviderDashboard() {
 
-    const providerId =
-        getProviderId();
+    const token = getAccessToken();
 
-    console.log(
-        "Loading provider:",
-        providerId
-    );
+    if (!token) {
 
+        console.error("No access token found.");
+
+        showDashboardError(
+            "Please login again."
+        );
+
+        return;
+    }
 
     try {
 
-        /* --------------------------------------------------------------
-           LOAD PROVIDER PROFILE
-        -------------------------------------------------------------- */
+        console.log(
+            "Loading authenticated provider dashboard..."
+        );
+
+
+        /* ---------------------------------------------------------
+           LOAD PROVIDER
+           --------------------------------------------------------- */
 
         const providerResponse =
             await fetch(
-                `${API_BASE}/providers/${providerId}/`
+                `${API_BASE}/providers/dashboard/`,
+                {
+                    method: "GET",
+
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
             );
 
 
-        if (!providerResponse.ok) {
+        console.log(
+            "Provider dashboard response:",
+            providerResponse.status
+        );
+
+
+        if (
+            providerResponse.status === 401
+        ) {
 
             throw new Error(
-                `Provider API failed: ${providerResponse.status}`
+                "Your login session has expired. Please login again."
             );
         }
 
 
-        const provider =
+        if (!providerResponse.ok) {
+
+            const errorData =
+                await providerResponse
+                    .json()
+                    .catch(
+                        function () {
+                            return {};
+                        }
+                    );
+
+
+            throw new Error(
+                errorData.error ||
+                errorData.detail ||
+                `Provider dashboard API failed: ${providerResponse.status}`
+            );
+        }
+
+
+        const dashboardData =
             await providerResponse.json();
 
 
         console.log(
             "Provider dashboard data:",
-            provider
+            dashboardData
         );
+
+
+        const provider =
+            dashboardData.provider;
+
+
+        if (!provider) {
+
+            throw new Error(
+                "Provider data was not returned by the server."
+            );
+        }
+
+
+        window.oneClickProvider =
+            provider;
 
 
         renderProviderDashboard(
@@ -128,59 +175,305 @@ async function loadProviderDashboard() {
         );
 
 
-        /* --------------------------------------------------------------
-           LOAD PROVIDER BOOKINGS
-        -------------------------------------------------------------- */
+        /* ---------------------------------------------------------
+           LOAD SERVICE REQUESTS
+           --------------------------------------------------------- */
+
+        const serviceRequests =
+            await loadProviderServiceRequests();
+
+        window.oneClickServiceRequests =
+            serviceRequests;
+
+           
+/* ---------------------------------------------------------
+   LOAD PROVIDER QUOTATIONS
+   --------------------------------------------------------- */
+
+const quotations =
+    await loadProviderQuotations();
+
+window.oneClickQuotations =
+    quotations;
+renderProviderCounterOffers(
+    quotations
+);
+
+
+
+        /* ---------------------------------------------------------
+           LOAD BOOKINGS
+           --------------------------------------------------------- */
 
         const bookings =
             await loadProviderBookings();
-
-
-        console.log(
-            "Provider bookings:",
-            bookings
-        );
-
-
-        /*
-         * Store bookings globally so other
-         * dashboard functions can use them.
-         */
 
         window.oneClickBookings =
             bookings;
 
 
-        /* --------------------------------------------------------------
-           RENDER REAL DASHBOARD DATA
-        -------------------------------------------------------------- */
+        /* ---------------------------------------------------------
+           RENDER ALL REAL DASHBOARD DATA
+           --------------------------------------------------------- */
 
         renderDashboardStatistics(
             bookings
         );
 
+
         renderJobRequests(
-            bookings
+            serviceRequests
         );
+
 
         renderTodaySchedule(
             bookings
         );
 
+
         renderCurrentJob(
             bookings
         );
 
+renderUpcomingJob(
+    bookings
+);
 
-    } catch (error) {
+        renderPerformance(
+            bookings
+        );
+
+
+        renderMonthlyEarnings(
+            bookings
+        );
+
+
+        renderEarningsChart(
+            bookings
+        );
+
+
+        renderBookingDateIndicators(
+            bookings
+        );
+
+
+        console.log(
+            "Provider dashboard loaded successfully."
+        );
+
+    }
+    catch (error) {
 
         console.error(
             "Failed to load provider dashboard:",
             error
         );
 
-        showDashboardError();
+
+        showDashboardError(
+            error.message
+        );
     }
+}
+
+
+/* ==========================================================================
+   LOAD PROVIDER SERVICE REQUESTS
+   ========================================================================== */
+
+async function loadProviderServiceRequests() {
+
+    const token =
+        getAccessToken();
+
+
+    if (!token) {
+
+        throw new Error(
+            "No login token found. Please login again."
+        );
+    }
+
+
+    console.log(
+        "Loading provider service requests..."
+    );
+
+
+    const response =
+        await fetch(
+            `${API_BASE}/services/requests/provider/`,
+            {
+                method: "GET",
+
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+    console.log(
+        "Provider service requests response:",
+        response.status
+    );
+
+
+    const data =
+        await response
+            .json()
+            .catch(
+                function () {
+                    return {};
+                }
+            );
+
+
+    if (
+        response.status === 401
+    ) {
+
+        throw new Error(
+            "Your login session has expired. Please login again."
+        );
+    }
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.error ||
+            data.detail ||
+            `Service request API failed: ${response.status}`
+        );
+    }
+
+
+    if (
+        !data.results ||
+        !Array.isArray(data.results)
+    ) {
+
+        console.error(
+            "Unexpected service request response:",
+            data
+        );
+
+        throw new Error(
+            "Invalid service request data received from server."
+        );
+    }
+
+
+    console.log(
+        "Provider service requests:",
+        data.results
+    );
+
+
+    return data.results;
+}
+
+
+/* ==========================================================================
+   LOAD PROVIDER QUOTATIONS
+   ========================================================================== */
+
+async function loadProviderQuotations() {
+
+    const token =
+        getAccessToken();
+
+
+    if (!token) {
+
+        throw new Error(
+            "No login token found. Please login again."
+        );
+    }
+
+
+    console.log(
+        "Loading provider quotations..."
+    );
+
+
+    const response =
+        await fetch(
+            `${API_BASE}/services/quotations/`,
+            {
+                method: "GET",
+
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+    console.log(
+        "Provider quotations response:",
+        response.status
+    );
+
+
+    const data =
+        await response
+            .json()
+            .catch(
+                function () {
+                    return {};
+                }
+            );
+
+
+    if (
+        response.status === 401
+    ) {
+
+        throw new Error(
+            "Your login session has expired. Please login again."
+        );
+    }
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.error ||
+            data.detail ||
+            `Quotation API failed: ${response.status}`
+        );
+    }
+
+
+    if (
+        !data.results ||
+        !Array.isArray(data.results)
+    ) {
+
+        console.error(
+            "Unexpected quotation response:",
+            data
+        );
+
+        throw new Error(
+            "Invalid quotation data received from server."
+        );
+    }
+
+
+    console.log(
+        "Provider quotations:",
+        data.results
+    );
+
+
+    return data.results;
 }
 
 
@@ -194,67 +487,324 @@ async function loadProviderBookings() {
         getAccessToken();
 
 
-    /*
-     * Booking API requires authentication.
-     */
-
     if (!token) {
 
-        console.error(
-            "No access token found."
+        throw new Error(
+            "No login token found. Please login again."
         );
-
-        console.warn(
-            "Please login again."
-        );
-
-        return [];
     }
 
 
-    try {
+    console.log(
+        "Loading provider bookings..."
+    );
 
-        const response =
-            await fetch(
-                `${API_BASE}/bookings/provider/`,
-                {
-                    method: "GET",
 
-                    headers: {
-                        "Authorization":
-                            `Bearer ${token}`,
+    const response =
+        await fetch(
+            `${API_BASE}/bookings/provider/`,
+            {
+                method: "GET",
 
-                        "Content-Type":
-                            "application/json"
-                    }
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+    console.log(
+        "Provider bookings response:",
+        response.status
+    );
+
+
+    const data =
+        await response
+            .json()
+            .catch(
+                function () {
+                    return {};
                 }
             );
 
 
-        if (!response.ok) {
+    if (
+        response.status === 401
+    ) {
 
-            throw new Error(
-                `Booking API failed: ${response.status}`
-            );
-        }
-
-
-        const bookings =
-            await response.json();
+        throw new Error(
+            "Your login session has expired. Please login again."
+        );
+    }
 
 
-        return bookings;
+    if (!response.ok) {
+
+        throw new Error(
+            data.error ||
+            data.detail ||
+            `Booking API failed: ${response.status}`
+        );
+    }
 
 
-    } catch (error) {
+    if (!Array.isArray(data)) {
 
         console.error(
-            "Failed to load provider bookings:",
-            error
+            "Unexpected booking API response:",
+            data
         );
 
-        return [];
+        throw new Error(
+            "Invalid booking data received from server."
+        );
     }
+
+
+    console.log(
+        "Provider bookings:",
+        data
+    );
+
+
+    return data;
+}
+
+
+/* ==========================================================================
+   RENDER CUSTOMER COUNTER OFFERS
+   ========================================================================== */
+
+function renderProviderCounterOffers(quotations) {
+
+    const container =
+        document.getElementById(
+            "providerCounterOffersContainer"
+        );
+
+    const badge =
+        document.getElementById(
+            "counterOfferBadge"
+        );
+
+    if (!container) {
+
+        console.error(
+            "providerCounterOffersContainer not found."
+        );
+
+        return;
+    }
+
+    if (!badge) {
+
+        console.error(
+            "counterOfferBadge not found."
+        );
+
+        return;
+    }
+
+
+    /*
+     * ---------------------------------------------------------
+     * FIND COUNTERED QUOTATIONS
+     * ---------------------------------------------------------
+     */
+
+    const counterOffers =
+        quotations.filter(
+            function (quotation) {
+
+                return (
+                    quotation.status === "countered" &&
+                    quotation.counter_price !== null &&
+                    quotation.counter_price !== ""
+                );
+
+            }
+        );
+
+
+    /*
+     * ---------------------------------------------------------
+     * UPDATE BADGE
+     * ---------------------------------------------------------
+     */
+
+    badge.textContent =
+        counterOffers.length;
+
+
+    /*
+     * ---------------------------------------------------------
+     * NO COUNTER OFFERS
+     * ---------------------------------------------------------
+     */
+
+    if (counterOffers.length === 0) {
+
+        container.innerHTML = `
+
+            <div class="request-empty-state">
+
+                <span class="item-icon bg-warning-soft">
+
+                    <i class="fa-solid fa-comments-dollar"></i>
+
+                </span>
+
+                <div>
+
+                    <h5>
+                        No counter offers
+                    </h5>
+
+                    <p>
+                        Customer counter offers will appear here.
+                    </p>
+
+                </div>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    /*
+     * ---------------------------------------------------------
+     * RENDER COUNTER OFFERS
+     * ---------------------------------------------------------
+     */
+
+    container.innerHTML =
+        counterOffers
+            .map(
+                function (quotation) {
+
+                    const counterPrice =
+                        Number(
+                            quotation.counter_price
+                        ).toLocaleString(
+                            "en-IN"
+                        );
+
+
+                    const originalPrice =
+                        Number(
+                            quotation.price
+                        ).toLocaleString(
+                            "en-IN"
+                        );
+
+
+                    const message =
+                        quotation.counter_message ||
+                        "The customer has submitted a counter offer.";
+
+
+                    return `
+
+                        <div class="request-card">
+
+                            <div class="request-card-header">
+
+                                <div>
+
+                                    <span class="badge bg-warning text-dark">
+                                        Counter Offer
+                                    </span>
+
+                                </div>
+
+                                <small class="text-muted">
+                                    Quotation #${quotation.id}
+                                </small>
+
+                            </div>
+
+
+                            <div class="request-card-body">
+
+                                <h5>
+                                    ${quotation.service_name || "Service"}
+                                </h5>
+
+                                <p class="text-muted mb-2">
+                                    Customer:
+                                    ${quotation.request_customer || "Customer"}
+                                </p>
+
+
+                                <div class="mb-2">
+
+                                    <strong>
+                                        Your original price:
+                                    </strong>
+
+                                    <span>
+                                        Rs. ${originalPrice}
+                                    </span>
+
+                                </div>
+
+
+                                <div class="mb-2">
+
+                                    <strong>
+                                        Customer counter offer:
+                                    </strong>
+
+                                    <span class="text-warning fw-bold">
+                                        Rs. ${counterPrice}
+                                    </span>
+
+                                </div>
+
+
+                                <div class="mt-3 p-3 bg-light rounded">
+
+                                    <small class="text-muted d-block mb-1">
+                                        Customer message
+                                    </small>
+
+                                    <span>
+                                        ${message}
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="request-card-footer">
+
+                                <button
+                                    type="button"
+                                    class="btn btn-primary final-offer-btn"
+                                    data-quotation-id="${quotation.id}"
+                                >
+
+                                    <i class="fa-solid fa-handshake me-1"></i>
+
+                                    Send Final Offer
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    `;
+
+                }
+            )
+            .join("");
 }
 
 
@@ -264,14 +814,9 @@ async function loadProviderBookings() {
 
 function renderProviderDashboard(provider) {
 
-    /*
-     * ---------------------------------------------------------
-     * PROVIDER NAME
-     * ---------------------------------------------------------
-     */
-
     const fullName =
-        provider.full_name || "Provider";
+        provider.full_name ||
+        "Provider";
 
 
     setText(
@@ -279,10 +824,6 @@ function renderProviderDashboard(provider) {
         fullName
     );
 
-
-    /*
-     * Greeting
-     */
 
     const firstName =
         fullName.split(" ")[0];
@@ -293,12 +834,6 @@ function renderProviderDashboard(provider) {
         firstName
     );
 
-
-    /*
-     * ---------------------------------------------------------
-     * CATEGORY + VERIFICATION
-     * ---------------------------------------------------------
-     */
 
     const category =
         provider.category_name ||
@@ -329,12 +864,6 @@ function renderProviderDashboard(provider) {
     }
 
 
-    /*
-     * ---------------------------------------------------------
-     * PROFILE IMAGE
-     * ---------------------------------------------------------
-     */
-
     const profileImage =
         document.querySelector(
             "#dashboardProfileImage"
@@ -351,25 +880,16 @@ function renderProviderDashboard(provider) {
 
         profileImage.alt =
             fullName;
+
+        profileImage.style.display =
+            "";
     }
 
-
-    /*
-     * ---------------------------------------------------------
-     * ONLINE / OFFLINE STATE
-     * ---------------------------------------------------------
-     */
 
     updateOnlineStatus(
         provider.available
     );
 
-
-    /*
-     * ---------------------------------------------------------
-     * RATING
-     * ---------------------------------------------------------
-     */
 
     const rating =
         Number(
@@ -390,19 +910,157 @@ function renderProviderDashboard(provider) {
 
 
     console.log(
-        "Provider reviews:",
+        "Provider review count:",
         reviewCount
     );
 
 
-    /*
-     * ---------------------------------------------------------
-     * STORE PROVIDER DATA
-     * ---------------------------------------------------------
-     */
+    updateRatingDisplay(
+        rating,
+        reviewCount
+    );
+
+
+    updateProviderProfileUI(
+        provider
+    );
+
 
     window.oneClickProvider =
         provider;
+}
+
+
+/* ==========================================================================
+   UPDATE PROVIDER PROFILE UI
+   ========================================================================== */
+
+function updateProviderProfileUI(provider) {
+
+    const fullName =
+        provider.full_name ||
+        "Provider";
+
+
+    const nameSelectors = [
+        "#profileName",
+        "#topbarProfileName",
+        ".profile-name",
+        ".provider-profile-name"
+    ];
+
+
+    nameSelectors.forEach(
+        function (selector) {
+
+            setText(
+                selector,
+                fullName
+            );
+        }
+    );
+
+
+    const imageSelectors = [
+        "#profileImage",
+        "#topbarProfileImage",
+        ".profile-image"
+    ];
+
+
+    imageSelectors.forEach(
+        function (selector) {
+
+            const image =
+                document.querySelector(
+                    selector
+                );
+
+
+            if (
+                image &&
+                provider.profile_image
+            ) {
+
+                image.src =
+                    provider.profile_image;
+
+                image.alt =
+                    fullName;
+
+                image.style.display =
+                    "";
+            }
+        }
+    );
+}
+
+
+/* ==========================================================================
+   UPDATE RATING DISPLAY
+   ========================================================================== */
+
+function updateRatingDisplay(
+    rating,
+    reviewCount
+) {
+
+    const ratingSelectors = [
+        "#providerRating",
+        ".provider-rating",
+        ".rating-value",
+        ".average-rating"
+    ];
+
+
+    ratingSelectors.forEach(
+        function (selector) {
+
+            const elements =
+                document.querySelectorAll(
+                    selector
+                );
+
+
+            elements.forEach(
+                function (element) {
+
+                    element.textContent =
+                        Number(rating)
+                            .toFixed(1);
+
+                }
+            );
+        }
+    );
+
+
+    const reviewSelectors = [
+        "#reviewCount",
+        ".review-count",
+        ".rating-count"
+    ];
+
+
+    reviewSelectors.forEach(
+        function (selector) {
+
+            const elements =
+                document.querySelectorAll(
+                    selector
+                );
+
+
+            elements.forEach(
+                function (element) {
+
+                    element.textContent =
+                        reviewCount;
+
+                }
+            );
+        }
+    );
 }
 
 
@@ -412,79 +1070,42 @@ function renderProviderDashboard(provider) {
 
 function renderDashboardStatistics(bookings) {
 
-    /*
-     * ---------------------------------------------------------
-     * COUNT PENDING REQUESTS
-     * ---------------------------------------------------------
-     */
-
     const pendingBookings =
         bookings.filter(
             function (booking) {
 
                 return booking.status === "pending";
+
             }
         );
 
-
-    /*
-     * ---------------------------------------------------------
-     * TODAY
-     * ---------------------------------------------------------
-     */
 
     const today =
         getTodayDateString();
 
 
-    const todayBookings =
+    const todayJobs =
         bookings.filter(
             function (booking) {
 
                 return (
-                    booking.booking_date === today
-                );
-            }
-        );
-
-
-    /*
-     * Accepted jobs scheduled today.
-     */
-
-    const todayJobs =
-        todayBookings.filter(
-            function (booking) {
-
-                return (
+                    booking.booking_date === today &&
                     booking.status === "accepted"
                 );
+
             }
         );
 
-
-    /*
-     * ---------------------------------------------------------
-     * COMPLETED JOBS
-     * ---------------------------------------------------------
-     */
 
     const completedBookings =
         bookings.filter(
             function (booking) {
 
-                return (
-                    booking.status === "completed"
-                );
+                return booking.status === "completed";
+
             }
         );
 
-
-    /*
-     * ---------------------------------------------------------
-     * MONTHLY EARNINGS
-     * ---------------------------------------------------------
-     */
 
     const currentDate =
         new Date();
@@ -498,12 +1119,12 @@ function renderDashboardStatistics(bookings) {
         currentDate.getMonth() + 1;
 
 
-    const monthlyCompleted =
-        completedBookings.filter(
-            function (booking) {
+    const monthlyEarnings =
+        completedBookings.reduce(
+            function (total, booking) {
 
                 if (!booking.booking_date) {
-                    return false;
+                    return total;
                 }
 
 
@@ -512,7 +1133,7 @@ function renderDashboardStatistics(bookings) {
 
 
                 if (parts.length !== 3) {
-                    return false;
+                    return total;
                 }
 
 
@@ -524,34 +1145,26 @@ function renderDashboardStatistics(bookings) {
                     Number(parts[1]);
 
 
-                return (
+                if (
                     year === currentYear &&
                     month === currentMonth
-                );
-            }
-        );
+                ) {
+
+                    return (
+                        total +
+                        Number(
+                            booking.total_price || 0
+                        )
+                    );
+                }
 
 
-    const monthlyEarnings =
-        monthlyCompleted.reduce(
-            function (total, booking) {
+                return total;
 
-                return (
-                    total +
-                    Number(
-                        booking.total_price || 0
-                    )
-                );
             },
             0
         );
 
-
-    /*
-     * ---------------------------------------------------------
-     * AVERAGE RATING
-     * ---------------------------------------------------------
-     */
 
     const provider =
         window.oneClickProvider || {};
@@ -563,20 +1176,30 @@ function renderDashboardStatistics(bookings) {
         );
 
 
-    /*
-     * ---------------------------------------------------------
-     * UPDATE STAT CARDS
-     * ---------------------------------------------------------
-     *
-     * HTML order:
-     *
-     * 1. Pending Requests
-     * 2. Today's Jobs
-     * 3. Completed Jobs
-     * 4. Monthly Earnings
-     * 5. Average Rating
-     * 6. Response Rate
-     */
+    const respondedBookings =
+        bookings.filter(
+            function (booking) {
+
+                return (
+                    booking.status === "accepted" ||
+                    booking.status === "rejected" ||
+                    booking.status === "completed"
+                );
+
+            }
+        );
+
+
+    const responseRate =
+        bookings.length > 0
+            ? Math.round(
+                (
+                    respondedBookings.length /
+                    bookings.length
+                ) * 100
+            )
+            : 0;
+
 
     const statValues =
         document.querySelectorAll(
@@ -588,33 +1211,26 @@ function renderDashboardStatistics(bookings) {
 
         updateStat(
             statValues[0],
-            pendingBookings.length,
-            "",
-            ""
+            pendingBookings.length
         );
 
 
         updateStat(
             statValues[1],
-            todayJobs.length,
-            "",
-            ""
+            todayJobs.length
         );
 
 
         updateStat(
             statValues[2],
-            completedBookings.length,
-            "",
-            ""
+            completedBookings.length
         );
 
 
         updateStat(
             statValues[3],
             monthlyEarnings,
-            "Rs. ",
-            ""
+            "Rs. "
         );
 
 
@@ -625,54 +1241,72 @@ function renderDashboardStatistics(bookings) {
             "",
             1
         );
+
+
+        updateStat(
+            statValues[5],
+            responseRate,
+            "",
+            "%",
+            0
+        );
+
+    } else {
+
+        console.warn(
+            "Expected 6 statistic cards but found:",
+            statValues.length
+        );
     }
 
 
-    /*
-     * ---------------------------------------------------------
-     * UPDATE PENDING REQUEST BADGE
-     * ---------------------------------------------------------
-     */
-
-    const requestNav =
-        document.querySelector(
-            '#job-requests'
+    const requestBadge =
+        document.getElementById(
+            "jobRequestBadge"
         );
 
 
-    if (requestNav) {
+    if (requestBadge) {
 
-        const badge =
-            requestNav.querySelector(
-                ".nav-badge"
-            );
+        requestBadge.textContent =
+            pendingBookings.length;
 
 
-        if (badge) {
-
-            badge.textContent =
-                pendingBookings.length;
-        }
+        requestBadge.style.display =
+            pendingBookings.length > 0
+                ? "inline-flex"
+                : "none";
     }
 
 
+    updateRatingDisplay(
+        rating,
+        Number(
+            provider.review_count ?? 0
+        )
+    );
+
+
     console.log(
-        "Dashboard statistics:",
+        "Real dashboard statistics:",
         {
-            pending:
+            pendingRequests:
                 pendingBookings.length,
 
             todayJobs:
                 todayJobs.length,
 
-            completed:
+            completedJobs:
                 completedBookings.length,
 
             monthlyEarnings:
                 monthlyEarnings,
 
-            rating:
-                rating
+            averageRating:
+                rating,
+
+            responseRate:
+                responseRate
         }
     );
 }
@@ -694,10 +1328,6 @@ function updateStat(
         return;
     }
 
-
-    /*
-     * Update data attributes too.
-     */
 
     element.setAttribute(
         "data-count",
@@ -723,10 +1353,6 @@ function updateStat(
     );
 
 
-    /*
-     * Immediately show real value.
-     */
-
     element.textContent =
         prefix +
         formatNumber(
@@ -741,50 +1367,79 @@ function updateStat(
    RENDER JOB REQUESTS
    ========================================================================== */
 
-function renderJobRequests(bookings) {
+function renderJobRequests(serviceRequests) {
 
     const container =
         document.querySelector(
-            ".job-requests-grid"
+            "#jobRequestsGrid"
         );
 
 
     if (!container) {
+
+        console.warn(
+            "#jobRequestsGrid was not found."
+        );
+
         return;
     }
 
 
-    /*
-     * Only pending bookings are requests.
-     */
-
     const requests =
-        bookings.filter(
-            function (booking) {
+        Array.isArray(serviceRequests)
+            ? serviceRequests
+            : [];
 
-                return (
-                    booking.status === "pending"
-                );
-            }
+
+    console.log(
+        "Rendering provider service requests:",
+        requests
+    );
+
+
+    const badge =
+        document.getElementById(
+            "jobRequestBadge"
         );
 
 
-    /*
-     * No requests.
-     */
+    if (badge) {
+
+        badge.textContent =
+            requests.length;
+
+
+        badge.style.display =
+            requests.length > 0
+                ? "inline-flex"
+                : "none";
+    }
+
 
     if (requests.length === 0) {
 
         container.innerHTML = `
-            <div class="request-card">
-                <div class="request-top">
-                    <div>
-                        <strong>No pending requests</strong>
-                        <div class="text-muted mt-1">
-                            New customer requests will appear here.
-                        </div>
-                    </div>
+            <div class="request-empty-state">
+
+                <span class="item-icon bg-primary-soft">
+
+                    <i class="fa-solid fa-inbox"></i>
+
+                </span>
+
+                <div>
+
+                    <h5>
+                        No new service requests
+                    </h5>
+
+                    <p>
+                        New customer requests for your service
+                        category will appear here.
+                    </p>
+
                 </div>
+
             </div>
         `;
 
@@ -792,103 +1447,107 @@ function renderJobRequests(bookings) {
     }
 
 
-    /*
-     * Create request cards.
-     */
-
     container.innerHTML =
-        requests.map(
-            function (booking) {
+        requests
+            .map(
+                function (request) {
 
-                return createRequestCard(
-                    booking
-                );
-            }
-        ).join("");
+                    return createServiceRequestCard(
+                        request
+                    );
 
-
-    /*
-     * IMPORTANT:
-     *
-     * The cards were created dynamically,
-     * so the old event listeners do not exist.
-     *
-     * Initialize them again.
-     */
-
-    initJobRequestActions();
+                }
+            )
+            .join("");
 }
 
 
 /* ==========================================================================
-   CREATE REQUEST CARD
+   CREATE SERVICE REQUEST CARD
    ========================================================================== */
 
-function createRequestCard(booking) {
+function createServiceRequestCard(request) {
 
     const customer =
-        booking.customer_email ||
+        request.customer_name ||
         "Customer";
 
 
     const service =
-        booking.service_name ||
+        request.service_name ||
         "Service";
 
 
-    const price =
-        Number(
-            booking.total_price || 0
-        );
+    const description =
+        request.description ||
+        "No description provided";
 
 
     const address =
-        booking.address ||
+        request.address ||
         "Address not provided";
 
 
-    const date =
-        formatDisplayDate(
-            booking.booking_date
-        );
-
-
-    const time =
-        formatDisplayTime(
-            booking.booking_time
-        );
+    const createdDate =
+        request.created_at
+            ? new Date(
+                request.created_at
+            ).toLocaleDateString(
+                "en-US",
+                {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric"
+                }
+            )
+            : "Date not provided";
 
 
     const avatarLetter =
-        customer.charAt(0).toUpperCase();
+        customer
+            .charAt(0)
+            .toUpperCase();
 
 
     return `
         <div
             class="request-card"
-            data-booking-id="${booking.id}"
+            data-request-id="${escapeHtml(request.id)}"
         >
 
             <div class="request-top">
 
                 <div class="req-avatar">
-                    ${escapeHtml(avatarLetter)}
+                    ${escapeHtml(
+                        avatarLetter
+                    )}
                 </div>
+
 
                 <div class="req-customer">
 
                     <strong>
-                        ${escapeHtml(customer)}
+                        ${escapeHtml(
+                            customer
+                        )}
                     </strong>
 
+
                     <span>
-                        ${escapeHtml(service)}
+                        ${escapeHtml(
+                            service
+                        )}
                     </span>
 
                 </div>
 
+
                 <div class="req-price">
-                    Rs. ${formatNumber(price, 0)}
+
+                    <span class="text-muted small">
+                        New Request
+                    </span>
+
                 </div>
 
             </div>
@@ -897,53 +1556,63 @@ function createRequestCard(booking) {
             <div class="req-details">
 
                 <div>
+
                     <i class="fa-solid fa-location-dot"></i>
-                    ${escapeHtml(address)}
+
+                    ${escapeHtml(
+                        address
+                    )}
+
                 </div>
 
+
                 <div>
+
                     <i class="fa-regular fa-calendar"></i>
-                    ${escapeHtml(date)}
+
+                    ${escapeHtml(
+                        createdDate
+                    )}
+
                 </div>
 
+
                 <div>
-                    <i class="fa-regular fa-clock"></i>
-                    ${escapeHtml(time)}
+
+                    <i class="fa-solid fa-circle-info"></i>
+
+                    Request #${escapeHtml(request.id)}
+
                 </div>
 
             </div>
 
 
-            ${
-                booking.note
-                    ? `
-                        <div class="mt-2 small text-muted">
-                            <i class="fa-regular fa-note-sticky"></i>
-                            ${escapeHtml(booking.note)}
-                        </div>
-                    `
-                    : ""
-            }
+            <div class="mt-3">
+
+                <p class="mb-0 small">
+
+                    ${escapeHtml(
+                        description
+                    )}
+
+                </p>
+
+            </div>
 
 
-            <div class="req-actions">
-
-                <button
-                    type="button"
-                    class="btn-oc-success btn-sm ripple accept-btn"
-                    data-booking-id="${booking.id}"
-                >
-                    <i class="fa-solid fa-check"></i>
-                    Accept
-                </button>
+            <div class="req-actions mt-3">
 
                 <button
                     type="button"
-                    class="btn-oc-danger-outline btn-sm ripple reject-btn"
-                    data-booking-id="${booking.id}"
+                    class="btn-oc-success btn-sm ripple quote-request-btn"
+                    data-request-id="${escapeHtml(request.id)}"
                 >
-                    <i class="fa-solid fa-xmark"></i>
-                    Reject
+
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+
+                    Send Quote
+
                 </button>
 
             </div>
@@ -954,6 +1623,62 @@ function createRequestCard(booking) {
 
 
 /* ==========================================================================
+   SEND QUOTE BUTTON
+   ========================================================================== */
+
+document.addEventListener(
+    "click",
+    function (event) {
+
+        const button =
+            event.target.closest(
+                ".quote-request-btn"
+            );
+
+
+        if (!button) {
+            return;
+        }
+
+
+        event.preventDefault();
+
+
+        const requestId =
+            button.getAttribute(
+                "data-request-id"
+            );
+
+
+        console.log(
+            "SEND QUOTE BUTTON CLICKED"
+        );
+
+
+        console.log(
+            "REQUEST ID:",
+            requestId
+        );
+
+
+        if (!requestId) {
+
+            console.error(
+                "Service request ID not found."
+            );
+
+            return;
+        }
+
+
+        openQuotationModal(
+            requestId
+        );
+    }
+);
+
+
+/* ==========================================================================
    RENDER TODAY'S SCHEDULE
    ========================================================================== */
 
@@ -961,11 +1686,16 @@ function renderTodaySchedule(bookings) {
 
     const timeline =
         document.querySelector(
-            ".timeline"
+            "#todayScheduleTimeline"
         );
 
 
     if (!timeline) {
+
+        console.warn(
+            "#todayScheduleTimeline was not found."
+        );
+
         return;
     }
 
@@ -974,10 +1704,18 @@ function renderTodaySchedule(bookings) {
         getTodayDateString();
 
 
-    /*
-     * Accepted and completed bookings
-     * scheduled for today.
-     */
+    const todayDate =
+        document.getElementById(
+            "todayScheduleDate"
+        );
+
+
+    if (todayDate) {
+
+        todayDate.textContent =
+            formatDisplayDate(today);
+    }
+
 
     const todayBookings =
         bookings
@@ -991,17 +1729,20 @@ function renderTodaySchedule(bookings) {
                             booking.status === "completed"
                         )
                     );
+
                 }
             )
             .sort(
                 function (a, b) {
 
-                    return (
-                        String(a.booking_time)
-                            .localeCompare(
-                                String(b.booking_time)
-                            )
+                    return String(
+                        a.booking_time || ""
+                    ).localeCompare(
+                        String(
+                            b.booking_time || ""
+                        )
                     );
+
                 }
             );
 
@@ -1009,21 +1750,30 @@ function renderTodaySchedule(bookings) {
     if (todayBookings.length === 0) {
 
         timeline.innerHTML = `
-            <div class="timeline-item">
 
-                <div class="timeline-card">
+            <div class="schedule-empty-state">
 
-                    <strong>
+                <span class="item-icon bg-secondary-soft">
+
+                    <i class="fa-regular fa-calendar-xmark"></i>
+
+                </span>
+
+                <div>
+
+                    <h5>
                         No jobs scheduled for today
-                    </strong>
+                    </h5>
 
-                    <p class="mb-0 text-muted">
-                        Your accepted jobs will appear here.
+                    <p>
+                        Your accepted and completed jobs for today
+                        will appear here.
                     </p>
 
                 </div>
 
             </div>
+
         `;
 
         return;
@@ -1031,14 +1781,17 @@ function renderTodaySchedule(bookings) {
 
 
     timeline.innerHTML =
-        todayBookings.map(
-            function (booking) {
+        todayBookings
+            .map(
+                function (booking) {
 
-                return createTimelineItem(
-                    booking
-                );
-            }
-        ).join("");
+                    return createTimelineItem(
+                        booking
+                    );
+
+                }
+            )
+            .join("");
 }
 
 
@@ -1046,7 +1799,9 @@ function renderTodaySchedule(bookings) {
    CREATE TIMELINE ITEM
    ========================================================================== */
 
-function createTimelineItem(booking) {
+function createTimelineItem(
+    booking
+) {
 
     const time =
         formatDisplayTime(
@@ -1077,7 +1832,9 @@ function createTimelineItem(booking) {
         "Upcoming";
 
 
-    if (booking.status === "completed") {
+    if (
+        booking.status === "completed"
+    ) {
 
         statusClass =
             "status-completed";
@@ -1085,7 +1842,8 @@ function createTimelineItem(booking) {
         statusText =
             "Completed";
 
-    } else if (
+    }
+    else if (
         booking.status === "accepted"
     ) {
 
@@ -1098,20 +1856,27 @@ function createTimelineItem(booking) {
 
 
     return `
+
         <div
             class="timeline-item"
             data-booking-id="${booking.id}"
         >
 
             <div class="timeline-time">
+
                 ${escapeHtml(time)}
+
             </div>
+
 
             <div class="timeline-dot"></div>
 
+
             <div class="timeline-card">
 
-                <div class="d-flex justify-content-between align-items-start">
+                <div class="d-flex
+                            justify-content-between
+                            align-items-start">
 
                     <div>
 
@@ -1119,19 +1884,31 @@ function createTimelineItem(booking) {
                             ${escapeHtml(service)}
                         </strong>
 
-                        <div class="small text-muted mt-1">
-                            ${escapeHtml(customer)}
-                        </div>
 
                         <div class="small text-muted mt-1">
+
+                            ${escapeHtml(customer)}
+
+                        </div>
+
+
+                        <div class="small text-muted mt-1">
+
                             <i class="fa-solid fa-location-dot"></i>
+
                             ${escapeHtml(address)}
+
                         </div>
 
                     </div>
 
-                    <span class="status-pill ${statusClass}">
+
+                    <span
+                        class="status-pill ${statusClass}"
+                    >
+
                         ${statusText}
+
                     </span>
 
                 </div>
@@ -1139,6 +1916,7 @@ function createTimelineItem(booking) {
             </div>
 
         </div>
+
     `;
 }
 
@@ -1156,6 +1934,11 @@ function renderCurrentJob(bookings) {
 
 
     if (!panel) {
+
+        console.warn(
+            ".current-job-panel was not found."
+        );
+
         return;
     }
 
@@ -1164,10 +1947,6 @@ function renderCurrentJob(bookings) {
         getTodayDateString();
 
 
-    /*
-     * Find accepted job for today.
-     */
-
     const currentJob =
         bookings
             .filter(
@@ -1175,72 +1954,165 @@ function renderCurrentJob(bookings) {
 
                     return (
                         booking.booking_date === today &&
-                        booking.status === "accepted"
+                        (
+                            booking.status === "accepted" ||
+                            booking.status === "completed"
+                        )
                     );
+
                 }
             )
             .sort(
                 function (a, b) {
 
-                    return (
-                        String(a.booking_time)
-                            .localeCompare(
-                                String(b.booking_time)
-                            )
+                    return String(
+                        a.booking_time || ""
+                    ).localeCompare(
+                        String(
+                            b.booking_time || ""
+                        )
                     );
+
                 }
             )[0];
 
 
-    /*
-     * If there is no current job,
-     * keep the dashboard clean.
-     */
-
-    if (!currentJob) {
-
-        const customer =
-            panel.querySelector(
-                ".current-job-customer"
-            );
-
-
-        const service =
-            panel.querySelector(
-                ".current-job-service"
-            );
-
-
-        if (customer) {
-            customer.textContent =
-                "No active job";
-        }
-
-
-        if (service) {
-            service.textContent =
-                "No accepted job scheduled for today.";
-        }
-
-
-        return;
-    }
-
-
-    /*
-     * Try to update existing HTML elements.
-     */
-
     const customerElement =
-        panel.querySelector(
-            ".current-job-customer"
+        document.getElementById(
+            "currentJobCustomer"
+        );
+
+
+    const addressElement =
+        document.getElementById(
+            "currentJobAddress"
         );
 
 
     const serviceElement =
-        panel.querySelector(
-            ".current-job-service"
+        document.getElementById(
+            "currentJobService"
         );
+
+
+    const statusBadge =
+        document.getElementById(
+            "currentJobStatusBadge"
+        );
+
+
+    const progressText =
+        document.getElementById(
+            "currentJobProgressText"
+        );
+
+
+    const progressBar =
+        document.getElementById(
+            "currentJobProgressBar"
+        );
+
+
+    const pendingStep =
+        document.getElementById(
+            "jobStepPending"
+        );
+
+
+    const acceptedStep =
+        document.getElementById(
+            "jobStepAccepted"
+        );
+
+
+    const completedStep =
+        document.getElementById(
+            "jobStepCompleted"
+        );
+
+
+    if (!currentJob) {
+
+        if (customerElement) {
+
+            customerElement.textContent =
+                "No active job";
+        }
+
+
+        if (addressElement) {
+
+            addressElement.innerHTML =
+                '<i class="fa-solid fa-location-dot"></i> No active job scheduled';
+        }
+
+
+        if (serviceElement) {
+
+            serviceElement.innerHTML =
+                '<i class="fa-solid fa-screwdriver-wrench"></i> Waiting for an accepted job';
+        }
+
+
+        if (statusBadge) {
+
+            statusBadge.innerHTML = `
+                <span class="live-dot"></span>
+                No Active Job
+            `;
+        }
+
+
+        if (progressText) {
+
+            progressText.textContent =
+                "Waiting";
+        }
+
+
+        if (progressBar) {
+
+            progressBar.style.width =
+                "0%";
+
+            progressBar.setAttribute(
+                "data-progress",
+                "0"
+            );
+        }
+
+
+        if (pendingStep) {
+
+            pendingStep.classList.remove(
+                "active",
+                "completed"
+            );
+        }
+
+
+        if (acceptedStep) {
+
+            acceptedStep.classList.remove(
+                "active",
+                "completed"
+            );
+        }
+
+
+        if (completedStep) {
+
+            completedStep.classList.remove(
+                "active",
+                "completed"
+            );
+        }
+
+
+        delete panel.dataset.bookingId;
+
+        return;
+    }
 
 
     if (customerElement) {
@@ -1251,21 +2123,1238 @@ function renderCurrentJob(bookings) {
     }
 
 
+    if (addressElement) {
+
+        addressElement.innerHTML = `
+            <i class="fa-solid fa-location-dot"></i>
+            ${escapeHtml(
+                currentJob.address ||
+                "Address not provided"
+            )}
+        `;
+    }
+
+
     if (serviceElement) {
 
-        serviceElement.textContent =
-            currentJob.service_name ||
-            "Service";
+        serviceElement.innerHTML = `
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+            ${escapeHtml(
+                currentJob.service_name ||
+                "Service"
+            )}
+        `;
+    }
+
+
+    if (statusBadge) {
+
+        if (
+            currentJob.status === "completed"
+        ) {
+
+            statusBadge.innerHTML = `
+                <span class="live-dot"></span>
+                Completed
+            `;
+
+        } else {
+
+            statusBadge.innerHTML = `
+                <span class="live-dot"></span>
+                Active Job
+            `;
+        }
+    }
+
+
+    let progress = 50;
+
+    let progressLabel =
+        "Accepted";
+
+
+    if (
+        currentJob.status === "completed"
+    ) {
+
+        progress = 100;
+
+        progressLabel =
+            "Completed";
+    }
+
+
+    if (progressText) {
+
+        progressText.textContent =
+            progressLabel;
+    }
+
+
+    if (progressBar) {
+
+        progressBar.style.width =
+            progress + "%";
+
+        progressBar.setAttribute(
+            "data-progress",
+            progress
+        );
+    }
+
+
+    if (pendingStep) {
+
+        pendingStep.classList.add(
+            "completed"
+        );
+
+        pendingStep.classList.remove(
+            "active"
+        );
+    }
+
+
+    if (acceptedStep) {
+
+        acceptedStep.classList.add(
+            "completed"
+        );
+
+        acceptedStep.classList.remove(
+            "active"
+        );
+    }
+
+
+    if (completedStep) {
+
+        if (
+            currentJob.status === "completed"
+        ) {
+
+            completedStep.classList.add(
+                "completed"
+            );
+
+        } else {
+
+            completedStep.classList.remove(
+                "completed"
+            );
+
+            completedStep.classList.add(
+                "active"
+            );
+        }
+    }
+
+
+    panel.dataset.bookingId =
+        currentJob.id;
+}
+
+/* ==========================================================================
+   RENDER UPCOMING JOB
+   ========================================================================== */
+
+function renderUpcomingJob(bookings) {
+
+    const customerElement =
+        document.getElementById(
+            "upcomingJobCustomer"
+        );
+
+    const serviceElement =
+        document.getElementById(
+            "upcomingJobService"
+        );
+
+    const addressElement =
+        document.getElementById(
+            "upcomingJobAddress"
+        );
+
+    const dateElement =
+        document.getElementById(
+            "upcomingJobDate"
+        );
+
+    const statusElement =
+        document.getElementById(
+            "upcomingJobStatus"
+        );
+
+    const detailsButton =
+        document.getElementById(
+            "upcomingJobDetailsBtn"
+        );
+
+
+    if (
+        !customerElement ||
+        !serviceElement ||
+        !addressElement ||
+        !dateElement ||
+        !statusElement
+    ) {
+
+        console.warn(
+            "Upcoming Job elements were not found."
+        );
+
+        return;
     }
 
 
     /*
-     * Add booking ID to panel so
-     * Complete Job can use it later.
+     * ---------------------------------------------------------
+     * FIND FUTURE ACCEPTED BOOKINGS
+     * ---------------------------------------------------------
      */
 
-    panel.dataset.bookingId =
-        currentJob.id;
+    const now =
+        new Date();
+
+    const upcomingBookings =
+        bookings
+            .filter(
+                function (booking) {
+
+                    if (
+                        booking.status !== "accepted"
+                    ) {
+                        return false;
+                    }
+
+                    if (
+                        !booking.booking_date
+                    ) {
+                        return false;
+                    }
+
+
+                    const bookingTime =
+                        booking.booking_time ||
+                        "00:00:00";
+
+
+                    const bookingDateTime =
+                        new Date(
+                            `${booking.booking_date}T${bookingTime}`
+                        );
+
+
+                    if (
+                        Number.isNaN(
+                            bookingDateTime.getTime()
+                        )
+                    ) {
+                        return false;
+                    }
+
+
+                    return bookingDateTime >= now;
+
+                }
+            )
+            .sort(
+                function (a, b) {
+
+                    const dateA =
+                        new Date(
+                            `${a.booking_date}T${a.booking_time || "00:00:00"}`
+                        );
+
+                    const dateB =
+                        new Date(
+                            `${b.booking_date}T${b.booking_time || "00:00:00"}`
+                        );
+
+                    return (
+                        dateA.getTime() -
+                        dateB.getTime()
+                    );
+
+                }
+            );
+
+
+    /*
+     * ---------------------------------------------------------
+     * NO UPCOMING JOB
+     * ---------------------------------------------------------
+     */
+
+    if (
+        upcomingBookings.length === 0
+    ) {
+
+        customerElement.textContent =
+            "No upcoming job";
+
+        serviceElement.textContent =
+            "No accepted booking scheduled";
+
+        addressElement.innerHTML = `
+            <i class="fa-solid fa-location-dot"></i>
+            No upcoming job scheduled
+        `;
+
+        dateElement.innerHTML = `
+            <i class="fa-regular fa-calendar"></i>
+            —
+        `;
+
+        statusElement.innerHTML = `
+            <i class="fa-solid fa-circle-info"></i>
+            Waiting for an accepted booking
+        `;
+
+        if (detailsButton) {
+
+            detailsButton.disabled =
+                true;
+
+            detailsButton.removeAttribute(
+                "data-booking-id"
+            );
+        }
+
+        return;
+    }
+
+
+    /*
+     * ---------------------------------------------------------
+     * GET NEAREST UPCOMING BOOKING
+     * ---------------------------------------------------------
+     */
+
+    const upcomingJob =
+        upcomingBookings[0];
+
+
+    const customer =
+        upcomingJob.customer_name ||
+        upcomingJob.customer_email ||
+        "Customer";
+
+    const service =
+        upcomingJob.service_name ||
+        "Service";
+
+    const address =
+        upcomingJob.address ||
+        "Address not provided";
+
+    const bookingDate =
+        formatDisplayDate(
+            upcomingJob.booking_date
+        );
+
+    const bookingTime =
+        formatDisplayTime(
+            upcomingJob.booking_time
+        );
+
+
+    /*
+     * ---------------------------------------------------------
+     * DISPLAY REAL DATA
+     * ---------------------------------------------------------
+     */
+
+    customerElement.textContent =
+        customer;
+
+    serviceElement.textContent =
+        `${service} · ${bookingTime}`;
+
+    addressElement.innerHTML = `
+        <i class="fa-solid fa-location-dot"></i>
+        ${escapeHtml(address)}
+    `;
+
+    dateElement.innerHTML = `
+        <i class="fa-regular fa-calendar"></i>
+        ${escapeHtml(bookingDate)}
+    `;
+
+    statusElement.innerHTML = `
+        <i class="fa-solid fa-circle-check"></i>
+        Accepted
+    `;
+
+
+    /*
+     * ---------------------------------------------------------
+     * VIEW DETAILS BUTTON
+     * ---------------------------------------------------------
+     */
+
+    if (detailsButton) {
+
+        detailsButton.disabled =
+            false;
+
+        detailsButton.setAttribute(
+            "data-booking-id",
+            upcomingJob.id
+        );
+    }
+}
+
+/* ==========================================================================
+   PERFORMANCE
+   ========================================================================== */
+
+function renderPerformance(bookings) {
+
+    const total =
+        bookings.length;
+
+
+    const accepted =
+        bookings.filter(
+            function (booking) {
+
+                return (
+                    booking.status === "accepted" ||
+                    booking.status === "completed"
+                );
+
+            }
+        ).length;
+
+
+    const completed =
+        bookings.filter(
+            function (booking) {
+
+                return booking.status === "completed";
+
+            }
+        ).length;
+
+
+    const rejected =
+        bookings.filter(
+            function (booking) {
+
+                return booking.status === "rejected";
+
+            }
+        ).length;
+
+
+    const acceptanceRate =
+        total > 0
+            ? Math.round(
+                (
+                    accepted /
+                    total
+                ) * 100
+            )
+            : 0;
+
+
+    const acceptedOrCompleted =
+        bookings.filter(
+            function (booking) {
+
+                return (
+                    booking.status === "accepted" ||
+                    booking.status === "completed"
+                );
+
+            }
+        ).length;
+
+
+    const completionRate =
+        acceptedOrCompleted > 0
+            ? Math.round(
+                (
+                    completed /
+                    acceptedOrCompleted
+                ) * 100
+            )
+            : 0;
+
+
+    const responded =
+        bookings.filter(
+            function (booking) {
+
+                return (
+                    booking.status === "accepted" ||
+                    booking.status === "rejected" ||
+                    booking.status === "completed"
+                );
+
+            }
+        ).length;
+
+
+    const responseRate =
+        total > 0
+            ? Math.round(
+                (
+                    responded /
+                    total
+                ) * 100
+            )
+            : 0;
+
+
+    const radials =
+        document.querySelectorAll(
+            "#performance .radial-progress"
+        );
+
+
+    const provider =
+        window.oneClickProvider || {};
+
+
+    const satisfaction =
+        Number(
+            provider.rating ?? 0
+        );
+
+
+    const satisfactionPercent =
+        Math.round(
+            (
+                satisfaction /
+                5
+            ) * 100
+        );
+
+
+    const performanceData = [
+
+        {
+            value: responseRate,
+            label: "Response Rate"
+        },
+
+        {
+            value: completionRate,
+            label: "Completion Rate"
+        },
+
+        {
+            value: satisfactionPercent,
+            label: "Customer Satisfaction"
+        }
+
+    ];
+
+
+    radials.forEach(
+        function (radial, index) {
+
+            const item =
+                performanceData[index];
+
+
+            if (!item) {
+                return;
+            }
+
+
+            const value =
+                item.value;
+
+
+            radial.setAttribute(
+                "data-percent",
+                value
+            );
+
+
+            const radialBar =
+                radial.querySelector(
+                    ".radial-bar"
+                );
+
+
+            if (radialBar) {
+
+                const circumference =
+                    2 *
+                    Math.PI *
+                    52;
+
+
+                const offset =
+                    circumference -
+                    (
+                        value /
+                        100
+                    ) *
+                    circumference;
+
+
+                radialBar.style.strokeDasharray =
+                    circumference;
+
+
+                radialBar.style.strokeDashoffset =
+                    offset;
+            }
+
+
+            const radialValue =
+                radial.querySelector(
+                    ".radial-value"
+                );
+
+
+            if (radialValue) {
+
+                radialValue.textContent =
+                    value + "%";
+            }
+        }
+    );
+
+
+    console.log(
+        "Real Performance:",
+        {
+            totalBookings: total,
+            accepted: accepted,
+            completed: completed,
+            rejected: rejected,
+            responseRate: responseRate,
+            completionRate: completionRate,
+            customerSatisfaction:
+                satisfactionPercent
+        }
+    );
+}
+
+
+/* ==========================================================================
+   MONTHLY EARNINGS
+   ========================================================================== */
+
+function renderMonthlyEarnings(bookings) {
+
+    const now = new Date();
+
+    const currentYear =
+        now.getFullYear();
+
+    const currentMonth =
+        now.getMonth();
+
+
+    const previousMonthDate =
+        new Date(
+            currentYear,
+            currentMonth - 1,
+            1
+        );
+
+
+    const previousYear =
+        previousMonthDate.getFullYear();
+
+
+    const previousMonth =
+        previousMonthDate.getMonth();
+
+
+    const completedThisMonth =
+        bookings.filter(
+            function (booking) {
+
+                if (
+                    booking.status !== "completed"
+                ) {
+                    return false;
+                }
+
+
+                if (
+                    !booking.booking_date
+                ) {
+                    return false;
+                }
+
+
+                const date =
+                    new Date(
+                        booking.booking_date +
+                        "T00:00:00"
+                    );
+
+
+                return (
+                    date.getFullYear() ===
+                    currentYear &&
+                    date.getMonth() ===
+                    currentMonth
+                );
+
+            }
+        );
+
+
+    let monthlyTotal = 0;
+
+
+    completedThisMonth.forEach(
+        function (booking) {
+
+            monthlyTotal +=
+                Number(
+                    booking.total_price || 0
+                );
+
+        }
+    );
+
+
+    let averageJobValue = 0;
+
+
+    if (
+        completedThisMonth.length > 0
+    ) {
+
+        averageJobValue =
+            monthlyTotal /
+            completedThisMonth.length;
+
+    }
+
+
+   
+
+
+    const completedPreviousMonth =
+        bookings.filter(
+            function (booking) {
+
+                if (
+                    booking.status !== "completed"
+                ) {
+                    return false;
+                }
+
+
+                if (
+                    !booking.booking_date
+                ) {
+                    return false;
+                }
+
+
+                const date =
+                    new Date(
+                        booking.booking_date +
+                        "T00:00:00"
+                    );
+
+
+                return (
+                    date.getFullYear() ===
+                    previousYear &&
+                    date.getMonth() ===
+                    previousMonth
+                );
+
+            }
+        );
+
+
+    let previousMonthTotal = 0;
+
+
+    completedPreviousMonth.forEach(
+        function (booking) {
+
+            previousMonthTotal +=
+                Number(
+                    booking.total_price || 0
+                );
+
+        }
+    );
+
+
+    let changeText = "";
+
+
+    if (
+        previousMonthTotal === 0 &&
+        monthlyTotal > 0
+    ) {
+
+        changeText =
+            "New earnings this month";
+
+    }
+    else if (
+        previousMonthTotal === 0 &&
+        monthlyTotal === 0
+    ) {
+
+        changeText =
+            "No completed earnings this month";
+
+    }
+    else {
+
+        const percentageChange =
+            (
+                (
+                    monthlyTotal -
+                    previousMonthTotal
+                ) /
+                previousMonthTotal
+            ) * 100;
+
+
+        const roundedChange =
+            Math.round(
+                percentageChange
+            );
+
+
+        if (
+            roundedChange > 0
+        ) {
+
+            changeText =
+                "+" +
+                roundedChange +
+                "% from last month";
+
+        }
+        else if (
+            roundedChange < 0
+        ) {
+
+            changeText =
+                roundedChange +
+                "% from last month";
+
+        }
+        else {
+
+            changeText =
+                "Same as last month";
+
+        }
+    }
+
+
+    const monthName =
+        now.toLocaleString(
+            "en-US",
+            {
+                month: "long"
+            }
+        );
+
+
+    const monthElement =
+        document.querySelector(
+            "#earningsMonth"
+        ) ||
+        document.querySelector(
+            ".earnings-panel .panel-date"
+        );
+
+
+    if (monthElement) {
+
+        monthElement.textContent =
+            monthName +
+            " " +
+            currentYear;
+    }
+
+
+    const totalElement =
+        document.querySelector(
+            "#monthlyEarningsValue"
+        ) ||
+        document.querySelector(
+            ".earnings-highlight .eh-value"
+        );
+
+
+    if (totalElement) {
+
+        totalElement.textContent =
+            "Rs. " +
+            formatNumber(
+                monthlyTotal,
+                0
+            );
+    }
+
+
+    const changeElement =
+        document.querySelector(
+            "#earningsChange"
+        ) ||
+        document.querySelector(
+            ".earnings-highlight .eh-change"
+        );
+
+
+    if (changeElement) {
+
+        changeElement.innerHTML =
+            '<i class="fa-solid fa-chart-line"></i> ' +
+            changeText;
+    }
+
+
+    const completedElement =
+        document.querySelector(
+            "#earningsCompletedJobs"
+        );
+
+
+    if (completedElement) {
+
+        completedElement.textContent =
+            completedThisMonth.length;
+
+    }
+    else {
+
+        const miniStats =
+            document.querySelectorAll(
+                ".earnings-mini-stats .mini-stat h4"
+            );
+
+
+        if (miniStats[0]) {
+
+            miniStats[0].textContent =
+                completedThisMonth.length;
+        }
+    }
+
+
+    const averageElement =
+        document.querySelector(
+            "#averageJobValue"
+        );
+
+
+    if (averageElement) {
+
+        averageElement.textContent =
+            "Rs. " +
+            formatNumber(
+                averageJobValue,
+                0
+            );
+
+    }
+    else {
+
+        const miniStats =
+            document.querySelectorAll(
+                ".earnings-mini-stats .mini-stat h4"
+            );
+
+
+        if (miniStats[1]) {
+
+            miniStats[1].textContent =
+                "Rs. " +
+                formatNumber(
+                    averageJobValue,
+                    0
+                );
+        }
+    }
+
+
+
+    console.log(
+        "Real Monthly Earnings:",
+        {
+            month:
+                monthName +
+                " " +
+                currentYear,
+
+            completedJobs:
+                completedThisMonth.length,
+
+            totalEarnings:
+                monthlyTotal,
+
+            averageJobValue:
+                averageJobValue,
+
+           
+
+            previousMonthEarnings:
+                previousMonthTotal
+        }
+    );
+}
+
+
+/* ==========================================================================
+   EARNINGS CHART
+   ========================================================================== */
+
+function renderEarningsChart(bookings) {
+
+    const bars =
+        document.querySelectorAll(
+            "#earningsChart .bar"
+        );
+
+
+    if (!bars.length) {
+        return;
+    }
+
+
+    const today =
+        new Date();
+
+
+    const dayOfWeek =
+        today.getDay();
+
+
+    const monday =
+        new Date(today);
+
+
+    const daysSinceMonday =
+        dayOfWeek === 0
+            ? 6
+            : dayOfWeek - 1;
+
+
+    monday.setDate(
+        today.getDate() -
+        daysSinceMonday
+    );
+
+
+    monday.setHours(
+        0,
+        0,
+        0,
+        0
+    );
+
+
+    const dailyTotals =
+        new Array(7)
+            .fill(0);
+
+
+    bookings.forEach(
+        function (booking) {
+
+            if (
+                booking.status !== "completed" ||
+                !booking.booking_date
+            ) {
+
+                return;
+            }
+
+
+            const bookingDate =
+                new Date(
+                    `${booking.booking_date}T00:00:00`
+                );
+
+
+            if (
+                Number.isNaN(
+                    bookingDate.getTime()
+                )
+            ) {
+
+                return;
+            }
+
+
+            const difference =
+                Math.floor(
+                    (
+                        bookingDate -
+                        monday
+                    ) /
+                    (
+                        1000 *
+                        60 *
+                        60 *
+                        24
+                    )
+                );
+
+
+            if (
+                difference >= 0 &&
+                difference <= 6
+            ) {
+
+                dailyTotals[difference] +=
+                    Number(
+                        booking.total_price || 0
+                    );
+            }
+        }
+    );
+
+
+    const max =
+        Math.max(
+            ...dailyTotals,
+            1
+        );
+
+
+    bars.forEach(
+        function (bar, index) {
+
+            const amount =
+                dailyTotals[index] || 0;
+
+
+            let percentage =
+                (
+                    amount /
+                    max
+                ) * 100;
+
+
+            if (
+                amount === 0
+            ) {
+
+                percentage = 4;
+            }
+
+
+            bar.style.height =
+                percentage + "%";
+
+
+            bar.style.setProperty(
+                "--val",
+                percentage + "%"
+            );
+
+
+            bar.setAttribute(
+                "data-real-earnings",
+                amount
+            );
+
+
+            bar.setAttribute(
+                "title",
+                `Rs. ${formatNumber(
+                    amount,
+                    0
+                )}`
+            );
+        }
+    );
+
+
+    console.log(
+        "Real weekly earnings chart:",
+        dailyTotals
+    );
+}
+
+
+/* ==========================================================================
+   BOOKING DATE INDICATORS
+   ========================================================================== */
+
+function renderBookingDateIndicators(
+    bookings
+) {
+
+    const bookingDates =
+        new Set();
+
+
+    bookings.forEach(
+        function (booking) {
+
+            if (
+                booking.booking_date
+            ) {
+
+                bookingDates.add(
+                    booking.booking_date
+                );
+            }
+        }
+    );
+
+
+    window.oneClickBookingDates =
+        bookingDates;
+
+
+    const dateElements =
+        document.querySelectorAll(
+            "[data-date]"
+        );
+
+
+    dateElements.forEach(
+        function (element) {
+
+            const date =
+                element.getAttribute(
+                    "data-date"
+                );
+
+
+            if (
+                bookingDates.has(date)
+            ) {
+
+                element.classList.add(
+                    "has-booking"
+                );
+
+            } else {
+
+                element.classList.remove(
+                    "has-booking"
+                );
+            }
+        }
+    );
+
+
+    console.log(
+        "Booking dates:",
+        Array.from(
+            bookingDates
+        )
+    );
 }
 
 
@@ -1276,26 +3365,43 @@ function renderCurrentJob(bookings) {
 function initSidebarToggle() {
 
     const appShell =
-        document.querySelector(".app-shell");
+        document.querySelector(
+            ".app-shell"
+        );
+
 
     const menuToggle =
-        document.getElementById("menuToggle");
+        document.getElementById(
+            "menuToggle"
+        );
+
 
     const sidebarClose =
-        document.getElementById("sidebarClose");
+        document.getElementById(
+            "sidebarClose"
+        );
+
 
     const overlay =
-        document.getElementById("sidebarOverlay");
+        document.getElementById(
+            "sidebarOverlay"
+        );
 
 
-    if (!appShell || !menuToggle) {
+    if (
+        !appShell ||
+        !menuToggle
+    ) {
+
         return;
     }
 
 
     function isMobile() {
 
-        return window.innerWidth <= 992;
+        return (
+            window.innerWidth <= 992
+        );
     }
 
 
@@ -1303,7 +3409,9 @@ function initSidebarToggle() {
         "click",
         function () {
 
-            if (isMobile()) {
+            if (
+                isMobile()
+            ) {
 
                 appShell.classList.toggle(
                     "sidebar-open"
@@ -1351,7 +3459,9 @@ function initSidebarToggle() {
         "resize",
         function () {
 
-            if (!isMobile()) {
+            if (
+                !isMobile()
+            ) {
 
                 appShell.classList.remove(
                     "sidebar-open"
@@ -1383,7 +3493,9 @@ function initNavActiveState() {
                 );
 
 
-            if (!link) return;
+            if (!link) {
+                return;
+            }
 
 
             link.addEventListener(
@@ -1436,23 +3548,32 @@ function initDropdowns() {
         );
 
 
+    if (!dropdowns.length) {
+        return;
+    }
+
+
     dropdowns.forEach(
         function (dropdown) {
 
             const trigger =
                 dropdown.querySelector(
-                    ".icon-btn, .profile-trigger"
+                    ".icon-btn, .profile-trigger, button, [role='button']"
                 );
 
 
-            if (!trigger) return;
+            if (!trigger) {
+                return;
+            }
 
 
             trigger.addEventListener(
                 "click",
-                function (e) {
+                function (event) {
 
-                    e.stopPropagation();
+                    event.preventDefault();
+
+                    event.stopPropagation();
 
 
                     const isOpen =
@@ -1462,9 +3583,9 @@ function initDropdowns() {
 
 
                     dropdowns.forEach(
-                        function (d) {
+                        function (item) {
 
-                            d.classList.remove(
+                            item.classList.remove(
                                 "open"
                             );
                         }
@@ -1488,15 +3609,82 @@ function initDropdowns() {
         function () {
 
             dropdowns.forEach(
-                function (d) {
+                function (dropdown) {
 
-                    d.classList.remove(
+                    dropdown.classList.remove(
                         "open"
                     );
                 }
             );
         }
     );
+}
+
+
+/* ==========================================================================
+   ONLINE / OFFLINE STATUS
+   ========================================================================== */
+
+function updateOnlineStatus(
+    isAvailable
+) {
+
+    const toggle =
+        document.getElementById(
+            "onlineToggle"
+        );
+
+
+    const wrap =
+        document.querySelector(
+            ".status-toggle-wrap"
+        );
+
+
+    const label =
+        document.getElementById(
+            "statusLabel"
+        );
+
+
+    if (
+        !toggle ||
+        !wrap ||
+        !label
+    ) {
+
+        return;
+    }
+
+
+    const available =
+        Boolean(
+            isAvailable
+        );
+
+
+    toggle.checked =
+        available;
+
+
+    if (available) {
+
+        wrap.classList.remove(
+            "offline"
+        );
+
+        label.textContent =
+            "Online";
+
+    } else {
+
+        wrap.classList.add(
+            "offline"
+        );
+
+        label.textContent =
+            "Offline";
+    }
 }
 
 
@@ -1511,18 +3699,8 @@ function initOnlineToggle() {
             "onlineToggle"
         );
 
-    const wrap =
-        document.querySelector(
-            ".status-toggle-wrap"
-        );
 
-    const label =
-        document.getElementById(
-            "statusLabel"
-        );
-
-
-    if (!toggle || !wrap || !label) {
+    if (!toggle) {
         return;
     }
 
@@ -1531,40 +3709,134 @@ function initOnlineToggle() {
         "change",
         async function () {
 
-            if (toggle.checked) {
-
-                wrap.classList.remove(
-                    "offline"
-                );
-
-                label.textContent =
-                    "Online";
-
-            } else {
-
-                wrap.classList.add(
-                    "offline"
-                );
-
-                label.textContent =
-                    "Offline";
-            }
+            const newAvailability =
+                toggle.checked;
 
 
-            /*
-             * Backend update is not done yet.
-             *
-             * We will connect this to the Provider
-             * PATCH endpoint after confirming how
-             * ProviderProfile is updated.
-             */
-
-            console.log(
-                "Availability changed:",
-                toggle.checked
+            updateOnlineStatus(
+                newAvailability
             );
+
+
+            try {
+
+                const data =
+                    await updateProviderAvailability(
+                        newAvailability
+                    );
+
+
+                console.log(
+                    "Availability updated:",
+                    data
+                );
+
+            }
+            catch (error) {
+
+                console.error(
+                    "Availability update failed:",
+                    error
+                );
+
+
+                updateOnlineStatus(
+                    !newAvailability
+                );
+
+
+                alert(
+                    error.message ||
+                    "Failed to update availability."
+                );
+            }
         }
     );
+}
+
+
+/* ==========================================================================
+   UPDATE PROVIDER AVAILABILITY
+   ========================================================================== */
+
+async function updateProviderAvailability(
+    available
+) {
+
+    const token =
+        getAccessToken();
+
+
+    if (!token) {
+
+        throw new Error(
+            "Your login session has expired. Please login again."
+        );
+    }
+
+
+    const response =
+        await fetch(
+            `${API_BASE}/providers/availability/`,
+            {
+                method: "PATCH",
+
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`,
+
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    available:
+                        available
+                })
+            }
+        );
+
+
+    const data =
+        await response
+            .json()
+            .catch(
+                function () {
+                    return {};
+                }
+            );
+
+
+    if (
+        response.status === 401
+    ) {
+
+        throw new Error(
+            "Your login session has expired. Please login again."
+        );
+    }
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.error ||
+            data.detail ||
+            `Availability update failed: ${response.status}`
+        );
+    }
+
+
+    if (
+        window.oneClickProvider
+    ) {
+
+        window.oneClickProvider.available =
+            data.available;
+    }
+
+
+    return data;
 }
 
 
@@ -1579,13 +3851,18 @@ function initAvailabilitySwitches() {
             "availableToday"
         );
 
+
     const unavailable =
         document.getElementById(
             "unavailable"
         );
 
 
-    if (!availableToday || !unavailable) {
+    if (
+        !availableToday ||
+        !unavailable
+    ) {
+
         return;
     }
 
@@ -1594,7 +3871,9 @@ function initAvailabilitySwitches() {
         "change",
         function () {
 
-            if (availableToday.checked) {
+            if (
+                availableToday.checked
+            ) {
 
                 unavailable.checked =
                     false;
@@ -1607,7 +3886,9 @@ function initAvailabilitySwitches() {
         "change",
         function () {
 
-            if (unavailable.checked) {
+            if (
+                unavailable.checked
+            ) {
 
                 availableToday.checked =
                     false;
@@ -1618,204 +3899,41 @@ function initAvailabilitySwitches() {
 
 
 /* ==========================================================================
-   ANIMATED COUNTERS
-   ========================================================================== */
-
-function initAnimatedCounters() {
-
-    const counters =
-        document.querySelectorAll(
-            ".stat-value[data-count]"
-        );
-
-
-    if (!counters.length) {
-        return;
-    }
-
-
-    const observer =
-        new IntersectionObserver(
-            function (entries) {
-
-                entries.forEach(
-                    function (entry) {
-
-                        if (
-                            entry.isIntersecting
-                        ) {
-
-                            animateCounter(
-                                entry.target
-                            );
-
-                            observer.unobserve(
-                                entry.target
-                            );
-                        }
-                    }
-                );
-
-            },
-            {
-                threshold: 0.4
-            }
-        );
-
-
-    counters.forEach(
-        function (counter) {
-
-            observer.observe(counter);
-        }
-    );
-}
-
-
-function animateCounter(el) {
-
-    const target =
-        parseFloat(
-            el.getAttribute(
-                "data-count"
-            )
-        );
-
-
-    const prefix =
-        el.getAttribute(
-            "data-prefix"
-        ) || "";
-
-
-    const suffix =
-        el.getAttribute(
-            "data-suffix"
-        ) || "";
-
-
-    const decimals =
-        parseInt(
-            el.getAttribute(
-                "data-decimal"
-            ) || "0",
-            10
-        );
-
-
-    const duration =
-        1400;
-
-
-    const start =
-        performance.now();
-
-
-    function tick(now) {
-
-        const progress =
-            Math.min(
-                (now - start) / duration,
-                1
-            );
-
-
-        const eased =
-            1 -
-            Math.pow(
-                1 - progress,
-                3
-            );
-
-
-        const current =
-            target * eased;
-
-
-        el.textContent =
-            prefix +
-            formatNumber(
-                current,
-                decimals
-            ) +
-            suffix;
-
-
-        if (progress < 1) {
-
-            requestAnimationFrame(
-                tick
-            );
-
-        } else {
-
-            el.textContent =
-                prefix +
-                formatNumber(
-                    target,
-                    decimals
-                ) +
-                suffix;
-        }
-    }
-
-
-    requestAnimationFrame(
-        tick
-    );
-}
-
-
-function formatNumber(
-    value,
-    decimals
-) {
-
-    if (decimals > 0) {
-
-        return Number(value).toFixed(
-            decimals
-        );
-    }
-
-
-    return Math.round(
-        value
-    ).toLocaleString(
-        "en-IN"
-    );
-}
-
-
-/* ==========================================================================
-   PROGRESS BAR
+   PROGRESS BARS
    ========================================================================== */
 
 function initProgressBars() {
 
-    const bar =
-        document.querySelector(
+    const bars =
+        document.querySelectorAll(
             ".oc-progress-bar"
         );
 
 
-    if (!bar) return;
+    if (!bars.length) {
+        return;
+    }
 
 
-    const targetWidth =
-        bar.getAttribute(
-            "data-progress"
-        ) || "0";
+    bars.forEach(
+        function (bar) {
+
+            const targetWidth =
+                bar.getAttribute(
+                    "data-progress"
+                ) || "0";
 
 
-    setTimeout(
-        function () {
+            setTimeout(
+                function () {
 
-            bar.style.width =
-                targetWidth + "%";
+                    bar.style.width =
+                        targetWidth + "%";
 
-        },
-        400
+                },
+                400
+            );
+        }
     );
 }
 
@@ -1832,156 +3950,84 @@ function initRadialProgress() {
         );
 
 
-    if (!radials.length) return;
+    if (!radials.length) {
+        return;
+    }
 
 
     const circumference =
-        2 * Math.PI * 52;
-
-
-    const observer =
-        new IntersectionObserver(
-            function (entries) {
-
-                entries.forEach(
-                    function (entry) {
-
-                        if (
-                            !entry.isIntersecting
-                        ) {
-                            return;
-                        }
-
-
-                        const el =
-                            entry.target;
-
-
-                        const percent =
-                            parseFloat(
-                                el.getAttribute(
-                                    "data-percent"
-                                )
-                            ) || 0;
-
-
-                        const bar =
-                            el.querySelector(
-                                ".radial-bar"
-                            );
-
-
-                        if (bar) {
-
-                            const offset =
-                                circumference -
-                                (
-                                    percent / 100
-                                ) *
-                                circumference;
-
-
-                            requestAnimationFrame(
-                                function () {
-
-                                    bar.style.strokeDashoffset =
-                                        offset;
-                                }
-                            );
-                        }
-
-
-                        observer.unobserve(
-                            el
-                        );
-                    }
-                );
-
-            },
-            {
-                threshold: 0.4
-            }
-        );
+        2 *
+        Math.PI *
+        52;
 
 
     radials.forEach(
         function (el) {
 
-            observer.observe(el);
+            const percent =
+                parseFloat(
+                    el.getAttribute(
+                        "data-percent"
+                    )
+                ) || 0;
+
+
+            const bar =
+                el.querySelector(
+                    ".radial-bar"
+                );
+
+
+            if (bar) {
+
+                bar.style.strokeDasharray =
+                    circumference;
+
+
+                const offset =
+                    circumference -
+                    (
+                        percent /
+                        100
+                    ) *
+                    circumference;
+
+
+                bar.style.strokeDashoffset =
+                    offset;
+            }
         }
     );
 }
 
 
 /* ==========================================================================
-   EARNINGS CHART
+   EARNINGS CHART INITIALIZATION
    ========================================================================== */
 
 function initEarningsChart() {
 
     const bars =
         document.querySelectorAll(
-            ".mini-bar-chart .bar"
+            "#earningsChart .bar"
         );
 
 
-    if (!bars.length) return;
-
-
-    const observer =
-        new IntersectionObserver(
-            function (entries) {
-
-                entries.forEach(
-                    function (entry) {
-
-                        if (
-                            !entry.isIntersecting
-                        ) {
-                            return;
-                        }
-
-
-                        const el =
-                            entry.target;
-
-
-                        const val =
-                            getComputedStyle(
-                                el
-                            )
-                            .getPropertyValue(
-                                "--val"
-                            )
-                            .trim();
-
-
-                        requestAnimationFrame(
-                            function () {
-
-                                el.style.height =
-                                    val;
-                            }
-                        );
-
-
-                        observer.unobserve(
-                            el
-                        );
-                    }
-                );
-
-            },
-            {
-                threshold: 0.3
-            }
-        );
+    if (!bars.length) {
+        return;
+    }
 
 
     bars.forEach(
         function (bar) {
 
-            observer.observe(bar);
+            bar.style.height =
+                "4%";
+
+            bar.style.setProperty(
+                "--val",
+                "4%"
+            );
         }
     );
 }
@@ -2004,7 +4050,7 @@ function initRippleButtons() {
 
             btn.addEventListener(
                 "click",
-                function (e) {
+                function (event) {
 
                     const rect =
                         btn.getBoundingClientRect();
@@ -2035,7 +4081,7 @@ function initRippleButtons() {
 
                     circle.style.left =
                         (
-                            e.clientX -
+                            event.clientX -
                             rect.left -
                             size / 2
                         ) + "px";
@@ -2043,7 +4089,7 @@ function initRippleButtons() {
 
                     circle.style.top =
                         (
-                            e.clientY -
+                            event.clientY -
                             rect.top -
                             size / 2
                         ) + "px";
@@ -2088,14 +4134,26 @@ function initJobRequestActions() {
 
 
     acceptButtons.forEach(
-        function (btn) {
+        function (button) {
 
-            btn.addEventListener(
+            if (
+                button.dataset.listenerAttached === "true"
+            ) {
+
+                return;
+            }
+
+
+            button.dataset.listenerAttached =
+                "true";
+
+
+            button.addEventListener(
                 "click",
                 async function () {
 
                     const bookingId =
-                        btn.getAttribute(
+                        button.getAttribute(
                             "data-booking-id"
                         );
 
@@ -2113,7 +4171,7 @@ function initJobRequestActions() {
                     await updateBookingStatus(
                         bookingId,
                         "accepted",
-                        btn
+                        button
                     );
                 }
             );
@@ -2122,14 +4180,26 @@ function initJobRequestActions() {
 
 
     rejectButtons.forEach(
-        function (btn) {
+        function (button) {
 
-            btn.addEventListener(
+            if (
+                button.dataset.listenerAttached === "true"
+            ) {
+
+                return;
+            }
+
+
+            button.dataset.listenerAttached =
+                "true";
+
+
+            button.addEventListener(
                 "click",
                 async function () {
 
                     const bookingId =
-                        btn.getAttribute(
+                        button.getAttribute(
                             "data-booking-id"
                         );
 
@@ -2147,7 +4217,7 @@ function initJobRequestActions() {
                     await updateBookingStatus(
                         bookingId,
                         "rejected",
-                        btn
+                        button
                     );
                 }
             );
@@ -2180,10 +4250,6 @@ async function updateBookingStatus(
     }
 
 
-    /*
-     * Prevent multiple clicks.
-     */
-
     if (button) {
 
         button.disabled =
@@ -2208,20 +4274,38 @@ async function updateBookingStatus(
                     },
 
                     body: JSON.stringify({
-                        status: newStatus
+                        status:
+                            newStatus
                     })
                 }
             );
 
 
         const data =
-            await response.json();
+            await response
+                .json()
+                .catch(
+                    function () {
+                        return {};
+                    }
+                );
+
+
+        if (
+            response.status === 401
+        ) {
+
+            throw new Error(
+                "Your login session has expired. Please login again."
+            );
+        }
 
 
         if (!response.ok) {
 
             throw new Error(
                 data.error ||
+                data.detail ||
                 `Booking update failed: ${response.status}`
             );
         }
@@ -2233,15 +4317,10 @@ async function updateBookingStatus(
         );
 
 
-        /*
-         * Reload the dashboard so all statistics,
-         * requests and schedules become accurate.
-         */
-
         await loadProviderDashboard();
 
-
-    } catch (error) {
+    }
+    catch (error) {
 
         console.error(
             "Failed to update booking:",
@@ -2276,7 +4355,9 @@ function initSearchInteraction() {
         );
 
 
-    if (!searchInput) return;
+    if (!searchInput) {
+        return;
+    }
 
 
     let debounceTimer;
@@ -2302,6 +4383,7 @@ function initSearchInteraction() {
                         if (
                             query.length === 0
                         ) {
+
                             return;
                         }
 
@@ -2320,11 +4402,13 @@ function initSearchInteraction() {
 
     searchInput.addEventListener(
         "keydown",
-        function (e) {
+        function (event) {
 
-            if (e.key === "Enter") {
+            if (
+                event.key === "Enter"
+            ) {
 
-                e.preventDefault();
+                event.preventDefault();
 
                 searchInput.blur();
             }
@@ -2345,7 +4429,9 @@ function initBackToTop() {
         );
 
 
-    if (!backToTopBtn) return;
+    if (!backToTopBtn) {
+        return;
+    }
 
 
     window.addEventListener(
@@ -2428,6 +4514,7 @@ function formatDisplayDate(
 ) {
 
     if (!dateString) {
+
         return "Date not provided";
     }
 
@@ -2438,7 +4525,12 @@ function formatDisplayDate(
         );
 
 
-    if (Number.isNaN(date.getTime())) {
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
         return dateString;
     }
 
@@ -2463,6 +4555,7 @@ function formatDisplayTime(
 ) {
 
     if (!timeString) {
+
         return "Time not provided";
     }
 
@@ -2471,13 +4564,18 @@ function formatDisplayTime(
         timeString.split(":");
 
 
-    if (parts.length < 2) {
+    if (
+        parts.length < 2
+    ) {
+
         return timeString;
     }
 
 
     let hours =
-        Number(parts[0]);
+        Number(
+            parts[0]
+        );
 
 
     const minutes =
@@ -2491,10 +4589,40 @@ function formatDisplayTime(
 
 
     hours =
-        hours % 12 || 12;
+        hours % 12 ||
+        12;
 
 
     return `${hours}:${minutes} ${period}`;
+}
+
+
+/* ==========================================================================
+   FORMAT NUMBER
+   ========================================================================== */
+
+function formatNumber(
+    value,
+    decimals
+) {
+
+    if (
+        decimals > 0
+    ) {
+
+        return Number(
+            value
+        ).toFixed(
+            decimals
+        );
+    }
+
+
+    return Math.round(
+        Number(value) || 0
+    ).toLocaleString(
+        "en-IN"
+    );
 }
 
 
@@ -2513,7 +4641,9 @@ function setText(
         );
 
 
-    if (!element) return;
+    if (!element) {
+        return;
+    }
 
 
     element.textContent =
@@ -2525,7 +4655,16 @@ function setText(
    ERROR MESSAGE
    ========================================================================== */
 
-function showDashboardError() {
+function showDashboardError(
+    message
+) {
+
+    console.warn(
+        "Provider dashboard error:",
+        message ||
+        "Unknown error"
+    );
+
 
     const name =
         document.querySelector(
@@ -2551,11 +4690,6 @@ function showDashboardError() {
         greeting.textContent =
             "Provider";
     }
-
-
-    console.warn(
-        "Provider dashboard could not load backend data."
-    );
 }
 
 
@@ -2563,9 +4697,13 @@ function showDashboardError() {
    HTML ESCAPE
    ========================================================================== */
 
-function escapeHtml(value) {
+function escapeHtml(
+    value
+) {
 
-    return String(value)
+    return String(
+        value ?? ""
+    )
         .replace(
             /&/g,
             "&amp;"
@@ -2586,4 +4724,1034 @@ function escapeHtml(value) {
             /'/g,
             "&#039;"
         );
+}
+
+
+/* ==========================================================================
+   ONECLICK — PROVIDER QUOTATION
+   Send Quote
+   ========================================================================== */
+
+let currentQuotationRequestId = null;
+
+
+/* ==========================================================================
+   SETUP QUOTATION FORM
+   ========================================================================== */
+
+function setupQuotationForm() {
+
+    const form =
+        document.getElementById(
+            "quotationForm"
+        );
+
+
+    if (!form) {
+
+        console.warn(
+            "quotationForm was not found."
+        );
+
+        return;
+    }
+
+
+    /*
+     * Prevent duplicate submit listeners.
+     */
+
+    if (
+        form.dataset.listenerAttached ===
+        "true"
+    ) {
+
+        return;
+    }
+
+
+    form.dataset.listenerAttached =
+        "true";
+
+
+    form.addEventListener(
+        "submit",
+        submitProviderQuotation
+    );
+
+
+    console.log(
+        "Quotation form initialized."
+    );
+}
+
+
+/* ==========================================================================
+   OPEN QUOTATION MODAL
+   ========================================================================== */
+
+function openQuotationModal(
+    requestId
+) {
+
+    console.log(
+        "Opening quotation modal for request:",
+        requestId
+    );
+
+
+    currentQuotationRequestId =
+        requestId;
+
+
+    const requestInput =
+        document.getElementById(
+            "quotationRequestId"
+        );
+
+
+    const priceInput =
+        document.getElementById(
+            "quotationPrice"
+        );
+
+
+    const messageInput =
+        document.getElementById(
+            "quotationMessage"
+        );
+
+
+    const errorBox =
+        document.getElementById(
+            "quotationError"
+        );
+
+
+    const successBox =
+        document.getElementById(
+            "quotationSuccess"
+        );
+
+
+    if (requestInput) {
+
+        requestInput.value =
+            requestId;
+    }
+
+
+    if (priceInput) {
+
+        priceInput.value =
+            "";
+    }
+
+
+    if (messageInput) {
+
+        messageInput.value =
+            "";
+    }
+
+
+    if (errorBox) {
+
+        errorBox.classList.add(
+            "d-none"
+        );
+
+        errorBox.textContent =
+            "";
+    }
+
+
+    if (successBox) {
+
+        successBox.classList.add(
+            "d-none"
+        );
+
+        successBox.textContent =
+            "";
+    }
+
+
+    const modalElement =
+        document.getElementById(
+            "quotationModal"
+        );
+
+
+    if (!modalElement) {
+
+        console.error(
+            "quotationModal NOT FOUND."
+        );
+
+        return;
+    }
+
+
+    console.log(
+        "Quotation modal element found."
+    );
+
+
+    if (
+        typeof bootstrap ===
+        "undefined"
+    ) {
+
+        console.error(
+            "Bootstrap JavaScript is NOT loaded."
+        );
+
+        return;
+    }
+
+
+    const modal =
+        bootstrap.Modal.getOrCreateInstance(
+            modalElement
+        );
+
+
+    modal.show();
+
+
+    console.log(
+        "Quotation modal opened successfully."
+    );
+}
+
+
+/* ==========================================================================
+   SUBMIT PROVIDER QUOTATION
+   ========================================================================== */
+
+async function submitProviderQuotation(
+    event
+) {
+
+    event.preventDefault();
+
+
+    const requestInput =
+        document.getElementById(
+            "quotationRequestId"
+        );
+
+
+    const priceInput =
+        document.getElementById(
+            "quotationPrice"
+        );
+
+
+    const messageInput =
+        document.getElementById(
+            "quotationMessage"
+        );
+
+
+    const errorBox =
+        document.getElementById(
+            "quotationError"
+        );
+
+
+    const successBox =
+        document.getElementById(
+            "quotationSuccess"
+        );
+
+
+    const submitButton =
+        document.getElementById(
+            "submitQuotationBtn"
+        );
+
+
+    const requestId =
+        currentQuotationRequestId ||
+        (
+            requestInput
+                ? requestInput.value
+                : ""
+        );
+
+
+    const price =
+        priceInput
+            ? priceInput.value
+            : "";
+
+
+    /*
+     * Provider message.
+     *
+     * This is stored in the quotation.message
+     * field by the Django backend.
+     */
+
+    const message =
+        messageInput
+            ? messageInput.value.trim()
+            : "";
+
+
+    console.log(
+        "Submitting quotation:",
+        {
+            requestId:
+                requestId,
+
+            price:
+                price,
+
+            message:
+                message
+        }
+    );
+
+
+    if (errorBox) {
+
+        errorBox.classList.add(
+            "d-none"
+        );
+
+        errorBox.textContent =
+            "";
+    }
+
+
+    if (successBox) {
+
+        successBox.classList.add(
+            "d-none"
+        );
+
+        successBox.textContent =
+            "";
+    }
+
+
+    if (!requestId) {
+
+        if (errorBox) {
+
+            errorBox.textContent =
+                "Service request ID is missing.";
+
+            errorBox.classList.remove(
+                "d-none"
+            );
+        }
+
+        return;
+    }
+
+
+    if (
+        !price ||
+        Number(price) <= 0
+    ) {
+
+        if (errorBox) {
+
+            errorBox.textContent =
+                "Please enter a valid price.";
+
+            errorBox.classList.remove(
+                "d-none"
+            );
+        }
+
+        return;
+    }
+
+
+    if (submitButton) {
+
+        submitButton.disabled =
+            true;
+
+
+        submitButton.innerHTML = `
+            <i class="fa-solid fa-spinner fa-spin me-2"></i>
+            Sending...
+        `;
+    }
+
+
+    try {
+
+        const token =
+            getAccessToken();
+
+
+        if (!token) {
+
+            throw new Error(
+                "Your login session has expired. Please log in again."
+            );
+        }
+
+
+        const response =
+            await fetch(
+                `${API_BASE}/services/quotations/`,
+                {
+                    method: "POST",
+
+                    headers: {
+
+                        "Authorization":
+                            `Bearer ${token}`,
+
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            request:
+                                Number(requestId),
+
+                            price:
+                                Number(price),
+
+                            message:
+                                message
+
+                        })
+                }
+            );
+
+
+        const data =
+            await response
+                .json()
+                .catch(
+                    function () {
+                        return {};
+                    }
+                );
+
+
+        console.log(
+            "Quotation response:",
+            response.status,
+            data
+        );
+
+
+        if (!response.ok) {
+
+            let errorMessage =
+                "Failed to send quotation.";
+
+
+            if (data.detail) {
+
+                errorMessage =
+                    data.detail;
+
+            }
+            else {
+
+                const firstError =
+                    Object.values(data)[0];
+
+
+                if (
+                    Array.isArray(firstError) &&
+                    firstError.length > 0
+                ) {
+
+                    errorMessage =
+                        firstError[0];
+                }
+            }
+
+
+            throw new Error(
+                errorMessage
+            );
+        }
+
+
+        if (successBox) {
+
+            successBox.textContent =
+                "Quotation sent successfully!";
+
+            successBox.classList.remove(
+                "d-none"
+            );
+        }
+
+
+        /*
+         * Clear current request after success.
+         */
+
+        currentQuotationRequestId =
+            null;
+
+
+        /*
+         * Close modal after 1.2 seconds.
+         */
+
+        setTimeout(
+            function () {
+
+                const modalElement =
+                    document.getElementById(
+                        "quotationModal"
+                    );
+
+
+                if (modalElement) {
+
+                    const modal =
+                        bootstrap.Modal.getInstance(
+                            modalElement
+                        );
+
+
+                    if (modal) {
+
+                        modal.hide();
+                    }
+                }
+
+
+                if (successBox) {
+
+                    successBox.classList.add(
+                        "d-none"
+                    );
+                }
+
+            },
+            1200
+        );
+
+
+        /*
+         * Reload provider requests.
+         */
+
+        setTimeout(
+            async function () {
+
+                try {
+
+                    const requests =
+                        await loadProviderServiceRequests();
+
+
+                    window.oneClickServiceRequests =
+                        requests;
+
+
+                    renderJobRequests(
+                        requests
+                    );
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "Failed to refresh service requests:",
+                        error
+                    );
+                }
+
+            },
+            1300
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Send quotation error:",
+            error
+        );
+
+
+        if (errorBox) {
+
+            errorBox.textContent =
+                error.message ||
+                "Something went wrong while sending the quotation.";
+
+            errorBox.classList.remove(
+                "d-none"
+            );
+        }
+
+    }
+    finally {
+
+        if (submitButton) {
+
+            submitButton.disabled =
+                false;
+
+
+            submitButton.innerHTML = `
+                <i class="fa-solid fa-paper-plane me-2"></i>
+                Send Quote
+            `;
+        }
+    }
+}
+
+
+/* ==========================================================================
+   PROVIDER FINAL OFFER
+   ========================================================================== */
+
+
+/* --------------------------------------------------------------------------
+   OPEN FINAL OFFER MODAL
+   -------------------------------------------------------------------------- */
+
+function openFinalOfferModal(quotationId) {
+
+    const quotationIdInput =
+        document.getElementById(
+            "finalOfferQuotationId"
+        );
+
+    const priceInput =
+        document.getElementById(
+            "finalOfferPrice"
+        );
+
+    const messageInput =
+        document.getElementById(
+            "finalOfferMessage"
+        );
+
+    const errorBox =
+        document.getElementById(
+            "finalOfferError"
+        );
+
+    const modalElement =
+        document.getElementById(
+            "finalOfferModal"
+        );
+
+
+    if (!quotationIdInput || !priceInput || !messageInput || !modalElement) {
+
+        console.error(
+            "Final offer modal elements not found."
+        );
+
+        return;
+    }
+
+
+    /*
+     * Store quotation ID.
+     */
+
+    quotationIdInput.value =
+        quotationId;
+
+
+    /*
+     * Clear previous values.
+     */
+
+    priceInput.value = "";
+
+    messageInput.value = "";
+
+
+    if (errorBox) {
+
+        errorBox.textContent = "";
+
+        errorBox.classList.add(
+            "d-none"
+        );
+    }
+
+
+    /*
+     * Open Bootstrap modal.
+     */
+
+    const modal =
+        bootstrap.Modal.getOrCreateInstance(
+            modalElement
+        );
+
+    modal.show();
+}
+
+
+/* --------------------------------------------------------------------------
+   SUBMIT FINAL OFFER
+   -------------------------------------------------------------------------- */
+
+async function submitProviderFinalOffer() {
+
+    const quotationId =
+        document.getElementById(
+            "finalOfferQuotationId"
+        )?.value;
+
+
+    const price =
+        document.getElementById(
+            "finalOfferPrice"
+        )?.value;
+
+
+    const message =
+        document.getElementById(
+            "finalOfferMessage"
+        )?.value.trim();
+
+
+    const errorBox =
+        document.getElementById(
+            "finalOfferError"
+        );
+
+
+    if (!quotationId) {
+
+        console.error(
+            "Quotation ID is missing."
+        );
+
+        return;
+    }
+
+
+    if (!price || Number(price) <= 0) {
+
+        if (errorBox) {
+
+            errorBox.textContent =
+                "Please enter a valid final price.";
+
+            errorBox.classList.remove(
+                "d-none"
+            );
+        }
+
+        return;
+    }
+
+
+    const token =
+        getAccessToken();
+
+
+    if (!token) {
+
+        if (errorBox) {
+
+            errorBox.textContent =
+                "Your login session has expired. Please login again.";
+
+            errorBox.classList.remove(
+                "d-none"
+            );
+        }
+
+        return;
+    }
+
+
+    const submitButton =
+        document.getElementById(
+            "submitFinalOfferBtn"
+        );
+
+
+    try {
+
+        if (submitButton) {
+
+            submitButton.disabled = true;
+
+            submitButton.innerHTML =
+                '<i class="fa-solid fa-spinner fa-spin me-1"></i> Sending...';
+        }
+
+
+        console.log(
+            "Sending final offer for quotation:",
+            quotationId
+        );
+
+
+        const response =
+            await fetch(
+                `${API_BASE}/services/quotations/${quotationId}/final/`,
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+
+                        "Authorization":
+                            `Bearer ${token}`
+                    },
+
+                    body:
+                        JSON.stringify({
+                            final_price:
+                                Number(price),
+
+                            final_message:
+                                message
+                        })
+                }
+            );
+
+
+        console.log(
+            "Final offer response:",
+            response.status
+        );
+
+
+        const data =
+            await response
+                .json()
+                .catch(
+                    function () {
+                        return {};
+                    }
+                );
+
+
+        console.log(
+            "Final offer data:",
+            data
+        );
+
+
+        if (response.status === 401) {
+
+            throw new Error(
+                "Your login session has expired. Please login again."
+            );
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                data.error ||
+                "Failed to send final offer."
+            );
+        }
+
+
+        /*
+         * Close modal.
+         */
+
+        const modalElement =
+            document.getElementById(
+                "finalOfferModal"
+            );
+
+
+        if (modalElement) {
+
+            const modal =
+                bootstrap.Modal.getInstance(
+                    modalElement
+                );
+
+            if (modal) {
+                modal.hide();
+            }
+        }
+
+
+        /*
+         * Reload quotations.
+         */
+
+        const quotations =
+            await loadProviderQuotations();
+
+
+        window.oneClickQuotations =
+            quotations;
+
+
+        renderProviderCounterOffers(
+            quotations
+        );
+
+
+        console.log(
+            "Final offer sent successfully."
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Final offer error:",
+            error
+        );
+
+
+        if (errorBox) {
+
+            errorBox.textContent =
+                error.message ||
+                "Failed to send final offer.";
+
+            errorBox.classList.remove(
+                "d-none"
+            );
+        }
+
+    }
+    finally {
+
+        if (submitButton) {
+
+            submitButton.disabled = false;
+
+            submitButton.innerHTML =
+                '<i class="fa-solid fa-handshake me-1"></i> Send Final Offer';
+        }
+    }
+}
+
+
+/* --------------------------------------------------------------------------
+   FINAL OFFER BUTTON + MODAL LISTENER
+   -------------------------------------------------------------------------- */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        /*
+         * Counter-offer cards are rendered dynamically,
+         * so use event delegation.
+         */
+
+        document.addEventListener(
+            "click",
+            function (event) {
+
+                const button =
+                    event.target.closest(
+                        ".final-offer-btn"
+                    );
+
+
+                if (!button) {
+                    return;
+                }
+
+
+                const quotationId =
+                    button.dataset.quotationId;
+
+
+                if (!quotationId) {
+
+                    console.error(
+                        "Final offer quotation ID not found."
+                    );
+
+                    return;
+                }
+
+
+                console.log(
+                    "Opening final offer for quotation:",
+                    quotationId
+                );
+
+
+                openFinalOfferModal(
+                    quotationId
+                );
+            }
+        );
+
+
+        /*
+         * Submit button.
+         */
+
+        const submitButton =
+            document.getElementById(
+                "submitFinalOfferBtn"
+            );
+
+
+        if (!submitButton) {
+
+            console.error(
+                "submitFinalOfferBtn not found."
+            );
+
+            return;
+        }
+
+
+        submitButton.addEventListener(
+            "click",
+            submitProviderFinalOffer
+        );
+
+    }
+);
+
+
+// =========================================================
+// LOGOUT
+// =========================================================
+
+const logoutBtn = document.getElementById("logoutBtn");
+
+if (logoutBtn) {
+
+    logoutBtn.addEventListener("click", function (event) {
+
+        event.preventDefault();
+
+        // Remove JWT tokens
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+
+        // Remove stored user/provider data if present
+        localStorage.removeItem("user");
+        localStorage.removeItem("provider");
+
+        // Go to login page
+        window.location.href = "login.html";
+
+    });
+
 }
