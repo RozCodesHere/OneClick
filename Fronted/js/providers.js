@@ -1728,7 +1728,9 @@ async function toggleSaveProvider(
     try {
 
         /*
+         * =====================================================
          * REMOVE PROVIDER
+         * =====================================================
          */
 
         if (isSaved) {
@@ -1774,7 +1776,7 @@ async function toggleSaveProvider(
                 } catch (error) {
 
                     /*
-                     * No JSON response.
+                     * Response did not contain JSON.
                      */
 
                 }
@@ -1807,7 +1809,9 @@ async function toggleSaveProvider(
 
 
         /*
+         * =====================================================
          * SAVE PROVIDER
+         * =====================================================
          */
 
         else {
@@ -1827,8 +1831,7 @@ async function toggleSaveProvider(
                         },
 
                         body: JSON.stringify({
-                            provider:
-                                providerId
+                            provider: providerId
                         })
                     }
                 );
@@ -1858,7 +1861,7 @@ async function toggleSaveProvider(
                 } catch (error) {
 
                     /*
-                     * No JSON response.
+                     * Response did not contain JSON.
                      */
 
                 }
@@ -1913,8 +1916,6 @@ async function toggleSaveProvider(
     }
 
 }
-
-
 /* =========================================================
 UPDATE SAVE BUTTON
 ========================================================= */

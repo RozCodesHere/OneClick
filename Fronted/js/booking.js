@@ -223,30 +223,66 @@ function renderProvider(provider) {
    ========================================================= */
 
 async function loadServices() {
-    const serviceSelect = document.getElementById("service");
+
+    const serviceSelect =
+        document.getElementById("service");
 
     if (!serviceSelect) {
         return;
     }
 
+    const providerId = getProviderId();
+    const serviceId = getServiceId();
+
+    if (!providerId) {
+        console.error("Provider ID is missing.");
+        return;
+    }
+
     try {
-        const response = await fetch(
-            `${API_BASE}/services/`
-        );
+
+        /*
+         * ---------------------------------------------------------
+         * LOAD THE PROVIDER
+         * ---------------------------------------------------------
+         *
+         * We use the provider endpoint because it already supports
+         * service_id and returns the provider-specific service price.
+         *
+         * Example:
+         * /providers/5/?service_id=2
+         */
+
+        let providerUrl =
+            `${API_BASE}/providers/${providerId}/`;
+
+        if (serviceId) {
+            providerUrl += `?service_id=${serviceId}`;
+        }
+
+        const response =
+            await fetch(providerUrl);
 
         if (!response.ok) {
             throw new Error(
-                `Services API returned ${response.status}`
+                `Provider API returned ${response.status}`
             );
         }
 
-        const data = await response.json();
+        const provider =
+            await response.json();
 
-        const services = Array.isArray(data)
-            ? data
-            : data.results || [];
+        console.log(
+            "Booking provider service:",
+            provider
+        );
 
-        console.log("Booking services:", services);
+
+        /*
+         * ---------------------------------------------------------
+         * CLEAR CURRENT OPTIONS
+         * ---------------------------------------------------------
+         */
 
         serviceSelect.innerHTML = `
             <option value="">
@@ -254,86 +290,107 @@ async function loadServices() {
             </option>
         `;
 
-        services
-            .filter(function (service) {
-                return service.is_active === true;
-            })
-            .forEach(function (service) {
-                const option = document.createElement("option");
 
-                option.value = service.id;
-               option.textContent =
-    `${service.name} — Rs. ${service.base_price}`;
+        /*
+         * ---------------------------------------------------------
+         * PROVIDER SERVICE
+         * ---------------------------------------------------------
+         */
 
-option.dataset.price = service.base_price;
-                option.dataset.description =
-                    service.description || "";
+        if (
+            !provider.service_name ||
+            !provider.service_price
+        ) {
 
-                serviceSelect.appendChild(option);
-            });
+            serviceSelect.innerHTML = `
+                <option value="">
+                    No service available
+                </option>
+            `;
 
-        serviceSelect.addEventListener(
-            "change",
-            updateSelectedService
-        );
+            serviceSelect.disabled = true;
 
-        /* -----------------------------------------------------
-           AUTO SELECT SERVICE FROM URL
-           ----------------------------------------------------- */
+            console.warn(
+                "Provider does not have a service for this booking."
+            );
 
-        const selectedServiceId = getServiceId();
+            return;
+        }
 
-if (selectedServiceId) {
 
-    const matchingOption = Array.from(
-        serviceSelect.options
-    ).find(function (option) {
+        /*
+         * ---------------------------------------------------------
+         * CREATE ONLY THE PROVIDER'S SERVICE OPTION
+         * ---------------------------------------------------------
+         */
 
-        return String(option.value) ===
-            String(selectedServiceId);
+        const option =
+            document.createElement("option");
 
-    });
+        option.value =
+            serviceId;
 
-    if (matchingOption) {
+        option.textContent =
+            `${provider.service_name} — Rs. ${Number(
+                provider.service_price
+            ).toFixed(2)}`;
 
-        serviceSelect.value =
-            matchingOption.value;
+        option.dataset.price =
+            provider.service_price;
 
-        updateSelectedService();
-applyProviderServicePrice();
-        
+        option.dataset.description =
+            provider.service_description ||
+            "Professional service available on OneClick.";
 
-        serviceSelect.disabled = true;
-  console.log(
-        "Selected service from URL:",
-        selectedServiceId
-    );
 
-    console.log(
-        "Selected service name:",
-        matchingOption.textContent
-    );
-}
-         else {
+        serviceSelect.appendChild(option);
 
-        console.warn(
-            "Selected service was not found:",
-            selectedServiceId
-        );
 
-    }
+        /*
+         * ---------------------------------------------------------
+         * SELECT SERVICE AUTOMATICALLY
+         * ---------------------------------------------------------
+         */
 
-}
+        if (serviceId) {
+
+            serviceSelect.value =
+                serviceId;
+
+            selectedProviderServicePrice =
+                provider.service_price;
+
+            updateSelectedService();
+
+            serviceSelect.disabled = true;
+
+            console.log(
+                "Selected provider service:",
+                provider.service_name
+            );
+
+            console.log(
+                "Provider service price:",
+                provider.service_price
+            );
+        }
+
+
     } catch (error) {
-        console.error("Services loading error:", error);
+
+        console.error(
+            "Provider service loading error:",
+            error
+        );
 
         serviceSelect.innerHTML = `
             <option value="">
-                Unable to load services
+                Unable to load service
             </option>
         `;
     }
 }
+
 
 /* =========================================================
    UPDATE SELECTED SERVICE
@@ -435,6 +492,31 @@ function setupBookingForm() {
     });
 }
 
+function getCurrentLocation() {
+    return new Promise(function (resolve, reject) {
+
+        if (!navigator.geolocation) {
+            reject(
+                new Error(
+                    "Geolocation is not supported by this browser."
+                )
+            );
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            resolve,
+            reject,
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    });
+}
+
+
 /* =========================================================
    SUBMIT BOOKING
    ========================================================= */
@@ -448,6 +530,9 @@ async function submitBooking() {
     const address = document.getElementById("address");
     const note = document.getElementById("note");
     const submitButton = document.getElementById("submitBooking");
+
+    let latitude = null;
+    let longitude = null;
 
     if (!providerId) {
         showError("Provider information is missing.");
@@ -474,16 +559,37 @@ async function submitBooking() {
         return;
     }
 
-    hideError();
+   hideError();
 
-    const bookingData = {
-        provider: Number(providerId),
-        service: Number(service.value),
-        booking_date: bookingDate.value,
-        booking_time: bookingTime.value,
-        address: address.value.trim(),
-        note: note ? note.value.trim() : ""
-    };
+try {
+    const position = await getCurrentLocation();
+
+   latitude = Number(position.coords.latitude.toFixed(6));
+longitude = Number(position.coords.longitude.toFixed(6));
+
+} catch (error) {
+
+    console.error(
+        "Location error:",
+        error
+    );
+
+    showError(
+        "Please allow location access to create a booking."
+    );
+
+    return;
+}
+const bookingData = {
+    provider: Number(providerId),
+    service: Number(service.value),
+    booking_date: bookingDate.value,
+    booking_time: bookingTime.value,
+    address: address.value.trim(),
+    latitude: latitude,
+    longitude: longitude,
+    note: note ? note.value.trim() : ""
+};
 
     console.log("Booking payload:", bookingData);
 

@@ -11,6 +11,8 @@ const API_BASE = "http://127.0.0.1:8000/api";
 
 document.addEventListener("DOMContentLoaded", function () {
 
+    loadLoggedInUser();
+
     loadProviderProfile();
 
     initAnimatedCounters();
@@ -111,9 +113,8 @@ function setText(selector, value) {
    provider-profile.html
 
    IMPORTANT:
-   Logged-in provider uses /providers/dashboard/
-   directly because the public provider endpoint only
-   exposes verified providers.
+   Public provider requests include service_id when
+   available so Django can return ProviderService.price.
    ========================================================= */
 
 async function loadProviderProfile() {
@@ -129,10 +130,34 @@ async function loadProviderProfile() {
 
         if (providerId) {
 
+            const serviceId =
+                getServiceId();
+
+            let providerUrl =
+                `${API_BASE}/providers/${providerId}/`;
+
+            /*
+             * If the profile was opened from a specific service,
+             * send that service ID to Django.
+             *
+             * Example:
+             * /api/providers/7/?service_id=4
+             */
+
+            if (serviceId) {
+
+                providerUrl +=
+                    `?service_id=${serviceId}`;
+
+            }
+
+            console.log(
+                "Loading provider profile:",
+                providerUrl
+            );
+
             const response =
-                await fetch(
-                    `${API_BASE}/providers/${providerId}/`
-                );
+                await fetch(providerUrl);
 
             if (!response.ok) {
 
@@ -150,11 +175,14 @@ async function loadProviderProfile() {
                 provider
             );
 
-           renderProviderProfile(provider);
+            renderProviderProfile(provider);
 
-await loadProviderReviews(provider.id);
+            await loadProviderReviews(
+                provider.id
+            );
 
-return;
+            return;
+
         }
 
         /* =====================================================
@@ -162,7 +190,9 @@ return;
            ===================================================== */
 
         const token =
-            localStorage.getItem("access_token");
+            localStorage.getItem(
+                "access_token"
+            );
 
         if (!token) {
 
@@ -222,11 +252,21 @@ return;
             provider
         );
 
-        /* =====================================================
-           RENDER REAL PROVIDER
-           ===================================================== */
+        renderProviderProfile(
+            provider
+        );
 
-        renderProviderProfile(provider);
+        /*
+         * Load reviews for the logged-in provider as well.
+         */
+
+        if (provider.id) {
+
+            await loadProviderReviews(
+                provider.id
+            );
+
+        }
 
     } catch (error) {
 
@@ -245,20 +285,105 @@ return;
 }
 
 /* =========================================================
+   LOAD LOGGED-IN USER FOR NAVBAR
+   ========================================================= */
+
+async function loadLoggedInUser() {
+
+    const token =
+        localStorage.getItem("access_token");
+
+    if (!token) {
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/users/me/`,
+                {
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+        if (!response.ok) {
+
+            console.error(
+                "Unable to load logged-in user:",
+                response.status
+            );
+
+            return;
+
+        }
+
+        const user =
+            await response.json();
+
+        console.log(
+            "LOGGED-IN USER:",
+            user
+        );
+
+        const userName =
+            user.full_name ||
+            user.name ||
+            user.username ||
+            user.email ||
+            "User";
+
+        setText(
+            "#navUserName",
+            userName
+        );
+
+        const avatar =
+            document.querySelector(
+                "#navUserAvatar"
+            );
+
+        if (
+            avatar &&
+            user.profile_image
+        ) {
+
+            avatar.src =
+                user.profile_image;
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Error loading logged-in user:",
+            error
+        );
+
+    }
+
+}
+
+/* =========================================================
    RENDER PROVIDER PROFILE
    ========================================================= */
 
 function renderProviderProfile(provider) {
 
     const providerName =
-        provider.full_name || "Provider";
+        provider.full_name ||
+        "Provider";
 
     const category =
-        provider.category_name || "Service Provider";
+        provider.category_name ||
+        "Service Provider";
 
-        const serviceName =
-    provider.service_name ||
-    null;
+    const serviceName =
+        provider.service_name ||
+        null;
 
     const experience =
         provider.experience ?? 0;
@@ -271,17 +396,25 @@ function renderProviderProfile(provider) {
         provider.bio ||
         "No description available.";
 
-   const servicePrice =
-    provider.service_price;
+    /*
+     * IMPORTANT:
+     *
+     * service_price comes from ProviderService.
+     *
+     * We intentionally DO NOT use hourly_rate as a fallback.
+     *
+     * hourly_rate is not necessarily the price of the
+     * selected service.
+     */
 
-const price =
-    servicePrice !== null &&
-    servicePrice !== undefined
-        ? servicePrice
-        : (
-            provider.hourly_rate ??
-            "0.00"
-        );
+    const servicePrice =
+        provider.service_price;
+
+    const price =
+        servicePrice !== null &&
+        servicePrice !== undefined
+            ? servicePrice
+            : null;
 
     const rating =
         Number(
@@ -322,9 +455,10 @@ const price =
     );
 
     setText(
-    "#providerService",
-    serviceName || category
-);
+        "#providerService",
+        serviceName ||
+        category
+    );
 
     setText(
         "#providerExperience",
@@ -365,16 +499,24 @@ const price =
             ".pricing-value"
         );
 
+    /*
+     * pricingValues[1] is the Starting Price field
+     */
+
     if (pricingValues.length >= 2) {
 
         pricingValues[1].textContent =
-            `Rs. ${price}`;
+            price !== null
+                ? `Rs. ${price}`
+                : "Not provided";
 
     }
 
     setText(
         "#floatingPrice",
-        `Rs. ${price}`
+        price !== null
+            ? `Rs. ${price}`
+            : "Not provided"
     );
 
     /* =====================================================
@@ -529,7 +671,13 @@ const price =
     updateAvailability(
         provider.available
     );
-cleanCompletedWorkGallery();
+
+    /* =====================================================
+       COMPLETED WORK
+       ===================================================== */
+
+    cleanCompletedWorkGallery();
+
 }
 
 /* =========================================================
@@ -673,7 +821,9 @@ function updateRatingStars(
     }
 
     const stars =
-        container.querySelectorAll("i");
+        container.querySelectorAll(
+            "i"
+        );
 
     stars.forEach(
         function (star, index) {
@@ -734,7 +884,9 @@ function updateAllRatingStars(
         function (group) {
 
             const stars =
-                group.querySelectorAll("i");
+                group.querySelectorAll(
+                    "i"
+                );
 
             stars.forEach(
                 function (star, index) {
@@ -788,13 +940,16 @@ function updateAllRatingStars(
    LOAD PROVIDER REVIEWS
    ========================================================= */
 
-async function loadProviderReviews(providerId) {
+async function loadProviderReviews(
+    providerId
+) {
 
     try {
 
-        const response = await fetch(
-            `${API_BASE}/reviews/?provider=${providerId}`
-        );
+        const response =
+            await fetch(
+                `${API_BASE}/reviews/?provider=${providerId}`
+            );
 
         if (!response.ok) {
 
@@ -830,9 +985,14 @@ async function loadProviderReviews(providerId) {
         const reviewList =
             Array.isArray(reviews)
                 ? reviews
-                : (reviews.results || []);
+                : (
+                    reviews.results ||
+                    []
+                );
 
-        renderReviews(reviewList);
+        renderReviews(
+            reviewList
+        );
 
     } catch (error) {
 
@@ -847,12 +1007,13 @@ async function loadProviderReviews(providerId) {
 
 }
 
-
 /* =========================================================
    RENDER REVIEWS
    ========================================================= */
 
-function renderReviews(reviews) {
+function renderReviews(
+    reviews
+) {
 
     const container =
         document.querySelector(
@@ -903,6 +1064,7 @@ function renderReviews(reviews) {
         }
 
         return;
+
     }
 
     reviews.forEach(
@@ -930,12 +1092,13 @@ function renderReviews(reviews) {
 
 }
 
-
 /* =========================================================
    RENDER SINGLE REVIEW
    ========================================================= */
 
-function renderReview(review) {
+function renderReview(
+    review
+) {
 
     const customerName =
         escapeHtml(
@@ -999,146 +1162,6 @@ function renderReview(review) {
 
 }
 
-
-/* =========================================================
-   GENERATE REVIEW STARS
-   ========================================================= */
-
-function generateReviewStars(rating) {
-
-    let html = "";
-
-    for (
-        let i = 1;
-        i <= 5;
-        i++
-    ) {
-
-        if (rating >= i) {
-
-            html +=
-                `<i class="fa-solid fa-star"></i>`;
-
-        } else if (
-            rating >= i - 0.5
-        ) {
-
-            html +=
-                `<i class="fa-solid fa-star-half-stroke"></i>`;
-
-        } else {
-
-            html +=
-                `<i class="fa-regular fa-star"></i>`;
-
-        }
-
-    }
-
-    return html;
-
-}
-
-
-/* =========================================================
-   FORMAT REVIEW DATE
-   ========================================================= */
-
-function formatReviewDate(dateString) {
-
-    if (!dateString) {
-
-        return "—";
-
-    }
-
-    const date =
-        new Date(dateString);
-
-    if (isNaN(date.getTime())) {
-
-        return "—";
-
-    }
-
-    return date.toLocaleDateString(
-        "en-US",
-        {
-            month: "short",
-            day: "numeric",
-            year: "numeric"
-        }
-    );
-
-}
-
-/* =========================================================
-   RENDER SINGLE REVIEW
-   ========================================================= */
-
-function renderReview(
-    review
-) {
-
-    const customerName =
-        escapeHtml(
-            review.customer_name ||
-            "Customer"
-        );
-
-    const comment =
-        escapeHtml(
-            review.comment ||
-            "No comment provided."
-        );
-
-    const rating =
-        Number(
-            review.rating || 0
-        );
-
-    const date =
-        formatReviewDate(
-            review.created_at
-        );
-
-    const stars =
-        generateReviewStars(
-            rating
-        );
-
-    return `
-        <div class="review-item">
-
-            <div class="review-body">
-
-                <div class="review-top">
-
-                    <h5>
-                        ${customerName}
-                    </h5>
-
-                    <div class="review-stars">
-                        ${stars}
-                    </div>
-
-                </div>
-
-                <p class="review-text">
-                    ${comment}
-                </p>
-
-                <span class="review-date">
-                    ${date}
-                </span>
-
-            </div>
-
-        </div>
-    `;
-
-}
-
 /* =========================================================
    GENERATE REVIEW STARS
    ========================================================= */
@@ -1147,8 +1170,7 @@ function generateReviewStars(
     rating
 ) {
 
-    let html =
-        "";
+    let html = "";
 
     for (
         let i = 1;
@@ -1196,7 +1218,9 @@ function formatReviewDate(
     }
 
     const date =
-        new Date(dateString);
+        new Date(
+            dateString
+        );
 
     if (isNaN(date.getTime())) {
 

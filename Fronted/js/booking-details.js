@@ -6,16 +6,39 @@
 const API_BASE = "http://127.0.0.1:8000/api";
 
 let currentBookingAddress = "";
+
+let currentBookingLatitude = null;
+
+let currentBookingLongitude = null;
+
 let googleMapsReady = false;
 
 /* =========================================================
    GOOGLE MAPS INITIALIZATION
    ========================================================= */
 
-window.initializeBookingMap = function(address) {
+window.initializeBookingMap = function(
+    address,
+    latitude,
+    longitude
+) {
     if (address !== undefined) {
-        currentBookingAddress = String(address || "");
-    }
+
+    currentBookingAddress = String(address || "");
+
+}
+
+if (latitude !== undefined) {
+
+    currentBookingLatitude = latitude;
+
+}
+
+if (longitude !== undefined) {
+
+    currentBookingLongitude = longitude;
+
+}
 
     const mapContainer = document.querySelector("#bookingMap");
     const openMapsButton = document.querySelector("#openGoogleMapsBtn");
@@ -55,7 +78,11 @@ window.initializeBookingMap = function(address) {
         return;
     }
 
-    renderGoogleMap(bookingAddress);
+   renderGoogleMap(
+    bookingAddress,
+    currentBookingLatitude,
+    currentBookingLongitude
+);
 };
 
 /* =========================================================
@@ -109,69 +136,78 @@ function setupGoogleMapsButton(address) {
    RENDER GOOGLE MAP
    ========================================================= */
 
-function renderGoogleMap(address) {
+function renderGoogleMap(address, latitude, longitude) {
     const mapContainer = document.querySelector("#bookingMap");
 
     if (!mapContainer) {
         return;
     }
 
-    const mapAddress = `${address}, Kathmandu, Nepal`;
-
     setupGoogleMapsButton(address);
 
-    const geocoder = new google.maps.Geocoder();
+    /*
+     * ---------------------------------------------------------
+     * USE SAVED BOOKING COORDINATES
+     * ---------------------------------------------------------
+     */
 
-    geocoder.geocode(
+    if (
+        latitude === null ||
+        latitude === undefined ||
+        longitude === null ||
+        longitude === undefined
+    ) {
+        mapContainer.innerHTML = `
+            <div class="map-loading">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>Map location is not available.</span>
+            </div>
+        `;
+
+        console.warn(
+            "Booking does not contain location coordinates."
+        );
+
+        return;
+    }
+
+    const location = {
+        lat: Number(latitude),
+        lng: Number(longitude)
+    };
+
+    /*
+     * ---------------------------------------------------------
+     * CREATE GOOGLE MAP
+     * ---------------------------------------------------------
+     */
+
+    const map = new google.maps.Map(
+        mapContainer,
         {
-            address: mapAddress
-        },
-        function(results, status) {
-            if (
-                status !== "OK" ||
-                !results ||
-                !results.length
-            ) {
-                console.warn(
-                    "Google Maps could not find address:",
-                    status,
-                    mapAddress
-                );
-
-                mapContainer.innerHTML = `
-                    <div class="map-loading">
-                        <i class="fa-solid fa-location-dot"></i>
-                        <span>Map location could not be found.</span>
-                    </div>
-                `;
-
-                return;
-            }
-
-            const location = results[0].geometry.location;
-
-            const map = new google.maps.Map(
-                mapContainer,
-                {
-                    center: location,
-                    zoom: 15,
-                    mapTypeControl: false,
-                    streetViewControl: false,
-                    fullscreenControl: true
-                }
-            );
-
-            new google.maps.Marker({
-                map: map,
-                position: location,
-                title: mapAddress
-            });
-
-            console.log(
-                "Google Map loaded:",
-                mapAddress
-            );
+            center: location,
+            zoom: 15,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: true
         }
+    );
+
+    /*
+     * ---------------------------------------------------------
+     * ADD BOOKING LOCATION MARKER
+     * ---------------------------------------------------------
+     */
+
+    new google.maps.Marker({
+        map: map,
+        position: location,
+        title: address || "Service Location"
+    });
+
+    console.log(
+        "Google Map loaded using booking coordinates:",
+        location
     );
 }
 
@@ -286,21 +322,29 @@ async function loadBooking(bookingId) {
 
         renderBooking(booking);
 
-        currentBookingAddress =
-            booking.address || "";
+       currentBookingAddress =
+    booking.address || "";
 
-        setupGoogleMapsButton(
-            currentBookingAddress
-        );
+currentBookingLatitude =
+    booking.latitude;
 
-        if (
-            typeof window.initializeBookingMap ===
-            "function"
-        ) {
-            window.initializeBookingMap(
-                currentBookingAddress
-            );
-        }
+currentBookingLongitude =
+    booking.longitude;
+
+setupGoogleMapsButton(
+    currentBookingAddress
+);
+
+if (
+    typeof window.initializeBookingMap ===
+    "function"
+) {
+    window.initializeBookingMap(
+        currentBookingAddress,
+        currentBookingLatitude,
+        currentBookingLongitude
+    );
+}
 
         if (booking.provider) {
             loadProvider(

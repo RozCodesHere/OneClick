@@ -47,9 +47,11 @@ class BookingSerializer(serializers.ModelSerializer):
             "service_price",
 
             "booking_date",
-            "booking_time",
-            "address",
-            "note",
+"booking_time",
+"address",
+"latitude",
+"longitude",
+"note",
 
             "status",
             "total_price",
