@@ -34,6 +34,14 @@
         href="css/provider-dashboard.css"
     >
 
+    <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+
+
+
 </head>
 
 <body>
@@ -64,21 +72,11 @@
 
         <div class="sidebar-brand">
 
-            <a
-                href="#"
-                class="brand-link"
-            >
-
-                <span class="brand-icon">
-                    <i class="fa-solid fa-bolt"></i>
-                </span>
-
-                <span class="brand-text">
-                    OneClick
-                    <span class="brand-sub">Provider</span>
-                </span>
-
-            </a>
+           <a class="navbar-brand oc-brand" href="provider-dashboard.html">
+    <img src="assests/images/logo.png"
+         alt="OneClick"
+         class="oneclick-logo">
+</a>
 
 
             <button
@@ -105,124 +103,136 @@
 
             <ul class="nav-list">
 
+    <!-- Dashboard -->
+    <li class="nav-item active">
 
-                <!-- Dashboard -->
+        <a
+            href="provider-dashboard.html"
+            class="nav-link"
+        >
 
-                <li class="nav-item active">
+            <i class="fa-solid fa-gauge-high"></i>
 
-                    <a
-                        href="#overview"
-                        class="nav-link"
-                        data-section="overview"
-                    >
+            <span>
+                Dashboard
+            </span>
 
-                        <i class="fa-solid fa-gauge-high"></i>
+        </a>
 
-                        <span>
-                            Dashboard
-                        </span>
-
-                    </a>
-
-                </li>
+    </li>
 
 
-                <!-- Job Requests -->
+    <!-- Job Requests -->
+    <li class="nav-item">
 
-                <li class="nav-item">
+        <a
+            href="provider-job-requests.html"
+            class="nav-link"
+        >
 
-                    <a
-                        href="#job-requests"
-                        class="nav-link"
-                        data-section="job-requests"
-                    >
+            <i class="fa-solid fa-inbox"></i>
 
-                        <i class="fa-solid fa-inbox"></i>
+            <span>
+                Job Requests
+            </span>
 
-                        <span>
-                            Job Requests
-                        </span>
+            <span
+                class="nav-badge"
+                id="jobRequestBadge"
+                style="display:none;"
+            >
+                0
+            </span>
 
-                        <span
-                            class="nav-badge"
-                            id="jobRequestBadge"
-                            style="display:none;"
-                        >
-                            0
-                        </span>
+        </a>
 
-                    </a>
-
-                </li>
+    </li>
 
 
-                <!-- Today's Jobs -->
+    <!-- Messages -->
+    <li class="nav-item">
 
-                <li class="nav-item">
+        <a
+            href="chat.html"
+            class="nav-link"
+        >
 
-                    <a
-                        href="#todays-jobs"
-                        class="nav-link"
-                        data-section="todays-jobs"
-                    >
+            <i class="fa-solid fa-comments"></i>
 
-                        <i class="fa-regular fa-calendar-check"></i>
+            <span>
+                Messages
+            </span>
 
-                        <span>
-                            Today's Jobs
-                        </span>
+            <span
+                class="nav-badge"
+                id="customerMessagesCount"
+                style="display:none;"
+            >
+                0
+            </span>
 
-                    </a>
+        </a>
 
-                </li>
-
-
-                <!-- Completed Jobs -->
-
-                <li class="nav-item">
-
-                    <a
-                        href="#completed-jobs"
-                        class="nav-link"
-                        data-section="completed-jobs"
-                    >
-
-                        <i class="fa-solid fa-circle-check"></i>
-
-                        <span>
-                            Completed Jobs
-                        </span>
-
-                    </a>
-
-                </li>
+    </li>
 
 
-                
+    <!-- Today's Jobs -->
+    <li class="nav-item">
 
-                <!-- Reviews -->
+        <a
+            href="provider-todays-jobs.html"
+            class="nav-link"
+        >
 
-                <li class="nav-item">
+            <i class="fa-regular fa-calendar-check"></i>
 
-                    <a
-                        href="#reviews"
-                        class="nav-link"
-                        data-section="reviews"
-                    >
+            <span>
+                My Jobs
+            </span>
 
-                        <i class="fa-solid fa-star"></i>
+        </a>
 
-                        <span>
-                            Reviews
-                        </span>
-
-                    </a>
-
-                </li>
+    </li>
 
 
-            </ul>
+    <!-- Completed Jobs -->
+    <li class="nav-item">
 
+        <a
+            href="provider-completed-jobs.html"
+            class="nav-link"
+        >
+
+            <i class="fa-solid fa-circle-check"></i>
+
+            <span>
+                Completed Jobs
+            </span>
+
+        </a>
+
+    </li>
+
+
+    <!-- Reviews -->
+    <li class="nav-item">
+
+        <a
+            href="review.html"
+            class="nav-link"
+        >
+
+            <i class="fa-solid fa-star"></i>
+
+            <span>
+                Reviews
+            </span>
+
+        </a>
+
+    </li>
+
+</ul>
         </nav>
 
 
@@ -275,22 +285,9 @@
             </button>
 
 
-            <!-- Search -->
+        
 
-            <div class="topbar-search">
-
-                <i
-                    class="fa-solid fa-magnifying-glass search-icon"
-                ></i>
-
-                <input
-                    type="text"
-                    id="topSearch"
-                    class="search-input"
-                    placeholder="Search jobs and customers..."
-                >
-
-            </div>
+            
 
 
             <!-- Topbar Actions -->
@@ -447,7 +444,7 @@
                         <!-- My Profile -->
 
                         <a
-                            href="provider-profile.html"
+                            href="profile.html"
                             class="dropdown-item"
                         >
 
@@ -468,7 +465,7 @@
                         <!-- Settings -->
 
                         <a
-                            href="#settings"
+                            href="setting.html"
                             class="dropdown-item"
                         >
 
@@ -537,18 +534,10 @@
                     <div>
 
                         <h1 class="greeting">
-
-                            Good Morning,
-
-                            <span id="dashboardGreetingName">
-                                Loading...
-                            </span>
-
-                            <span class="wave">
-                                👋
-                            </span>
-
-                        </h1>
+    <span id="dashboardGreetingText">Hello,</span>
+    <span id="dashboardGreetingName">Loading...</span>
+    <span class="wave">👋</span>
+</h1>
 
 
                         <p class="greeting-sub">
@@ -904,103 +893,99 @@
 
                         <!-- Current Job Actions -->
 
-                        <div class="current-job-actions">
+                        
+<div class="current-job-actions">
 
-                            <button
-                                class="btn btn-oc-secondary ripple"
-                                type="button"
-                            >
+    <button
+        class="btn btn-oc-secondary ripple"
+        type="button"
+        id="callCustomerBtn"
+    >
+        <i class="fa-solid fa-phone"></i>
+        Call Customer
+    </button>
 
-                                <i class="fa-solid fa-phone"></i>
+    <button
+        class="btn btn-primary ripple"
+        type="button"
+        id="startJobBtn"
+        style="display:none;"
+    >
+        <i class="fa-solid fa-play"></i>
+        Start Job
+    </button>
 
-                                Call Customer
+    <button
+        class="btn btn-oc-success ripple"
+        type="button"
+        id="completeJobBtn"
+        style="display:none;"
+    >
+        <i class="fa-solid fa-circle-check"></i>
+        Complete Job
+    </button>
 
-                            </button>
+    <button
+    class="btn btn-oc-primary ripple"
+    type="button"
+    id="startServiceBtn"
+    style="display:none;"
+>
+    <i class="fa-solid fa-play"></i>
+    Start Service
+</button>
 
+<button
+    class="btn btn-oc-success ripple"
+    type="button"
+    id="confirmCashPaymentBtn"
+    style="display:none;"
+>
+    <i class="fa-solid fa-money-bill-wave"></i>
+    Confirm Cash Received
+</button>
 
-                            <button
-                                class="btn btn-oc-success ripple"
-                                type="button"
-                            >
+</div>
 
-                                <i class="fa-solid fa-circle-check"></i>
-
-                                Complete Job
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </section>
-
-
-                <!-- =================================================
-                     JOB REQUESTS
-                ================================================== -->
-
-                <section
-                    class="oc-panel fade-in"
-                    id="job-requests"
-                >
-
-                    <div class="panel-heading">
-
-                        <h2>
-
-                            <i class="fa-solid fa-inbox"></i>
-
-                            Job Requests
-
-                        </h2>
-
-
-                        <a
-                            href="#job-requests"
-                            class="panel-link"
-                        >
-
-                            View All
-
-                            <i class="fa-solid fa-arrow-right"></i>
-
-                        </a>
-
-                    </div>
+</div>
 
 
-                    <div
-                        class="job-requests-grid"
-                        id="jobRequestsGrid"
-                    >
+<!-- FULL SCREEN PROVIDER NAVIGATION -->
+<div
+    id="providerNavigationScreen"
+    style="
+        display:none;
+        position:fixed;
+        inset:0;
+        z-index:99999;
+        background:#fff;
+        padding:15px;
+    "
+>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5>Navigate to Customer</h5>
 
-                        <div class="request-empty-state">
+        <button
+            type="button"
+            class="btn btn-danger"
+            id="closeProviderNavigation"
+        >
+            <i class="fa-solid fa-xmark"></i> Exit
+        </button>
+    </div>
 
-                            <span class="item-icon bg-primary-soft">
+    <div
+        id="providerCustomerMap"
+        style="height:calc(100vh - 100px);width:100%;border-radius:12px;"
+    ></div>
 
-                                <i class="fa-solid fa-inbox"></i>
+    <p id="providerMapAddress" class="text-muted mt-2">
+        Customer location will appear here.
+    </p>
+</div>
 
-                            </span>
 
-
-                            <div>
-
-                                <h5>
-                                    No pending job requests
-                                </h5>
-
-                                <p>
-                                    New customer requests will appear here.
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </section>
+                
 
 
                 <!-- =================================================
@@ -1338,6 +1323,62 @@
                 <!-- =================================================
                      RECENT REVIEWS
                 ================================================== -->
+<!-- =================================================
+     CUSTOMER MESSAGES
+================================================== -->
+
+<section
+    class="oc-panel fade-in"
+    id="customer-messages"
+>
+
+    <div class="panel-heading">
+
+        <h2>
+            <i class="fa-regular fa-comments"></i>
+            Customer Messages
+        </h2>
+
+        <span
+            class="badge bg-primary"
+            id="customerMessageBadge"
+        >
+            0
+        </span>
+
+    </div>
+
+
+    <div
+        class="messages-list"
+        id="providerMessagesList"
+    >
+
+        <div class="request-empty-state">
+
+            <span class="item-icon bg-primary-soft">
+
+                <i class="fa-regular fa-comments"></i>
+
+            </span>
+
+            <div>
+
+                <h5>
+                    No customer messages
+                </h5>
+
+                <p>
+                    Messages from your customers will appear here.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
 
                 <section
                     class="oc-panel fade-in"
@@ -1724,6 +1765,7 @@
                 </section>
 
 
+
                 <!-- =================================================
                      QUICK ACTIONS
                 ================================================== -->
@@ -1752,7 +1794,7 @@
                         <!-- Update Profile -->
 
                         <a
-                            href="provider-profile.html"
+                            href="profile.html"
                             class="quick-action-card ripple"
                         >
 
@@ -1769,7 +1811,19 @@
 
                         </a>
 
+<!-- Work Gallery -->
 
+<button
+    type="button"
+    class="quick-action-card ripple"
+    id="uploadWorkPhotoBtn"
+>
+    <span class="qa-icon bg-primary-soft text-primary">
+        <i class="fa-solid fa-images"></i>
+    </span>
+
+    <span>Upload Work Photos</span>
+</button>
                         <!-- Manage Services -->
 
                         <a
@@ -1815,7 +1869,22 @@
                     </div>
 
                 </section>
+<!-- MY WORK PHOTOS -->
 
+<section class="oc-panel fade-in" id="my-work-photos">
+
+    <div class="panel-heading">
+        <h2>
+            <i class="fa-solid fa-images"></i>
+            My Work Photos
+        </h2>
+    </div>
+
+    <div id="myWorkPhotosContainer">
+        <p class="text-muted">Loading photos...</p>
+    </div>
+
+</section>
 
             </main>
 
@@ -2013,7 +2082,49 @@
 
         </div>
 
+<!-- WORK PHOTO UPLOAD MODAL -->
 
+<div class="modal fade" id="workPhotoModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Work Photo</h5>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <label class="form-label">Choose Image</label>
+                <input type="file"
+                       class="form-control"
+                       id="workPhotoInput"
+                       accept="image/*"
+                       required>
+
+                <label class="form-label mt-3">Caption (Optional)</label>
+                <input type="text"
+                       class="form-control"
+                       id="workPhotoCaption"
+                       maxlength="255"
+                       placeholder="Describe your work">
+
+                <div id="workPhotoMessage" class="mt-3"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+
+                <button type="button" class="btn btn-primary"
+                        id="submitWorkPhotoBtn">
+                    Upload Photo
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
         <!-- =====================================================
              SEND QUOTATION MODAL
         ====================================================== -->
@@ -2248,7 +2359,7 @@
     src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
 ></script>
 
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <!-- =========================================================
      PROVIDER DASHBOARD JS
 ========================================================= -->

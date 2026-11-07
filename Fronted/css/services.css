@@ -3,12 +3,12 @@
 ========================================================= */
 
 :root {
-    --primary: #2563eb;
+    --primary: #d86334;
     --primary-dark: #1d4ed8;
-    --accent: #f59e0b;
-    --dark: #0f172a;
-    --text: #475569;
-    --light: #f8fafc;
+    --accent: #F59E0B;
+    --dark: #1c468a;
+    --text: #476951;
+    --light: #edf2f7;
     --border: #e2e8f0;
 }
 
@@ -452,7 +452,7 @@ body {
 
 .services-cta {
     padding: 100px 0;
-    background: var(--primary);
+    background: #1c468a;
     color: white;
 }
 
@@ -483,10 +483,10 @@ body {
 }
 
 .oc-footer-about {
-    font-size: 14px;
-    line-height: 1.8;
-    margin-top: 20px;
-    max-width: 350px;
+    color: white;
+    font-size: 0.88 rem;
+ margin-bottom: 1.25 rem;
+    max-width: 320px;
 }
 
 .oc-social-icons {
@@ -676,4 +676,51 @@ body {
         font-size: 21px;
     }
 
+}
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    margin-left: 10px;
+}
+
+/* Individual service images */
+.service-image-container {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.service-image {
+    display: block;
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 12px;
+    background: #f1f5f9;
+}
+
+/* Fallback when a photo is not configured or cannot load */
+.service-image-placeholder {
+    width: 100%;
+    height: 190px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 42px;
+}
+
+.service-card {
+    overflow: hidden;
+}
+
+@media (max-width: 575.98px) {
+    .service-image,
+    .service-image-placeholder {
+        height: 145px;
+    }
 }

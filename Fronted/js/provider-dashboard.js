@@ -1,9 +1,128 @@
 /* ==========================================================================
    ONECLICK — PROVIDER DASHBOARD
-   Connected to Django REST API
+   Connected to Django R`EST API
    ========================================================================== */
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = (
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "localhost"
+)
+    ? "http://127.0.0.1:8000/api"
+    : "https://levitra-lower-debian-announces.trycloudflare.com/api";
+
+/* ==========================================================================
+   PROVIDER LIVE GPS TRACKING
+   ========================================================================== */
+
+let providerLocationWatchId = null;
+let activeTrackingBookingId = null;
+let providerCustomerMap = null;
+let providerCustomerMarker = null;
+let providerLiveMarker = null;
+let providerRouteLine = null;
+let providerRouteRequestInProgress = false;
+let lastProviderRoutePosition = null;
+
+
+function startProviderLocationTracking(bookingId) {
+
+    if (!navigator.geolocation) {
+        alert("GPS is not supported by this browser.");
+        return;
+    }
+
+    // Prevent duplicate GPS watchers.
+    if (providerLocationWatchId !== null) {
+        navigator.geolocation.clearWatch(
+            providerLocationWatchId
+        );
+    }
+
+    activeTrackingBookingId = bookingId;
+
+    const token = getAccessToken();
+
+    if (!token) {
+        alert("Please login again.");
+        return;
+    }
+
+    providerLocationWatchId =
+        navigator.geolocation.watchPosition(
+            async function (position) {
+
+                const latitude =
+                    position.coords.latitude;
+
+                const longitude =
+                    position.coords.longitude;
+                // Update the live motorcycle marker on the map.
+updateProviderLiveMap(latitude, longitude);
+                try {
+                    const response = await fetch(
+                        `${API_BASE}/bookings/provider/${bookingId}/location/`,
+                        {
+                            method: "PATCH",
+                            headers: {
+                                "Authorization": `Bearer ${token}`,
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                provider_latitude: latitude,
+                                provider_longitude: longitude
+                            })
+                        }
+                    );
+
+                    if (!response.ok) {
+                        console.error(
+                            "GPS update failed:",
+                            await response.text()
+                        );
+                    }
+
+                } catch (error) {
+                    console.error(
+                        "GPS update error:",
+                        error
+                    );
+                }
+            },
+
+            function (error) {
+                console.error("GPS error:", error.message);
+                alert(
+                    "Unable to access your location. Please enable location permission."
+                );
+            },
+
+            {
+                enableHighAccuracy: true,
+                maximumAge: 3000,
+                timeout: 15000
+            }
+        );
+
+    console.log(
+        "Live GPS tracking started for booking:",
+        bookingId
+    );
+}
+
+
+function stopProviderLocationTracking() {
+
+    if (providerLocationWatchId !== null) {
+        navigator.geolocation.clearWatch(
+            providerLocationWatchId
+        );
+    }
+
+    providerLocationWatchId = null;
+    activeTrackingBookingId = null;
+
+    console.log("Live GPS tracking stopped.");
+}
 
 
 /* ==========================================================================
@@ -11,7 +130,20 @@ const API_BASE = "http://127.0.0.1:8000/api";
    ========================================================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
-    const dashboardDate =
+    const greetingText = document.getElementById("dashboardGreetingText");
+
+if (greetingText) {
+    const hour = new Date().getHours();
+
+    if (hour < 12) {
+        greetingText.textContent = "Good morning,";
+    } else if (hour < 17) {
+        greetingText.textContent = "Good afternoon,";
+    } else {
+        greetingText.textContent = "Good evening,";
+    }
+}
+const dashboardDate =
     document.getElementById("dashboardDate");
 
 if (dashboardDate) {
@@ -51,7 +183,121 @@ initSearchInteraction();
     initNavActiveState();
 
     setupQuotationForm();
+    
 });
+
+/* =========================================================
+   PROVIDER LIVE MOTORCYCLE + ROAD ROUTE
+   ========================================================= */
+
+async function updateProviderLiveMap(latitude, longitude) {
+
+    if (!providerCustomerMap || !providerCustomerMarker) {
+        return;
+    }
+
+    const providerPosition = [latitude, longitude];
+
+    const motorcycleIcon = L.divIcon({
+        className: "provider-live-icon",
+        html: '<i class="fa-solid fa-motorcycle"></i>',
+        iconSize: [42, 42],
+        iconAnchor: [21, 21]
+    });
+
+    if (!providerLiveMarker) {
+
+        providerLiveMarker = L.marker(
+            providerPosition,
+            { icon: motorcycleIcon }
+        )
+        .addTo(providerCustomerMap)
+        .bindPopup("Your Live Location");
+
+    } else {
+
+        providerLiveMarker.setLatLng(providerPosition);
+    }
+
+    // Avoid unnecessary route requests.
+    if (providerRouteRequestInProgress) return;
+
+    const customerPosition =
+        providerCustomerMarker.getLatLng();
+
+    const currentPosition =
+        L.latLng(latitude, longitude);
+
+    if (lastProviderRoutePosition) {
+
+        const previousPosition = L.latLng(
+            lastProviderRoutePosition[0],
+            lastProviderRoutePosition[1]
+        );
+
+        if (previousPosition.distanceTo(currentPosition) < 50) {
+            return;
+        }
+    }
+
+    providerRouteRequestInProgress = true;
+
+    try {
+
+        const url =
+            `https://router.project-osrm.org/route/v1/driving/` +
+            `${longitude},${latitude};` +
+            `${customerPosition.lng},${customerPosition.lat}` +
+            `?overview=full&geometries=geojson`;
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.code !== "Ok" || !data.routes.length) {
+            return;
+        }
+
+        const coordinates =
+            data.routes[0].geometry.coordinates.map(
+                point => [point[1], point[0]]
+            );
+
+        if (providerRouteLine) {
+
+            providerRouteLine.setLatLngs(coordinates);
+
+        } else {
+
+            providerRouteLine = L.polyline(
+                coordinates,
+                {
+                    color: "#2563eb",
+                    weight: 5,
+                    opacity: 0.8
+                }
+            ).addTo(providerCustomerMap);
+        }
+
+        lastProviderRoutePosition = providerPosition;
+
+        providerCustomerMap.fitBounds(
+            L.latLngBounds([
+                providerCustomerMarker.getLatLng(),
+                providerLiveMarker.getLatLng()
+            ]),
+            { padding: [40, 40], maxZoom: 15 }
+        );
+
+    } catch (error) {
+
+        console.error("Provider map route error:", error);
+
+    } finally {
+
+        providerRouteRequestInProgress = false;
+    }
+}
+
 
 
 /* ==========================================================================
@@ -156,7 +402,9 @@ async function loadProviderDashboard() {
 
         const provider =
             dashboardData.provider;
-
+console.log("SAVED AVAILABILITY:", provider.availability_status);
+console.log("PROVIDER AVAILABLE:", provider.available);
+console.log("FULL PROVIDER DATA:", provider);
 
         if (!provider) {
 
@@ -168,6 +416,37 @@ async function loadProviderDashboard() {
 
         window.oneClickProvider =
             provider;
+            // Load saved provider service location
+window.oneClickProvider =
+    provider;
+            updateOnlineStatus(provider.availability_status);
+
+            // Restore saved availability from the database
+const savedAvailability =
+    provider.availability_status ||
+    (provider.available ? "available" : "unavailable");
+
+updateOnlineStatus(savedAvailability);
+
+// Restore the three availability switches
+const availabilitySwitches = [
+    { id: "availableToday", status: "available" },
+    { id: "unavailable", status: "unavailable" },
+    { id: "vacationMode", status: "vacation" }
+];
+
+availabilitySwitches.forEach(function (item) {
+    const element = document.getElementById(item.id);
+
+    if (element) {
+        element.checked = item.status === savedAvailability;
+    }
+});
+
+localStorage.setItem(
+    "providerAvailability",
+    savedAvailability
+);
 
 
         renderProviderDashboard(
@@ -211,7 +490,32 @@ renderProviderCounterOffers(
         window.oneClickBookings =
             bookings;
 
+           // Resume GPS tracking if a job is active.
+const activeTrackingBooking = bookings.find(
+    booking =>
+        booking.status === "on_the_way" ||
+        booking.status === "in_progress"
+);
 
+if (activeTrackingBooking) {
+    startProviderLocationTracking(
+        activeTrackingBooking.id
+    );
+}
+
+/* ---------------------------------------------------------
+   LOAD CUSTOMER MESSAGES
+   --------------------------------------------------------- */
+
+const messages =
+    await loadProviderMessages();
+
+window.oneClickMessages =
+    messages;
+
+renderProviderMessages(
+    messages
+);
         /* ---------------------------------------------------------
            RENDER ALL REAL DASHBOARD DATA
            --------------------------------------------------------- */
@@ -372,7 +676,15 @@ async function loadProviderServiceRequests() {
         "Provider service requests:",
         data.results
     );
-
+console.table(
+    data.results.map(request => ({
+        id: request.id,
+        service: request.service_name || request.service,
+        provider: request.provider,
+        status: request.status,
+        address: request.address
+    }))
+);
 
     return data.results;
 }
@@ -572,7 +884,345 @@ async function loadProviderBookings() {
     return data;
 }
 
+async function loadProviderMessages() {
+    try {
 
+        let response = await fetch(
+            `${API_BASE}/services/messages/`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                `Failed to load provider messages: ${response.status}`
+            );
+        }
+
+        let data = await response.json();
+
+        let messages =
+            Array.isArray(data)
+                ? data
+                : Array.isArray(data.results)
+                    ? data.results
+                    : [];
+
+        /*
+         * Load all remaining DRF pages.
+         */
+        let nextPage =
+            data.next;
+
+        while (nextPage) {
+
+            const secureNextPage =
+    nextPage.replace(/^http:\/\//i, "https://");
+
+const nextResponse =
+    await fetch(
+        secureNextPage,
+                    {
+                        method: "GET",
+                        headers: {
+                            "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+
+            if (!nextResponse.ok) {
+                throw new Error(
+                    `Failed to load provider messages: ${nextResponse.status}`
+                );
+            }
+
+            const nextData =
+                await nextResponse.json();
+
+            if (Array.isArray(nextData.results)) {
+                messages =
+                    messages.concat(
+                        nextData.results
+                    );
+            }
+
+            nextPage =
+                nextData.next;
+        }
+
+        console.log(
+            "Provider messages:",
+            messages
+        );
+
+        return messages;
+
+    } catch (error) {
+
+        console.error(
+            "Error loading provider messages:",
+            error
+        );
+
+        return [];
+    }
+}
+
+function renderProviderMessages(messages) {
+
+    const container =
+        document.getElementById("providerMessagesList");
+
+    const countBadge =
+        document.getElementById("customerMessageBadge");
+
+    if (!container) {
+        console.error(
+            "Provider messages container not found."
+        );
+        return;
+    }
+
+    /*
+     * Only show messages that belong to
+     * the currently logged-in provider.
+     *
+     * Provider ID is obtained from the dashboard
+     * data already loaded by the dashboard.
+     */
+
+   const providerId =
+    window.oneClickProvider?.id;
+
+    const providerMessages =
+        providerId
+            ? messages.filter(
+                message =>
+                    Number(message.provider) ===
+                    Number(providerId)
+            )
+            : messages;
+
+    if (countBadge) {
+        countBadge.textContent =
+            providerMessages.length;
+    }
+
+    if (!providerMessages.length) {
+
+        container.innerHTML = `
+            <div class="request-empty-state">
+
+                <span class="item-icon bg-primary-soft">
+
+                    <i class="fa-regular fa-comments"></i>
+
+                </span>
+
+                <div>
+
+                    <h5>
+                        No customer messages
+                    </h5>
+
+                    <p>
+                        Messages from your customers
+                        will appear here.
+                    </p>
+
+                </div>
+
+            </div>
+        `;
+
+        return;
+    }
+
+
+    /*
+     * Group messages by customer.
+     */
+
+    const conversations = {};
+
+    providerMessages.forEach(message => {
+
+        const customerId =
+            message.sender === providerId
+                ? message.receiver
+                : message.sender;
+
+        if (!conversations[customerId]) {
+            conversations[customerId] = [];
+        }
+
+        conversations[customerId].push(message);
+
+    });
+
+
+    container.innerHTML = Object.values(conversations)
+        .map(conversation => {
+
+            conversation.sort(
+                (a, b) =>
+                    new Date(a.created_at) -
+                    new Date(b.created_at)
+            );
+
+            const latest =
+                conversation[conversation.length - 1];
+
+            const customerName =
+                latest.sender === providerId
+                    ? latest.receiver_name || "Customer"
+                    : latest.sender_name || "Customer";
+
+            return `
+                <div
+                    class="border rounded p-3 mb-3"
+                    data-customer-id="${latest.sender === providerId
+                        ? latest.receiver
+                        : latest.sender}"
+                >
+
+                    <div
+                        class="d-flex justify-content-between
+                               align-items-center mb-2"
+                    >
+
+                        <strong>
+                            ${customerName}
+                        </strong>
+
+                        <small class="text-muted">
+                            ${new Date(
+                                latest.created_at
+                            ).toLocaleString()}
+                        </small>
+
+                    </div>
+
+
+                    <div class="mb-3">
+
+                        ${conversation.map(message => {
+
+                            const isProvider =
+                                Number(message.sender) ===
+                                Number(providerId);
+
+                            return `
+                                <div
+                                    class="mb-2
+                                    ${isProvider
+                                        ? "text-end"
+                                        : "text-start"}"
+                                >
+
+                                  <div
+   <div
+    class="d-inline-block
+    p-2 rounded
+    ${isProvider
+        ? "bg-primary text-white"
+        : "bg-light"}"
+>
+
+    ${message.content || ""}
+
+    ${
+        message.image
+            ? `
+                <div class="message-image-wrapper mt-2">
+                    <img
+                        src="${
+                            message.image.startsWith("http")
+                                ? message.image
+                                : `http://127.0.0.1:8000${message.image}`
+                        }"
+                        alt="Shared image"
+                        class="message-shared-image"
+                        loading="lazy"
+                    >
+                </div>
+              `
+            : ""
+    }
+
+</div>
+
+    ${
+        message.image
+            ? `
+                <div class="message-image-wrapper mt-2">
+                    <img
+                        src="${
+                            message.image.startsWith("http")
+                                ? message.image
+                                : `http://127.0.0.1:8000${message.image}`
+                        }"
+                        alt="Shared image"
+                        class="message-shared-image"
+                        loading="lazy"
+                    >
+                </div>
+              `
+            : ""
+    }
+
+</div>
+
+                                </div>
+                            `;
+
+                        }).join("")}
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            placeholder="Type your reply..."
+                            id="providerReply-${latest.sender === providerId
+                                ? latest.receiver
+                                : latest.sender}"
+                        >
+
+                        <button
+                            class="btn btn-primary"
+                            type="button"
+                            onclick="sendProviderMessage(
+                                ${latest.sender === providerId
+                                    ? latest.receiver
+                                    : latest.sender},
+                                ${latest.provider}
+                            )"
+                        >
+
+                            <i class="fa-solid fa-paper-plane"></i>
+
+                            Send
+
+                        </button>
+
+                    </div>
+
+                </div>
+            `;
+
+        })
+        .join("");
+}
 /* ==========================================================================
    RENDER CUSTOMER COUNTER OFFERS
    ========================================================================== */
@@ -682,129 +1332,70 @@ function renderProviderCounterOffers(quotations) {
      * ---------------------------------------------------------
      */
 
-    container.innerHTML =
-        counterOffers
-            .map(
-                function (quotation) {
+    
+container.innerHTML = counterOffers.map(quotation => `
+    <div class="counter-offer-card request-card p-3 mb-3">
 
-                    const counterPrice =
-                        Number(
-                            quotation.counter_price
-                        ).toLocaleString(
-                            "en-IN"
-                        );
+        <span class="badge bg-warning text-dark">
+            Counter Offer
+        </span>
 
+        <small class="text-muted">
+            Quotation #${quotation.id}
+        </small>
 
-                    const originalPrice =
-                        Number(
-                            quotation.price
-                        ).toLocaleString(
-                            "en-IN"
-                        );
+        <h5 class="mt-3">
+            ${escapeHtml(quotation.service_name || "Service")}
+        </h5>
 
+        <p>
+            Customer: ${escapeHtml(quotation.request_customer || "Customer")}
+        </p>
 
-                    const message =
-                        quotation.counter_message ||
-                        "The customer has submitted a counter offer.";
+        <p>
+            Your original price:
+            Rs. ${Number(quotation.price).toLocaleString("en-IN")}
+        </p>
 
+        <p>
+            Customer counter offer:
+            <strong class="text-warning">
+                Rs. ${Number(quotation.counter_price).toLocaleString("en-IN")}
+            </strong>
+        </p>
 
-                    return `
+        <div class="p-3 bg-light rounded mb-3">
+            <small class="text-muted d-block">
+                Customer message
+            </small>
+            ${escapeHtml(quotation.counter_message || "No message provided.")}
+        </div>
 
-                        <div class="request-card">
+        <div class="d-flex gap-2 mt-3">
 
-                            <div class="request-card-header">
+    <button
+        type="button"
+        class="btn btn-success accept-counter-btn"
+        data-quotation-id="${quotation.id}"
+    >
+        <i class="fa-solid fa-check me-1"></i>
+        Accept Rs. ${Number(quotation.counter_price).toLocaleString("en-IN")}
+    </button>
 
-                                <div>
+    <button
+        type="button"
+        class="btn btn-primary final-offer-btn"
+        data-quotation-id="${quotation.id}"
+    >
+        <i class="fa-solid fa-handshake me-1"></i>
+        Send Final Offer
+    </button>
 
-                                    <span class="badge bg-warning text-dark">
-                                        Counter Offer
-                                    </span>
+</div>
 
-                                </div>
+    </div>
+`).join("");
 
-                                <small class="text-muted">
-                                    Quotation #${quotation.id}
-                                </small>
-
-                            </div>
-
-
-                            <div class="request-card-body">
-
-                                <h5>
-                                    ${quotation.service_name || "Service"}
-                                </h5>
-
-                                <p class="text-muted mb-2">
-                                    Customer:
-                                    ${quotation.request_customer || "Customer"}
-                                </p>
-
-
-                                <div class="mb-2">
-
-                                    <strong>
-                                        Your original price:
-                                    </strong>
-
-                                    <span>
-                                        Rs. ${originalPrice}
-                                    </span>
-
-                                </div>
-
-
-                                <div class="mb-2">
-
-                                    <strong>
-                                        Customer counter offer:
-                                    </strong>
-
-                                    <span class="text-warning fw-bold">
-                                        Rs. ${counterPrice}
-                                    </span>
-
-                                </div>
-
-
-                                <div class="mt-3 p-3 bg-light rounded">
-
-                                    <small class="text-muted d-block mb-1">
-                                        Customer message
-                                    </small>
-
-                                    <span>
-                                        ${message}
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-
-                            <div class="request-card-footer">
-
-                                <button
-                                    type="button"
-                                    class="btn btn-primary final-offer-btn"
-                                    data-quotation-id="${quotation.id}"
-                                >
-
-                                    <i class="fa-solid fa-handshake me-1"></i>
-
-                                    Send Final Offer
-
-                                </button>
-
-                            </div>
-
-                        </div>
-
-                    `;
-
-                }
-            )
-            .join("");
 }
 
 
@@ -841,7 +1432,7 @@ function renderProviderDashboard(provider) {
 
 
     const verified =
-        provider.verified === true;
+    provider.verification_status === "approved";
 
 
     const roleElement =
@@ -928,6 +1519,7 @@ function renderProviderDashboard(provider) {
 
     window.oneClickProvider =
         provider;
+        
 }
 
 
@@ -1097,14 +1689,10 @@ function renderDashboardStatistics(bookings) {
         );
 
 
-    const completedBookings =
-        bookings.filter(
-            function (booking) {
-
-                return booking.status === "completed";
-
-            }
-        );
+   const completedBookings =
+    bookings.filter(function (booking) {
+        return booking.status === "completed";
+    });
 
 
     const currentDate =
@@ -1123,9 +1711,12 @@ function renderDashboardStatistics(bookings) {
         completedBookings.reduce(
             function (total, booking) {
 
-                if (!booking.booking_date) {
-                    return total;
-                }
+              if (
+    booking.payment_status !== "paid" ||
+    !booking.booking_date
+) {
+    return total;
+}
 
 
                 const parts =
@@ -1181,11 +1772,11 @@ function renderDashboardStatistics(bookings) {
             function (booking) {
 
                 return (
-                    booking.status === "accepted" ||
-                    booking.status === "rejected" ||
-                    booking.status === "completed"
-                );
-
+    booking.status === "accepted" ||
+    booking.status === "in_progress" ||
+    booking.status === "rejected" ||
+    booking.status === "completed"
+);
             }
         );
 
@@ -1722,13 +2313,15 @@ function renderTodaySchedule(bookings) {
             .filter(
                 function (booking) {
 
-                    return (
-                        booking.booking_date === today &&
-                        (
-                            booking.status === "accepted" ||
-                            booking.status === "completed"
-                        )
-                    );
+                   return (
+    booking.booking_date === today &&
+    (
+       booking.status === "accepted" ||
+booking.status === "on_the_way" ||
+booking.status === "in_progress" ||
+booking.status === "completed"
+    )
+);
 
                 }
             )
@@ -1920,6 +2513,64 @@ function createTimelineItem(
     `;
 }
 
+function updateProviderCustomerMap(booking) {
+
+    const mapElement = document.getElementById(
+        "providerCustomerMap"
+    );
+
+    const addressElement = document.getElementById(
+        "providerMapAddress"
+    );
+
+    if (!mapElement || !window.L) {
+        console.error("Map container or Leaflet not found.");
+        return;
+    }
+
+    const lat = Number(booking.latitude);
+    const lng = Number(booking.longitude);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        addressElement.textContent = "Customer coordinates unavailable.";
+        return;
+    }
+
+    if (!providerCustomerMap) {
+
+        providerCustomerMap = L.map(mapElement).setView(
+            [lat, lng],
+            16
+        );
+
+        L.tileLayer(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            {
+                attribution: "&copy; OpenStreetMap contributors"
+            }
+        ).addTo(providerCustomerMap);
+
+    } else {
+
+        providerCustomerMap.setView([lat, lng], 16);
+    }
+
+    if (providerCustomerMarker) {
+        providerCustomerMarker.remove();
+    }
+
+    providerCustomerMarker = L.marker([lat, lng])
+        .addTo(providerCustomerMap)
+        .bindPopup("Customer Location")
+        .openPopup();
+
+    addressElement.textContent = booking.address || "Customer location";
+
+setTimeout(function () {
+    providerCustomerMap.invalidateSize(true);
+}, 600);
+}
+
 
 /* ==========================================================================
    RENDER CURRENT JOB
@@ -1947,35 +2598,28 @@ function renderCurrentJob(bookings) {
         getTodayDateString();
 
 
-    const currentJob =
-        bookings
-            .filter(
-                function (booking) {
-
-                    return (
-                        booking.booking_date === today &&
-                        (
-                            booking.status === "accepted" ||
-                            booking.status === "completed"
-                        )
-                    );
-
-                }
-            )
-            .sort(
-                function (a, b) {
-
-                    return String(
-                        a.booking_time || ""
-                    ).localeCompare(
-                        String(
-                            b.booking_time || ""
-                        )
-                    );
-
-                }
-            )[0];
-
+   const currentJob =
+    bookings
+        .filter(function (booking) {
+            return (
+                booking.booking_date === today &&
+                (
+                    booking.status === "accepted" ||
+                    booking.status === "on_the_way" ||
+                    booking.status === "in_progress" ||
+                    (
+                        booking.status === "completed" &&
+                        booking.payment_method === "cash" &&
+                        booking.payment_status !== "paid"
+                    )
+                )
+            );
+        })
+        .sort(function (a, b) {
+            return String(a.booking_time || "").localeCompare(
+                String(b.booking_time || "")
+            );
+        })[0];
 
     const customerElement =
         document.getElementById(
@@ -2029,6 +2673,18 @@ function renderCurrentJob(bookings) {
         document.getElementById(
             "jobStepCompleted"
         );
+
+        const startJobBtn =
+    document.getElementById("startJobBtn");
+
+const completeJobBtn =
+    document.getElementById("completeJobBtn");
+
+    const confirmCashPaymentBtn =
+    document.getElementById("confirmCashPaymentBtn");
+
+const startServiceBtn =
+    document.getElementById("startServiceBtn");
 
 
     if (!currentJob) {
@@ -2111,6 +2767,14 @@ function renderCurrentJob(bookings) {
 
         delete panel.dataset.bookingId;
 
+        if (startJobBtn) {
+    startJobBtn.style.display = "none";
+}
+
+if (completeJobBtn) {
+    completeJobBtn.style.display = "none";
+}
+
         return;
     }
 
@@ -2168,21 +2832,23 @@ function renderCurrentJob(bookings) {
     }
 
 
-    let progress = 50;
+  let progress = 50;
+let progressLabel = "Accepted";
 
-    let progressLabel =
-        "Accepted";
+if (currentJob.status === "on_the_way") {
+    progress = 65;
+    progressLabel = "On the Way";
+}
 
+if (currentJob.status === "in_progress") {
+    progress = 75;
+    progressLabel = "In Progress";
+}
 
-    if (
-        currentJob.status === "completed"
-    ) {
-
-        progress = 100;
-
-        progressLabel =
-            "Completed";
-    }
+if (currentJob.status === "completed") {
+    progress = 100;
+    progressLabel = "Completed";
+}
 
 
     if (progressText) {
@@ -2251,8 +2917,110 @@ function renderCurrentJob(bookings) {
     }
 
 
-    panel.dataset.bookingId =
-        currentJob.id;
+    
+panel.dataset.bookingId = currentJob.id;
+console.log("CURRENT JOB MAP DATA:", currentJob);
+updateProviderCustomerMap(currentJob);
+
+// Show Start Job only after provider accepts the booking.
+if (startJobBtn) {
+    startJobBtn.style.display =
+        currentJob.status === "accepted"
+            ? "inline-flex"
+            : "none";
+}
+// Show Start Service after provider reaches the customer.
+if (startServiceBtn) {
+    startServiceBtn.style.display =
+        currentJob.status === "on_the_way"
+            ? "inline-flex"
+            : "none";
+}
+
+
+// Show Complete Job only after provider starts the job.
+if (completeJobBtn) {
+    completeJobBtn.style.display =
+        currentJob.status === "in_progress"
+            ? "inline-flex"
+            : "none";
+}
+
+// Show cash confirmation after job completion if unpaid.
+if (confirmCashPaymentBtn) {
+    confirmCashPaymentBtn.style.display =
+        currentJob.status === "completed" &&
+        currentJob.payment_status !== "paid"
+            ? "inline-flex"
+            : "none";
+}
+
+if (
+    confirmCashPaymentBtn &&
+    confirmCashPaymentBtn.dataset.listenerAttached !== "true"
+) {
+    confirmCashPaymentBtn.dataset.listenerAttached = "true";
+
+    confirmCashPaymentBtn.addEventListener("click", async function () {
+
+        const panel = document.querySelector(".current-job-panel");
+        const bookingId = panel?.dataset.bookingId;
+
+        if (!bookingId) {
+            alert("Booking ID not found.");
+            return;
+        }
+
+        const confirmed = confirm(
+            "Confirm that you received the cash payment? (Demo only)"
+        );
+
+        if (!confirmed) return;
+
+        confirmCashPaymentBtn.disabled = true;
+        confirmCashPaymentBtn.textContent = " Confirming...";
+
+        try {
+            const token = localStorage.getItem("access_token");
+
+            const response = await fetch(
+                "http://127.0.0.1:8000/api/bookings/payment/cash/confirm/",
+                {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        booking_id: bookingId
+                    })
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Cash confirmation failed.");
+            }
+
+            currentJob.payment_status = "paid";
+
+            confirmCashPaymentBtn.style.display = "none";
+
+            alert("Demo cash payment confirmed successfully!");
+
+            console.log("Cash payment:", result);
+
+        } catch (error) {
+            console.error("Cash confirmation error:", error);
+            alert(error.message);
+            confirmCashPaymentBtn.disabled = false;
+            confirmCashPaymentBtn.innerHTML =
+                '<i class="fa-solid fa-money-bill-wave"></i> Confirm Cash Received';
+        }
+    });
+}
+// End renderCurrentJob() here.
 }
 
 /* ==========================================================================
@@ -2504,6 +3272,31 @@ function renderUpcomingJob(bookings) {
             upcomingJob.id
         );
     }
+    // VIEW UPCOMING JOB DETAILS
+
+if (
+    detailsButton &&
+    detailsButton.dataset.listenerAttached !== "true"
+) {
+
+    detailsButton.dataset.listenerAttached = "true";
+
+    detailsButton.addEventListener("click", function () {
+
+        const bookingId =
+            detailsButton.dataset.bookingId;
+
+        if (!bookingId) {
+            alert("Booking ID is unavailable.");
+            return;
+        }
+
+        window.location.href =
+            `booking-details.html?id=${encodeURIComponent(bookingId)}`;
+
+    });
+}
+
 }
 
 /* ==========================================================================
@@ -2561,16 +3354,13 @@ function renderPerformance(bookings) {
 
 
     const acceptedOrCompleted =
-        bookings.filter(
-            function (booking) {
-
-                return (
-                    booking.status === "accepted" ||
-                    booking.status === "completed"
-                );
-
-            }
-        ).length;
+    bookings.filter(function (booking) {
+        return (
+           booking.status === "accepted" ||
+booking.status === "on_the_way" ||
+booking.status === "in_progress"
+        );
+    }).length;
 
 
     const completionRate =
@@ -2774,11 +3564,12 @@ function renderMonthlyEarnings(bookings) {
         bookings.filter(
             function (booking) {
 
-                if (
-                    booking.status !== "completed"
-                ) {
-                    return false;
-                }
+               if (
+    booking.status !== "completed" ||
+    booking.payment_status !== "paid"
+) {
+    return false;
+}
 
 
                 if (
@@ -2842,11 +3633,12 @@ function renderMonthlyEarnings(bookings) {
         bookings.filter(
             function (booking) {
 
-                if (
-                    booking.status !== "completed"
-                ) {
-                    return false;
-                }
+               if (
+    booking.status !== "completed" ||
+    booking.payment_status !== "paid"
+) {
+    return false;
+}
 
 
                 if (
@@ -3168,14 +3960,13 @@ function renderEarningsChart(bookings) {
     bookings.forEach(
         function (booking) {
 
-            if (
-                booking.status !== "completed" ||
-                !booking.booking_date
-            ) {
-
-                return;
-            }
-
+       if (
+    booking.status !== "completed" ||
+    booking.payment_status !== "paid" ||
+    !booking.booking_date
+) {
+    return;
+}
 
             const bookingDate =
                 new Date(
@@ -3621,71 +4412,6 @@ function initDropdowns() {
 }
 
 
-/* ==========================================================================
-   ONLINE / OFFLINE STATUS
-   ========================================================================== */
-
-function updateOnlineStatus(
-    isAvailable
-) {
-
-    const toggle =
-        document.getElementById(
-            "onlineToggle"
-        );
-
-
-    const wrap =
-        document.querySelector(
-            ".status-toggle-wrap"
-        );
-
-
-    const label =
-        document.getElementById(
-            "statusLabel"
-        );
-
-
-    if (
-        !toggle ||
-        !wrap ||
-        !label
-    ) {
-
-        return;
-    }
-
-
-    const available =
-        Boolean(
-            isAvailable
-        );
-
-
-    toggle.checked =
-        available;
-
-
-    if (available) {
-
-        wrap.classList.remove(
-            "offline"
-        );
-
-        label.textContent =
-            "Online";
-
-    } else {
-
-        wrap.classList.add(
-            "offline"
-        );
-
-        label.textContent =
-            "Offline";
-    }
-}
 
 
 /* ==========================================================================
@@ -3693,65 +4419,49 @@ function updateOnlineStatus(
    ========================================================================== */
 
 function initOnlineToggle() {
-
-    const toggle =
-        document.getElementById(
-            "onlineToggle"
-        );
-
+    const toggle = document.getElementById("onlineToggle");
 
     if (!toggle) {
         return;
     }
 
+    toggle.addEventListener("change", async function () {
+        const newAvailability = toggle.checked
+            ? "available"
+            : "unavailable";
 
-    toggle.addEventListener(
-        "change",
-        async function () {
+        try {
+            const data = await updateProviderAvailability(newAvailability);
 
-            const newAvailability =
-                toggle.checked;
-
-
-            updateOnlineStatus(
-                newAvailability
+            localStorage.setItem(
+                "providerAvailability",
+                data.availability
             );
 
+            const switches = [
+                { id: "availableToday", status: "available" },
+                { id: "unavailable", status: "unavailable" },
+                { id: "vacationMode", status: "vacation" }
+            ];
 
-            try {
+            switches.forEach(function (item) {
+                const element = document.getElementById(item.id);
 
-                const data =
-                    await updateProviderAvailability(
-                        newAvailability
-                    );
+                if (element) {
+                    element.checked = item.status === data.availability;
+                }
+            });
 
+            console.log("Availability updated:", data.availability);
 
-                console.log(
-                    "Availability updated:",
-                    data
-                );
+        } catch (error) {
+            console.error("Availability update failed:", error);
 
-            }
-            catch (error) {
+            toggle.checked = !toggle.checked;
 
-                console.error(
-                    "Availability update failed:",
-                    error
-                );
-
-
-                updateOnlineStatus(
-                    !newAvailability
-                );
-
-
-                alert(
-                    error.message ||
-                    "Failed to update availability."
-                );
-            }
+            alert(error.message || "Failed to update availability.");
         }
-    );
+    });
 }
 
 
@@ -3759,66 +4469,40 @@ function initOnlineToggle() {
    UPDATE PROVIDER AVAILABILITY
    ========================================================================== */
 
-async function updateProviderAvailability(
-    available
-) {
-
-    const token =
-        getAccessToken();
-
+async function updateProviderAvailability(availability) {
+    const token = getAccessToken();
 
     if (!token) {
-
         throw new Error(
             "Your login session has expired. Please login again."
         );
     }
 
+    const response = await fetch(
+        `${API_BASE}/providers/availability/`,
+        {
+            method: "PATCH",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                availability: availability
+            })
+        }
+    );
 
-    const response =
-        await fetch(
-            `${API_BASE}/providers/availability/`,
-            {
-                method: "PATCH",
+    const data = await response.json().catch(function () {
+        return {};
+    });
 
-                headers: {
-                    "Authorization":
-                        `Bearer ${token}`,
-
-                    "Content-Type":
-                        "application/json"
-                },
-
-                body: JSON.stringify({
-                    available:
-                        available
-                })
-            }
-        );
-
-
-    const data =
-        await response
-            .json()
-            .catch(
-                function () {
-                    return {};
-                }
-            );
-
-
-    if (
-        response.status === 401
-    ) {
-
+    if (response.status === 401) {
         throw new Error(
             "Your login session has expired. Please login again."
         );
     }
-
 
     if (!response.ok) {
-
         throw new Error(
             data.error ||
             data.detail ||
@@ -3826,75 +4510,100 @@ async function updateProviderAvailability(
         );
     }
 
-
-    if (
-        window.oneClickProvider
-    ) {
-
-        window.oneClickProvider.available =
-            data.available;
+    if (window.oneClickProvider) {
+        window.oneClickProvider.available = data.available;
+        window.oneClickProvider.availability_status = data.availability;
     }
 
+    // Update top dashboard status after backend confirms success.
+    updateOnlineStatus(data.availability);
 
     return data;
 }
 
 
 /* ==========================================================================
+   UPDATE ONLINE / OFFLINE INDICATOR
+   ========================================================================== */
+
+function updateOnlineStatus(availability) {
+
+    const toggle = document.getElementById("onlineToggle");
+    const wrap = document.querySelector(".status-toggle-wrap");
+    const label = document.getElementById("statusLabel");
+    const dot = document.getElementById("statusDot");
+
+    if (!toggle || !label) {
+        return;
+    }
+
+    // Support both Boolean and string values.
+    const isOnline =
+        availability === true ||
+        availability === "available";
+
+    toggle.checked = isOnline;
+
+    label.textContent = isOnline ? "Online" : "Offline";
+
+    if (wrap) {
+        wrap.classList.toggle("offline", !isOnline);
+    }
+
+    if (dot) {
+        dot.style.backgroundColor = isOnline ? "#22c55e" : "#ef4444";
+    }
+}
+
+/* ==========================================================================
    AVAILABILITY SWITCHES
    ========================================================================== */
 
 function initAvailabilitySwitches() {
+    const availableToday = document.getElementById("availableToday");
+    const unavailable = document.getElementById("unavailable");
+    const vacationMode = document.getElementById("vacationMode");
 
-    const availableToday =
-        document.getElementById(
-            "availableToday"
-        );
-
-
-    const unavailable =
-        document.getElementById(
-            "unavailable"
-        );
-
-
-    if (
-        !availableToday ||
-        !unavailable
-    ) {
-
+    if (!availableToday || !unavailable || !vacationMode) {
         return;
     }
 
+    const switches = [
+        { element: availableToday, status: "available" },
+        { element: unavailable, status: "unavailable" },
+        { element: vacationMode, status: "vacation" }
+    ];
 
-    availableToday.addEventListener(
-        "change",
-        function () {
+    // Restore the last saved status after refreshing.
+    const savedStatus = localStorage.getItem("providerAvailability") || "available";
 
-            if (
-                availableToday.checked
-            ) {
+    switches.forEach(function (item) {
+        item.element.checked = item.status === savedStatus;
+    });
 
-                unavailable.checked =
-                    false;
+    updateOnlineStatus(savedStatus);
+
+    switches.forEach(function (item) {
+        item.element.addEventListener("change", async function () {
+            if (!item.element.checked) {
+                return;
             }
-        }
-    );
 
+            switches.forEach(function (other) {
+                other.element.checked = other === item;
+            });
 
-    unavailable.addEventListener(
-        "change",
-        function () {
+            try {
+                await updateProviderAvailability(item.status);
 
-            if (
-                unavailable.checked
-            ) {
+                localStorage.setItem("providerAvailability", item.status);
 
-                availableToday.checked =
-                    false;
+                console.log("Availability updated:", item.status);
+            } catch (error) {
+                alert(error.message || "Failed to update availability.");
             }
-        }
-    );
+        });
+    });
 }
 
 
@@ -4226,121 +4935,297 @@ function initJobRequestActions() {
 }
 
 
+
+
 /* ==========================================================================
    UPDATE BOOKING STATUS
-   ========================================================================== */
+========================================================================== */
 
-async function updateBookingStatus(
-    bookingId,
-    newStatus,
-    button
-) {
-
-    const token =
-        getAccessToken();
-
+async function updateBookingStatus(bookingId, newStatus, button) {
+    const token = getAccessToken();
 
     if (!token) {
-
-        alert(
-            "Your login session has expired. Please login again."
-        );
-
-        return;
+        alert("Your login session has expired. Please login again.");
+        return false;
     }
 
+    const originalHTML = button?.innerHTML || "";
 
     if (button) {
+        button.disabled = true;
 
-        button.disabled =
-            true;
+        button.innerHTML =
+            newStatus === "on_the_way"
+                ? '<i class="fa-solid fa-spinner fa-spin"></i> Starting Job...'
+                : newStatus === "in_progress"
+                    ? '<i class="fa-solid fa-spinner fa-spin"></i> Starting Service...'
+                    : newStatus === "completed"
+                        ? '<i class="fa-solid fa-spinner fa-spin"></i> Completing...'
+                        : '<i class="fa-solid fa-spinner fa-spin"></i> Updating...';
     }
 
-
     try {
+        const response = await fetch(
+            `${API_BASE}/bookings/provider/${bookingId}/`,
+            {
+                method: "PATCH",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    status: newStatus
+                })
+            }
+        );
 
-        const response =
-            await fetch(
-                `${API_BASE}/bookings/provider/${bookingId}/`,
-                {
-                    method: "PATCH",
-
-                    headers: {
-                        "Authorization":
-                            `Bearer ${token}`,
-
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-                        status:
-                            newStatus
-                    })
-                }
-            );
-
-
-        const data =
-            await response
-                .json()
-                .catch(
-                    function () {
-                        return {};
-                    }
-                );
-
-
-        if (
-            response.status === 401
-        ) {
-
-            throw new Error(
-                "Your login session has expired. Please login again."
-            );
-        }
-
+        const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-
             throw new Error(
-                data.error ||
                 data.detail ||
+                data.error ||
                 `Booking update failed: ${response.status}`
             );
         }
 
+      
 
-        console.log(
-            "Booking updated:",
-            data
-        );
-
+        // Stop GPS tracking when the job is completed.
+        if (newStatus === "completed") {
+            stopProviderLocationTracking();
+        }
 
         await loadProviderDashboard();
 
+if (newStatus === "on_the_way") {
+
+    const navigationScreen = document.getElementById(
+        "providerNavigationScreen"
+    );
+
+    if (navigationScreen) {
+        navigationScreen.style.display = "block";
     }
-    catch (error) {
 
-        console.error(
-            "Failed to update booking:",
-            error
-        );
+    setTimeout(() => {
 
+        if (providerCustomerMap) {
+            providerCustomerMap.invalidateSize(true);
+        }
 
-        alert(
-            error.message ||
-            "Unable to update booking."
-        );
+        startProviderLocationTracking(bookingId);
 
+    }, 500);
+}
+
+return true;
+
+    } catch (error) {
+        console.error("Booking update failed:", error);
+
+        alert(error.message || "Unable to update booking.");
 
         if (button) {
-
-            button.disabled =
-                false;
+            button.disabled = false;
+            button.innerHTML = originalHTML;
         }
+
+        return false;
     }
 }
+
+
+/* ==========================================================================
+   CURRENT JOB BUTTON LISTENERS
+========================================================================== */
+
+// The script is loaded at the bottom of the HTML,
+// so attach listeners directly instead of waiting for DOMContentLoaded.
+
+(function initCurrentJobButtons() {
+
+    const startJobBtn =
+        document.getElementById("startJobBtn");
+
+    const startServiceBtn =
+        document.getElementById("startServiceBtn");
+
+    const completeJobBtn =
+        document.getElementById("completeJobBtn");
+
+
+
+        
+    /* ---------------- START JOB ---------------- */
+
+    if (startJobBtn &&
+        startJobBtn.dataset.listenerAttached !== "true") {
+
+        startJobBtn.dataset.listenerAttached = "true";
+
+        startJobBtn.addEventListener("click", async function () {
+
+            const panel =
+                document.querySelector(".current-job-panel");
+
+            const bookingId =
+                panel?.dataset.bookingId;
+
+            if (!bookingId) {
+                alert("Booking ID not found.");
+                return;
+            }
+
+            const confirmed = confirm(
+                "Are you ready to start this service?"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            startJobBtn.disabled = true;
+
+            startJobBtn.innerHTML =
+                '<i class="fa-solid fa-spinner fa-spin"></i> Starting...';
+
+            const success = await updateBookingStatus(
+                bookingId,
+               "on_the_way",
+                startJobBtn
+            );
+
+            if (success) {
+                console.log("Job started:", bookingId);
+            }
+
+        });
+    }
+
+    /* ---------------- START SERVICE ---------------- */
+
+    if (startServiceBtn &&
+        startServiceBtn.dataset.listenerAttached !== "true") {
+
+        startServiceBtn.dataset.listenerAttached = "true";
+
+        startServiceBtn.addEventListener("click", async function () {
+
+            const panel =
+                document.querySelector(".current-job-panel");
+
+            const bookingId =
+                panel?.dataset.bookingId;
+
+            if (!bookingId) {
+                alert("Booking ID not found.");
+                return;
+            }
+
+            const confirmed = confirm(
+                "Have you reached the customer and are you ready to start the service?"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            startServiceBtn.disabled = true;
+
+            startServiceBtn.innerHTML =
+                '<i class="fa-solid fa-spinner fa-spin"></i> Starting Service...';
+
+            const success = await updateBookingStatus(
+                bookingId,
+                "in_progress",
+                startServiceBtn
+            );
+
+           if (success) {
+    console.log("Service started:", bookingId);
+
+    const navigationScreen = document.getElementById(
+        "providerNavigationScreen"
+    );
+
+    if (navigationScreen) {
+        navigationScreen.style.display = "none";
+    }
+
+    stopProviderLocationTracking();
+}
+
+        });
+    }
+
+
+    const closeNavigationBtn = document.getElementById(
+    "closeProviderNavigation"
+);
+
+if (closeNavigationBtn &&
+    closeNavigationBtn.dataset.listenerAttached !== "true") {
+
+    closeNavigationBtn.dataset.listenerAttached = "true";
+
+    closeNavigationBtn.addEventListener("click", function () {
+
+        document.getElementById(
+            "providerNavigationScreen"
+        ).style.display = "none";
+
+    });
+}
+
+    
+    /* ---------------- COMPLETE JOB ---------------- */
+
+    if (completeJobBtn &&
+        completeJobBtn.dataset.listenerAttached !== "true") {
+
+        completeJobBtn.dataset.listenerAttached = "true";
+
+        completeJobBtn.addEventListener("click", async function () {
+
+            const panel =
+                document.querySelector(".current-job-panel");
+
+            const bookingId =
+                panel?.dataset.bookingId;
+
+            if (!bookingId) {
+                alert("Booking ID not found.");
+                return;
+            }
+
+            const confirmed = confirm(
+                "Are you sure this service has been completed?"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            completeJobBtn.disabled = true;
+
+            completeJobBtn.innerHTML =
+                '<i class="fa-solid fa-spinner fa-spin"></i> Completing...';
+
+            const success = await updateBookingStatus(
+                bookingId,
+                "completed",
+                completeJobBtn
+            );
+
+            if (success) {
+                console.log("Job completed:", bookingId);
+            }
+
+        });
+    }
+
+})();
 
 
 /* ==========================================================================
@@ -5658,57 +6543,83 @@ document.addEventListener(
          * so use event delegation.
          */
 
-        document.addEventListener(
-            "click",
-            function (event) {
+        // New document click listener ends here
 
-                const button =
-                    event.target.closest(
-                        ".final-offer-btn"
-                    );
+document.addEventListener("click", async function (event) {
 
+    // SEND FINAL OFFER
+    const finalButton = event.target.closest(".final-offer-btn");
 
-                if (!button) {
-                    return;
+    if (finalButton) {
+        const quotationId = finalButton.dataset.quotationId;
+
+        if (quotationId) {
+            openFinalOfferModal(quotationId);
+        }
+
+        return;
+    }
+
+    // ACCEPT CUSTOMER COUNTER-OFFER
+    const acceptButton = event.target.closest(".accept-counter-btn");
+
+    if (!acceptButton) return;
+
+    const quotationId = acceptButton.dataset.quotationId;
+
+    if (!quotationId) return;
+
+    if (!confirm("Accept the customer's counter-offer?")) return;
+
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        alert("Please login again.");
+        return;
+    }
+
+    try {
+        acceptButton.disabled = true;
+        acceptButton.textContent = "Accepting...";
+
+        const response = await fetch(
+            `${API_BASE}/services/quotations/${quotationId}/provider-accept/`,
+            {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`
                 }
-
-
-                const quotationId =
-                    button.dataset.quotationId;
-
-
-                if (!quotationId) {
-
-                    console.error(
-                        "Final offer quotation ID not found."
-                    );
-
-                    return;
-                }
-
-
-                console.log(
-                    "Opening final offer for quotation:",
-                    quotationId
-                );
-
-
-                openFinalOfferModal(
-                    quotationId
-                );
             }
         );
 
+        const data = await response.json().catch(() => ({}));
 
-        /*
-         * Submit button.
-         */
-
-        const submitButton =
-            document.getElementById(
-                "submitFinalOfferBtn"
+        if (!response.ok) {
+            throw new Error(
+                data.detail || data.error || "Could not accept counter-offer."
             );
+        }
 
+        alert("Customer counter-offer accepted!");
+
+        const quotations = await loadProviderQuotations();
+        window.oneClickQuotations = quotations;
+        renderProviderCounterOffers(quotations);
+
+    } catch (error) {
+        alert(error.message);
+        acceptButton.disabled = false;
+        acceptButton.textContent = "Accept Counter Offer";
+    }
+});
+
+
+/*
+ * Submit button.
+ */
+
+const submitButton =
+    document.getElementById("submitFinalOfferBtn");
 
         if (!submitButton) {
 
@@ -5755,3 +6666,321 @@ if (logoutBtn) {
     });
 
 }
+
+/* =========================================================
+   SEND PROVIDER MESSAGE
+========================================================= */
+
+async function sendProviderMessage(customerId, providerId) {
+
+    const input =
+        document.getElementById(
+            `providerReply-${customerId}`
+        );
+
+    if (!input) {
+
+        console.error(
+            "Provider reply input not found."
+        );
+
+        return;
+    }
+
+    const message =
+        input.value.trim();
+
+    if (!message) {
+        return;
+    }
+
+    const token =
+        localStorage.getItem("access_token");
+
+    if (!token) {
+
+        console.error(
+            "No access token found."
+        );
+
+        return;
+    }
+
+    try {
+
+        console.log(
+            "Sending provider message...",
+            {
+                customerId,
+                providerId,
+                message
+            }
+        );
+
+        const response =
+            await fetch(
+                `${API_BASE}/services/messages/`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`,
+
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+    provider:
+        Number(providerId),
+
+    receiver:
+        Number(customerId),
+
+    content:
+        message
+
+})
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Provider message response:",
+            response.status,
+            data
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                data.error ||
+                `Failed to send message: ${response.status}`
+            );
+        }
+
+
+        /*
+         * Clear input after successful send.
+         */
+
+        input.value = "";
+
+
+        /*
+         * Reload messages.
+         */
+
+        const messages =
+            await loadProviderMessages();
+
+
+        window.oneClickMessages =
+            messages;
+
+
+        renderProviderMessages(
+            messages
+        );
+
+
+        console.log(
+            "Provider message sent successfully."
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Error sending provider message:",
+            error
+        );
+
+        alert(
+            error.message ||
+            "Failed to send message."
+        );
+    }
+}
+
+
+
+/* =========================================================
+   PROVIDER WORK PHOTO UPLOAD
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const uploadBtn = document.getElementById("uploadWorkPhotoBtn");
+    const submitBtn = document.getElementById("submitWorkPhotoBtn");
+
+    const modalElement = document.getElementById("workPhotoModal");
+
+    if (!uploadBtn || !submitBtn || !modalElement) return;
+
+    const modal = new bootstrap.Modal(modalElement);
+
+    uploadBtn.addEventListener("click", function () {
+        modal.show();
+    });
+
+    submitBtn.addEventListener("click", async function () {
+
+        const imageInput = document.getElementById("workPhotoInput");
+        const captionInput = document.getElementById("workPhotoCaption");
+        const message = document.getElementById("workPhotoMessage");
+
+        const token = getAccessToken();
+
+        if (!imageInput.files.length) {
+            message.textContent = "Please select an image.";
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("image", imageInput.files[0]);
+        formData.append("caption", captionInput.value);
+
+        submitBtn.disabled = true;
+        message.textContent = "Uploading...";
+
+        try {
+            const response = await fetch(
+                "http://127.0.0.1:8000/api/providers/work-photos/upload/",
+                {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: formData
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Upload failed.");
+            }
+
+            message.textContent = "Photo uploaded successfully!";
+            imageInput.value = "";
+            captionInput.value = "";
+
+        } catch (error) {
+            message.textContent = error.message;
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
+
+});
+
+
+/* =========================================================
+   LOAD AND DELETE PROVIDER WORK PHOTOS
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", async function () {
+
+    const container = document.getElementById("myWorkPhotosContainer");
+
+    if (!container) return;
+
+    async function loadWorkPhotos() {
+        container.innerHTML = '<p>Loading photos...</p>';
+
+        try {
+            const response = await fetch(
+                "http://127.0.0.1:8000/api/providers/dashboard/",
+                {
+                    headers: {
+                        "Authorization": `Bearer ${getAccessToken()}`
+                    }
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Could not load photos.");
+            }
+
+            const photos = data.provider.work_photos || [];
+
+            if (!photos.length) {
+                container.innerHTML = "<p>No work photos uploaded yet.</p>";
+                return;
+            }
+
+            container.innerHTML = "";
+
+            photos.forEach(photo => {
+                const card = document.createElement("div");
+                card.className = "provider-work-photo-card";
+
+                const img = document.createElement("img");
+                img.src = photo.image;
+                img.alt = photo.caption || "Work photo";
+
+                const caption = document.createElement("p");
+                caption.textContent = photo.caption || "";
+
+                const deleteBtn = document.createElement("button");
+                deleteBtn.type = "button";
+                deleteBtn.className = "btn btn-danger btn-sm m-2";
+                deleteBtn.textContent = "Delete";
+
+                deleteBtn.addEventListener("click", async function () {
+                    if (!confirm("Delete this work photo?")) return;
+
+                    deleteBtn.disabled = true;
+
+                    try {
+                        const deleteResponse = await fetch(
+                            `http://127.0.0.1:8000/api/providers/work-photos/${photo.id}/delete/`,
+                            {
+                                method: "DELETE",
+                                headers: {
+                                    "Authorization": `Bearer ${getAccessToken()}`
+                                }
+                            }
+                        );
+
+                        const result = await deleteResponse.json();
+
+                        if (!deleteResponse.ok) {
+                            throw new Error(result.error || "Delete failed.");
+                        }
+
+                        card.remove();
+
+                        if (!container.querySelector(".provider-work-photo-card")) {
+                            container.innerHTML = "<p>No work photos uploaded yet.</p>";
+                        }
+
+                    } catch (error) {
+                        alert(error.message);
+                        deleteBtn.disabled = false;
+                    }
+                });
+
+                card.append(img, caption, deleteBtn);
+                container.appendChild(card);
+            });
+
+        } catch (error) {
+            container.textContent = error.message;
+        }
+    }
+
+    loadWorkPhotos();
+
+});

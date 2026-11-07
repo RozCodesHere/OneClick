@@ -5,6 +5,17 @@ from services.models import ServiceCategory
 
 
 class ProviderProfile(models.Model):
+    # Verification statuses
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+    VERIFICATION_STATUS_CHOICES = [
+        (PENDING, "Pending"),
+        (APPROVED, "Approved"),
+        (REJECTED, "Rejected"),
+    ]
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -22,6 +33,41 @@ class ProviderProfile(models.Model):
 
     address = models.CharField(
         max_length=255
+    )
+
+    # Service location
+    country = models.CharField(
+        max_length=100,
+        default="Nepal",
+    )
+
+    province = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    district = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    city = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+    
+    latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+    )
+
+    longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
     )
 
     bio = models.TextField(
@@ -42,9 +88,20 @@ class ProviderProfile(models.Model):
     available = models.BooleanField(
         default=True
     )
+    availability_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("available", "Available Today"),
+            ("unavailable", "Unavailable"),
+            ("vacation", "Vacation Mode"),
+        ],
+        default="available",
+    )
 
-    verified = models.BooleanField(
-        default=False
+    verification_status = models.CharField(
+        max_length=20,
+        choices=VERIFICATION_STATUS_CHOICES,
+        default=PENDING,
     )
 
     created_at = models.DateTimeField(
@@ -54,7 +111,30 @@ class ProviderProfile(models.Model):
     def __str__(self):
         return self.user.email
 
+class ProviderWorkPhoto(models.Model):
 
+    provider = models.ForeignKey(
+        ProviderProfile,
+        on_delete=models.CASCADE,
+        related_name="work_photos",
+    )
+
+    image = models.ImageField(
+        upload_to="provider_work_photos/",
+    )
+
+    caption = models.CharField(
+        max_length=255,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    def __str__(self):
+        return f"Work photo - {self.provider.user.email}"
+    
 class SavedProvider(models.Model):
     customer = models.ForeignKey(
         settings.AUTH_USER_MODEL,

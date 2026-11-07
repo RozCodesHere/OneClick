@@ -71,6 +71,7 @@
   font-weight: 800;
   line-height: 1.25;
   margin-bottom: 1.1rem;
+  color: var(--oc-primary);
 }
 
 .oc-auth-tagline {
@@ -418,4 +419,10 @@
     padding: 2.25rem 1.5rem;
     border-radius: var(--oc-radius-md);
   }
+}
+
+.oneclick-logo {
+    width: 280px;
+    height: 200px;
+    object-fit: contain;
 }

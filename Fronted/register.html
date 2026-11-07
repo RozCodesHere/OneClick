@@ -33,10 +33,9 @@
   ========================================================== -->
   <nav class="navbar navbar-expand-lg fixed-top oc-navbar oc-scrolled" id="mainNavbar">
     <div class="container">
-      <a class="navbar-brand oc-brand" href="index.html">
-        <span class="oc-brand-mark"><i class="fa-solid fa-bolt"></i></span>
-        One<span class="text-accent">Click</span>
-      </a>
+     <a class="navbar-brand oc-brand" href="index.html">
+  <img src="assests/images/logo.png" alt="OneClick" class="oneclick-logo">
+</a>
 
       <button class="navbar-toggler oc-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
         <span class="oc-toggler-bar"></span>
@@ -333,35 +332,55 @@
                 <div id="provPhoneFeedback" class="invalid-feedback">Please enter a valid 10-digit phone number.</div>
               </div>
 
-              <!-- Service Category -->
+          <!-- Service Category -->
 <div class="col-md-6">
-  <label for="provCategory" class="form-label">Service Category</label>
+  <label for="provCategory" class="form-label">
+    Service Category
+  </label>
+
+  <div class="oc-input-group">
+    <span class="oc-input-icon" aria-hidden="true">
+      <i class="fa-solid fa-layer-group"></i>
+    </span>
+
+    <select
+      id="provCategory"
+      name="category"
+      class="form-select oc-form-control"
+      required
+      aria-describedby="provCategoryFeedback"
+    >
+      <option value="">Loading categories...</option>
+    </select>
+  </div>
+
+  <div id="provCategoryFeedback" class="invalid-feedback">
+    Please select a service category.
+  </div>
+</div>
+
+<!-- Services -->
+<div class="col-md-6">
+  <label class="form-label">Services You Provide</label>
 
   <div class="oc-input-group">
     <span class="oc-input-icon" aria-hidden="true">
       <i class="fa-solid fa-list-check"></i>
     </span>
 
-    <select
-      class="form-select oc-form-control oc-form-select"
-      id="provCategory"
-      name="serviceCategory"
-      required
-      aria-describedby="provCategoryFeedback"
+    <div
+      id="provServices"
+      class="oc-services-checkboxes"
+      aria-describedby="provServicesFeedback"
     >
-      <option value="" selected disabled>
-        Select your service category
-      </option>
-
-      <option value="1">Home Repair</option>
-      <option value="2">Cleaning</option>
-      <option value="3">Vehicle Services</option>
-      <option value="4">Electrical</option>
-    </select>
+      <div class="text-muted small">
+        Please select a category first.
+      </div>
+    </div>
   </div>
 
-  <div id="provCategoryFeedback" class="invalid-feedback">
-    Please select a service category.
+  <div id="provServicesFeedback" class="invalid-feedback">
+    Please select at least one service.
   </div>
 </div>
 
@@ -443,6 +462,87 @@
                 </div>
                 <div id="provAddressFeedback" class="invalid-feedback">Please enter your address.</div>
               </div>
+              <!-- Primary Service Location -->
+<div class="col-12 mt-3">
+  <h5>Primary Service Location</h5>
+  <p>Where are you based? Customers will find you according to this location.</p>
+</div>
+
+<!-- Country -->
+<div class="col-md-6">
+  <label for="provCountry" class="form-label">Country</label>
+  <div class="oc-input-group">
+    <span class="oc-input-icon">
+      <i class="fa-solid fa-globe"></i>
+    </span>
+    <input
+      type="text"
+      class="form-control oc-form-control"
+      id="provCountry"
+      name="country"
+      value="Nepal"
+      required
+    >
+  </div>
+  <div class="invalid-feedback">Please enter your country.</div>
+</div>
+
+<!-- Province -->
+<div class="col-md-6">
+  <label for="provProvince" class="form-label">Province / State</label>
+  <div class="oc-input-group">
+    <span class="oc-input-icon">
+      <i class="fa-solid fa-map"></i>
+    </span>
+    <input
+      type="text"
+      class="form-control oc-form-control"
+      id="provProvince"
+      name="province"
+      placeholder="e.g. Gandaki Province"
+      required
+    >
+  </div>
+  <div class="invalid-feedback">Please enter your province or state.</div>
+</div>
+
+<!-- District -->
+<div class="col-md-6">
+  <label for="provDistrict" class="form-label">District</label>
+  <div class="oc-input-group">
+    <span class="oc-input-icon">
+      <i class="fa-solid fa-location-dot"></i>
+    </span>
+    <input
+      type="text"
+      class="form-control oc-form-control"
+      id="provDistrict"
+      name="district"
+      placeholder="e.g. Kaski"
+      required
+    >
+  </div>
+  <div class="invalid-feedback">Please enter your district.</div>
+</div>
+
+<!-- City -->
+<div class="col-md-6">
+  <label for="provCity" class="form-label">
+    City / Municipality / Area (Optional)
+  </label>
+  <div class="oc-input-group">
+    <span class="oc-input-icon">
+      <i class="fa-solid fa-city"></i>
+    </span>
+    <input
+      type="text"
+      class="form-control oc-form-control"
+      id="provCity"
+      name="city"
+      placeholder="e.g. Pokhara"
+    >
+  </div>
+</div>
 
               <!-- Short Bio -->
               <div class="col-12">

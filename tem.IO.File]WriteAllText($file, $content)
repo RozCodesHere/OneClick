@@ -1,0 +1,212 @@
+Backend/bookings/serializers.py:47: trailing whitespace.
+[32m+[m[41m            [m
+Backend/bookings/urls.py:57: trailing whitespace.
+[32m+[m[32mpath("payment/khalti/initiate/",[m[41m [m
+Backend/bookings/urls.py:58: trailing whitespace.
+[32m+[m[32m     KhaltiInitiateView.as_view(),[m[41m [m
+Backend/bookings/views.py:348: trailing whitespace.
+[32m+[m[41m        [m
+Backend/bookings/views.py:349: trailing whitespace.
+[32m+[m[41m        [m
+Backend/bookings/views.py:350: trailing whitespace.
+[32m+[m[41m        [m
+Backend/bookings/views.py:351: trailing whitespace.
+[32m+[m[41m        [m
+Backend/bookings/views.py:436: trailing whitespace.
+[32m+[m[41m        [m
+Backend/providers/models.py:58: trailing whitespace.
+[32m+[m[41m    [m
+Backend/providers/models.py:137: trailing whitespace.
+[32m+[m[41m    [m
+Backend/providers/serializers.py:90: trailing whitespace.
+[32m+[m[41m          [m
+Backend/providers/serializers.py:163: trailing whitespace.
+[32m+[m[41m    [m
+Backend/providers/urls.py:85: trailing whitespace.
+[32m+[m[41m    [m
+Backend/providers/urls.py:87: trailing whitespace.
+[32m+[m[41m  [m
+Backend/providers/views.py:97: trailing whitespace.
+[32m+[m[41m    [m
+Backend/providers/views.py:294: trailing whitespace.
+[32m+[m[41m       [m
+Backend/providers/views.py:318: trailing whitespace.
+[32m+[m[41m   [m
+Backend/providers/views.py:321: trailing whitespace.
+[32m+[m[41m            [m
+Backend/providers/views.py:593: trailing whitespace.
+[32m+[m[41m    [m
+Backend/services/models.py:120: trailing whitespace.
+[32m+[m[41m    [m
+Backend/services/serializers.py:169: trailing whitespace.
+[32m+[m[41m           [m
+Backend/services/views.py:574: trailing whitespace.
+[32m+[m[41m        [m
+Backend/services/views.py:575: trailing whitespace.
+[32m+[m[41m        [m
+Backend/services/views.py:582: trailing whitespace.
+[32m+[m[41m [m
+Backend/users/serializers.py:30: trailing whitespace.
+[32m+[m[41m                        [m
+Backend/users/serializers.py:36: trailing whitespace.
+[32m+[m[41m            [m
+Backend/users/serializers.py:90: trailing whitespace.
+[32m+[m[41m            [m
+Backend/users/urls.py:56: trailing whitespace.
+[32m+[m[41m    [m
+Backend/users/urls.py:64: trailing whitespace.
+[32m+[m[32m    path("forgot-password/",[m[41m [m
+Backend/users/urls.py:65: trailing whitespace.
+[32m+[m[32m         ForgotPasswordView.as_view(),[m[41m  [m
+Backend/users/urls.py:68: trailing whitespace.
+[32m+[m[32mpath("reset-password/",[m[41m [m
+Backend/users/urls.py:69: trailing whitespace.
+[32m+[m[32m     ResetPasswordView.as_view(),[m[41m [m
+Backend/users/urls.py:134: trailing whitespace.
+[32m+[m[41m    [m
+Backend/users/views.py:313: trailing whitespace.
+[32m+[m[41m        [m
+Backend/users/views.py:698: trailing whitespace.
+[32m+[m[41m        [m
+Backend/users/views.py:722: trailing whitespace.
+[32m+[m[41m            [m
+Backend/users/views.py:769: trailing whitespace.
+[32m+[m[41m            [m
+Fronted/about.html:46: trailing whitespace.
+[32m+[m[41m        [m
+Fronted/become-provider.html:60: trailing whitespace.
+[32m+[m[41m         [m
+Fronted/booking.html:366: trailing whitespace.
+[32m+[m[41m                            [m
+Fronted/chat.html:260: trailing whitespace.
+[32m+[m[41m          [m
+Fronted/contact.html:46: trailing whitespace.
+[32m+[m[41m        [m
+Fronted/css/become-provider.css:90: trailing whitespace.
+[32m+[m[41m  [m
+Fronted/css/customer-dashboard.css:50: trailing whitespace.
+[32m+[m[41m    [m
+Fronted/css/customer-dashboard.css:2036: trailing whitespace.
+[32m+[m[41m   [m
+Fronted/css/provider-job-requests.css:561: trailing whitespace.
+[32m+[m[41m              [m
+Fronted/css/provider-job-requests.css:1627: trailing whitespace.
+[32m+[m[41m    [m
+Fronted/customer-dashboard.html:718: trailing whitespace.
+[32m+[m[41m        [m
+Fronted/customer-dashboard.html:822: trailing whitespace.
+[32m+[m[41m         [m
+Fronted/customer-dashboard.html:858: trailing whitespace.
+[32m+[m[41m     [m
+Fronted/customer-dashboard.html:902: trailing whitespace.
+[32m+[m[41m        [m
+Fronted/faq.html:47: trailing whitespace.
+[32m+[m[41m        [m
+Fronted/how-it-works.html:111: trailing whitespace.
+[32m+[m[41m         [m
+Fronted/how-it-works.html:669: trailing whitespace.
+[32m+[m[41m [m
+Fronted/index.html:74: trailing whitespace.
+[32m+[m[41m          [m
+Fronted/js/booking-details.js:286: trailing whitespace.
+[32m+[m[41m             [m
+Fronted/js/customer-dashboard.js:1226: trailing whitespace.
+[32m+[m[41m            [m
+Fronted/js/customer-dashboard.js:1729: trailing whitespace.
+[32m+[m[41m    [m
+Fronted/js/customer-dashboard.js:2917: trailing whitespace.
+[32m+[m[41m        [m
+Fronted/js/customer-dashboard.js:2918: trailing whitespace.
+[32m+[m[41m        [m
+Fronted/js/customer-dashboard.js:5034: trailing whitespace.
+[32m+[m[41m    [m
+Fronted/js/customer-dashboard.js:5036: trailing whitespace.
+[32m+[m[41m      [m
+Fronted/js/customer-dashboard.js:6322: trailing whitespace.
+[32m+[m[41m        [m
+Fronted/js/login.js:328: trailing whitespace.
+[32m+[m[41m                        [m
+Fronted/js/login.js:372: trailing whitespace.
+[32m+[m[41m                [m
+Fronted/js/profile.js:30: trailing whitespace.
+[32m+[m[41m    [m
+Fronted/js/provider-dashboard.js:186: trailing whitespace.
+[32m+[m[41m    [m
+Fronted/js/provider-dashboard.js:1335: trailing whitespace.
+[32m+[m[41m    [m
+Fronted/js/provider-dashboard.js:1522: trailing whitespace.
+[32m+[m[41m        [m
+Fronted/js/provider-dashboard.js:2920: trailing whitespace.
+[32m+[m[41m    [m
+Fronted/js/provider-dashboard.js:4992: trailing whitespace.
+[32m+[m[41m      [m
+Fronted/js/provider-dashboard.js:5059: trailing whitespace.
+[32m+[m[41m        [m
+Fronted/js/provider-dashboard.js:5181: trailing whitespace.
+[32m+[m[41m    [m
+Fronted/js/provider-job-requests.js:687: trailing whitespace.
+[32m+[m[41m                       [m
+Fronted/js/provider-profile.js:23: trailing whitespace.
+[32m+[m[41m   [m
+Fronted/js/provider-profile.js:556: trailing whitespace.
+[32m+[m[41m   [m
+Fronted/js/provider-profile.js:838: trailing whitespace.
+[32m+[m[41m    [m
+Fronted/js/provider-todays-jobs.js:607: trailing whitespace.
+[32m+[m[41m   [m
+Fronted/js/providers.js:500: trailing whitespace.
+[32m+[m[41m      [m
+Fronted/js/register.js:827: trailing whitespace.
+[32m+[m[41m   [m
+Fronted/js/register.js:1602: trailing whitespace.
+[32m+[m[41m                   [m
+Fronted/js/register.js:1604: trailing whitespace.
+[32m+[m[41m                    [m
+Fronted/js/register.js:1614: trailing whitespace.
+[32m+[m[41m    [m
+Fronted/js/register.js:1733: trailing whitespace.
+[32m+[m[41m  [m
+Fronted/js/register.js:1912: trailing whitespace.
+[32m+[m[41m               [m
+Fronted/js/register.js:2629: trailing whitespace.
+[32m+[m[41m                   [m
+Fronted/js/setting.js:356: trailing whitespace.
+[32m+[m[41m  [m
+Fronted/js/setting.js:357: trailing whitespace.
+[32m+[m[41m     [m
+Fronted/js/setting.js:1858: trailing whitespace.
+[32m+[m[41m  [m
+Fronted/js/theme.js:155: trailing whitespace.
+[32m+[m[41m    [m
+Fronted/js/verify-email.js:77: trailing whitespace.
+[32m+[m[32m}[m[41m      [m
+Fronted/provider-dashboard.html:288: trailing whitespace.
+[32m+[m[41m        [m
+Fronted/provider-dashboard.html:290: trailing whitespace.
+[32m+[m[41m            [m
+Fronted/provider-dashboard.html:896: trailing whitespace.
+[32m+[m[41m                        [m
+Fronted/provider-dashboard.html:988: trailing whitespace.
+[32m+[m[41m                [m
+Fronted/provider-job-requests.html:42: trailing whitespace.
+[32m+[m[41m   [m
+Fronted/provider-job-requests.html:76: trailing whitespace.
+[32m+[m[41m                [m
+Fronted/provider-job-requests.html:205: trailing whitespace.
+[32m+[m[41m       [m
+Fronted/provider-profile.html:106: trailing whitespace.
+[32m+[m[41m         [m
+Fronted/provider-profile.html:862: trailing whitespace.
+[32m+[m[41m   [m
+Fronted/provider-profile.html:877: trailing whitespace.
+[32m+[m[41m        [m
+Fronted/provider-todays-jobs.html:28: trailing whitespace.
+[32m+[m[41m   [m
+Fronted/providers.html:100: trailing whitespace.
+[32m+[m[41m                [m
+Fronted/providers.html:115: trailing whitespace.
+[32m+[m[41m               [m
+Fronted/services.html:103: trailing whitespace.
+[32m+[m[41m           [m
+Fronted/term.html:46: trailing whitespace.
+[32m+[m[41m      [m

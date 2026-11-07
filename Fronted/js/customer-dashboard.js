@@ -51,7 +51,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadRecentBookings();
 
-    loadRecommendedProviders();
+    loadMyServiceRequests();
+
+    loadRecommendedProviders(false);
 
     loadCustomerQuotations();
 
@@ -218,19 +220,47 @@ async function loadCustomer() {
 
         }
 
-        const avatar =
-            document.getElementById(
-                "customerAvatar"
-            );
+        /* ---------- Avatar ---------- */
 
-        if (avatar) {
+const avatar =
+    document.getElementById(
+        "customerAvatar"
+    );
 
-            avatar.textContent =
-                firstName
-                    .charAt(0)
-                    .toUpperCase();
+if (avatar) {
 
-        }
+    if (user.profile_picture) {
+
+        const imageUrl =
+            user.profile_picture.startsWith("http")
+                ? user.profile_picture
+                : `http://127.0.0.1:8000${user.profile_picture}`;
+
+        avatar.innerHTML = "";
+
+        const img =
+            document.createElement("img");
+
+        img.src = imageUrl;
+        img.alt = fullName || "User";
+
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.objectFit = "cover";
+        img.style.borderRadius = "50%";
+
+        avatar.appendChild(img);
+
+    } else {
+
+        avatar.textContent =
+            firstName
+                .charAt(0)
+                .toUpperCase();
+
+    }
+
+}
 
         window.oneClickCustomer =
             user;
@@ -548,19 +578,51 @@ async function loadServices() {
             data
         );
 
-        const services =
-            Array.isArray(data)
-                ? data
-                : (
-                    Array.isArray(data.results)
-                        ? data.results
-                        : []
+       let services = [];
+
+if (Array.isArray(data)) {
+
+    services = data;
+
+} else if (Array.isArray(data.results)) {
+
+    services = data.results;
+
+    // Load remaining service pages
+    let nextUrl = data.next;
+
+    while (nextUrl) {
+
+        const nextResponse =
+            await fetch(nextUrl);
+
+        if (!nextResponse.ok) {
+            break;
+        }
+
+        const nextData =
+            await nextResponse.json();
+
+        if (Array.isArray(nextData.results)) {
+
+            services =
+                services.concat(
+                    nextData.results
                 );
 
-        console.log(
-            "SERVICES ARRAY:",
-            services
-        );
+        }
+
+        nextUrl =
+            nextData.next;
+
+    }
+
+}
+
+console.log(
+    "SERVICES ARRAY:",
+    services
+);
 
         window.oneClickServices =
             services;
@@ -930,24 +992,13 @@ async function loadRecentBookings() {
 
     try {
 
-        tableBody.innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="8"
-                    class="oc-table-loading"
-                >
-
-                    <i class="fa-solid fa-spinner fa-spin"></i>
-
-                    Loading bookings...
-
-                </td>
-
-            </tr>
-
-        `;
+       tableBody.innerHTML = `
+    <div class="oc-booking-state">
+        <i class="fa-regular fa-calendar-xmark"></i>
+        <strong>No bookings found</strong>
+        <span>Your recent bookings will appear here.</span>
+    </div>
+`;
 
         const response =
             await fetch(
@@ -1039,19 +1090,60 @@ async function loadRecentBookings() {
 
         }
 
-        const sortedBookings =
-            [...bookings]
-                .sort(
-                    compareBookings
-                )
-                .slice(0, 5);
+       const sortedBookings =
+    [...bookings].sort(compareBookings);
 
-        tableBody.innerHTML =
-            sortedBookings
-                .map(
-                    createBookingRow
-                )
-                .join("");
+        const visibleBookings = sortedBookings.slice(0, 3);
+
+tableBody.innerHTML =
+    visibleBookings.map(createBookingRow).join("");
+
+if (sortedBookings.length > 3) {
+    tableBody.innerHTML += `
+        <button
+            type="button"
+            class="btn btn-outline-primary btn-sm mt-3"
+            id="seeMoreBookingsBtn"
+        >
+            See More
+            <i class="fa-solid fa-chevron-down ms-1"></i>
+        </button>
+    `;
+}
+let bookingsExpanded = false;
+
+function renderBookings() {
+    const visibleBookings = bookingsExpanded
+        ? sortedBookings
+        : sortedBookings.slice(0, 3);
+
+    tableBody.innerHTML =
+        visibleBookings.map(createBookingRow).join("");
+
+    if (sortedBookings.length > 3) {
+        tableBody.innerHTML += `
+            <button
+                type="button"
+                class="btn btn-outline-primary btn-sm mt-3"
+                id="seeMoreBookingsBtn"
+            >
+                ${bookingsExpanded ? "See Less" : "See More"}
+                <i class="fa-solid fa-chevron-${bookingsExpanded ? "up" : "down"} ms-1"></i>
+            </button>
+        `;
+    }
+
+    refreshAOS();
+}
+
+renderBookings();
+
+tableBody.addEventListener("click", function (event) {
+    if (event.target.closest("#seeMoreBookingsBtn")) {
+        bookingsExpanded = !bookingsExpanded;
+        renderBookings();
+    }
+});
 
         refreshAOS();
 
@@ -1065,32 +1157,505 @@ async function loadRecentBookings() {
         );
 
         tableBody.innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="8"
-                    class="oc-empty-bookings"
-                >
-
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-
-                    <strong>
-                        Unable to load bookings
-                    </strong>
-
-                    <div>
-                        Please check your API connection.
-                    </div>
-
-                </td>
-
-            </tr>
-
-        `;
+    <div class="oc-booking-state">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <strong>Unable to load bookings</strong>
+        <span>Please check your API connection.</span>
+    </div>
+`;
 
     }
 
+}
+
+
+/* =========================================================
+   LOAD MY SERVICE REQUESTS
+   ========================================================= */
+
+async function loadMyServiceRequests() {
+    const container = document.getElementById(
+        "myServiceRequestsBody"
+    );
+
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="text-center py-4">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <span class="ms-2">Loading service requests...</span>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/services/requests/`,
+            {
+                method: "GET",
+                headers: getHeaders()
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                `Service requests API error: ${response.status}`
+            );
+        }
+
+        const responseData = await response.json();
+
+        const requests = Array.isArray(responseData)
+            ? responseData
+            : Array.isArray(responseData.results)
+                ? responseData.results
+                : [];
+
+        if (requests.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fa-regular fa-clipboard fa-2x mb-2"></i>
+                    <strong class="d-block">No service requests yet</strong>
+                    <span>Requests you submit will appear here.</span>
+                </div>
+            `;
+            return;
+        }
+
+        const allRequestCardsHTML = requests.map(request => {
+            const service = request.service;
+            
+            const serviceId =
+    service && typeof service === "object"
+        ? service.id
+        : service || request.service_id;
+            const serviceName =
+                request.service_name ||
+                (service && typeof service === "object"
+                    ? service.name || service.title
+                    : null) ||
+                (typeof service === "number"
+                    ? `Service #${service}`
+                    : service) ||
+                "Service request";
+
+            const status = String(
+                request.status || "pending"
+            ).replace(/_/g, " ");
+
+            const description = request.description || "";
+            const address = request.address || "";
+
+            const escapeHTML = value =>
+                String(value).replace(/[&<>"']/g, char => ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;"
+                }[char]));
+
+
+return `
+<article class="oc-request-card" data-request-id="${escapeHTML(request.id)}">
+        <div class="oc-request-icon">
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+        </div>
+
+        <div class="oc-request-details">
+            <h3>${escapeHTML(serviceName)}</h3>
+
+            <p class="oc-request-description">
+                ${escapeHTML(description || "No description provided.")}
+            </p>
+
+            ${address ? `
+                <p class="oc-request-address">
+                    <i class="fa-solid fa-location-dot"></i>
+                    ${escapeHTML(address)}
+                </p>
+            ` : ""}
+        </div>
+
+        <aside class="oc-request-status pending">
+            <span class="oc-request-status-label">Request status</span>
+            <strong>
+                <i class="fa-solid fa-clock"></i>
+                ${escapeHTML(status)}
+            </strong>
+        </aside>
+
+<button
+    type="button"
+    class="btn btn-outline-primary btn-sm mt-2"
+    onclick="viewServiceRequestDetails(${Number(request.id)})"
+>
+    View Details
+    <i class="fa-solid fa-arrow-right ms-1"></i>
+</button>
+
+
+</article>
+`;
+
+
+        });
+
+       let requestsExpanded = false;
+
+function renderRequests() {
+    const visibleRequests = requestsExpanded
+        ? allRequestCardsHTML
+        : allRequestCardsHTML.slice(0, 3);
+
+    container.innerHTML = visibleRequests.join("");
+
+    if (allRequestCardsHTML.length > 3) {
+        container.innerHTML += `
+            <button
+                type="button"
+                class="btn btn-outline-primary btn-sm mt-3"
+                id="seeMoreRequestsBtn"
+            >
+                ${requestsExpanded ? "See Less" : "See More"}
+                <i class="fa-solid fa-chevron-${requestsExpanded ? "up" : "down"} ms-1"></i>
+            </button>
+        `;
+    }
+
+    refreshAOS();
+}
+
+renderRequests();
+
+container.onclick = function (event) {
+    if (event.target.closest("#seeMoreRequestsBtn")) {
+        requestsExpanded = !requestsExpanded;
+        renderRequests();
+    }
+};
+
+    } catch (error) {
+        console.error("Error loading service requests:", error);
+
+        container.innerHTML = `
+            <div class="alert alert-warning mb-0">
+                Unable to load service requests.
+                Please refresh the page and try again.
+            </div>
+        `;
+    }
+}
+
+async function cancelServiceRequest(requestId) {
+    const confirmed = window.confirm(
+        "Are you sure you want to cancel this service request?"
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/services/requests/${requestId}/cancel/`,
+            {
+                method: "PATCH",
+                headers: getHeaders()
+            }
+        );
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(
+                data.detail || `Cancellation failed (${response.status}).`
+            );
+        }
+
+        alert("Your service request has been cancelled.");
+
+        await loadMyServiceRequests();
+
+    } catch (error) {
+        console.error("Error cancelling service request:", error);
+
+        alert(
+            error.message ||
+            "Unable to cancel this request. Please try again."
+        );
+    }
+}
+
+window.deleteServiceRequest = async function (requestId) {
+    const confirmed = window.confirm(
+        "Are you sure you want to permanently delete this cancelled service request?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/services/requests/${requestId}/`,
+            {
+                method: "DELETE",
+                headers: getHeaders()
+            }
+        );
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+
+            throw new Error(
+                data.detail || `Delete failed (${response.status}).`
+            );
+        }
+
+        alert("Cancelled service request deleted successfully.");
+
+        await loadMyServiceRequests();
+
+    } catch (error) {
+        console.error("Error deleting service request:", error);
+
+        alert(
+            error.message ||
+            "Unable to delete this request. Please try again."
+        );
+    }
+};
+
+
+
+
+
+/* =========================================================
+   VIEW SERVICE REQUEST DETAILS & NEARBY PROVIDERS
+   ========================================================= */
+
+
+async function viewServiceRequestDetails(requestId) {
+    const modalElement = document.getElementById(
+        "serviceRequestDetailsModal"
+    );
+
+    const contentElement = document.getElementById(
+        "serviceRequestDetailsContent"
+    );
+
+    if (!modalElement || !contentElement) {
+        console.error("Service request details modal was not found.");
+        return;
+    }
+
+    contentElement.innerHTML = `
+        <div class="text-center py-5">
+            <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+            <p class="mt-3">Loading request details...</p>
+        </div>
+    `;
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    modal.show();
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/services/requests/`,
+            {
+                method: "GET",
+                headers: getHeaders()
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                `Service requests API error: ${response.status}`
+            );
+        }
+
+        const responseData = await response.json();
+
+        const requests = Array.isArray(responseData)
+            ? responseData
+            : Array.isArray(responseData.results)
+                ? responseData.results
+                : [];
+
+        const request = requests.find(
+            item => Number(item.id) === Number(requestId)
+        );
+
+        if (!request) {
+            throw new Error("Service request not found.");
+        }
+
+        const escapeHTML = value =>
+            String(value ?? "").replace(/[&<>"']/g, char => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[char]));
+
+        const service = request.service;
+        const serviceId =
+    service && typeof service === "object"
+        ? service.id
+        : request.service_id ??
+          (typeof service === "number" ? service : null);
+        const serviceName =
+            request.service_name ||
+            (service && typeof service === "object"
+                ? service.name || service.title
+                : null) ||
+            (typeof service === "number"
+                ? `Service #${service}`
+                : service) ||
+            "Service request";
+
+        contentElement.innerHTML = `
+            <section class="mb-4">
+                <h6 class="fw-bold">Your Request</h6>
+
+                <p class="mb-2">
+                    <strong>Service:</strong>
+                    ${escapeHTML(serviceName)}
+                </p>
+
+               <p class="mb-2">
+    <strong>Description:</strong>
+    ${escapeHTML(request.description || "No description provided.")}
+</p>
+
+<p class="mb-2">
+    <strong>Address:</strong>
+    ${escapeHTML(request.address || "No address provided.")}
+</p>
+
+<p class="mb-2">
+    <strong>Preferred Date:</strong>
+    ${escapeHTML(request.preferred_date || "Not specified")}
+</p>
+
+<p class="mb-2">
+    <strong>Preferred Time:</strong>
+    ${escapeHTML(request.preferred_time || "Not specified")}
+</p>
+
+<p class="mb-2">
+    <strong>Status:</strong>
+    ${escapeHTML(request.status || "Pending")}
+</p>
+
+<p class="mb-0">
+    <strong>Request ID:</strong>
+    #${escapeHTML(request.id)}
+</p>
+            </section>
+
+            <hr>
+
+            <section>
+                <h6 class="fw-bold mb-3">
+                    <i class="fa-solid fa-location-dot me-2"></i>
+                    Nearby Providers
+                </h6>
+
+                <div class="mb-3">
+    <label for="requestProviderRadius" class="form-label">
+        Search radius
+    </label>
+
+    <select id="requestProviderRadius" class="form-select">
+        <option value="3">Within 3 km</option>
+        <option value="5" selected>Within 5 km</option>
+        <option value="20">Within 20 km</option>
+        <option value="100">Within 100 km</option>
+    </select>
+</div>
+
+<div id="requestNearbyProviders">
+    <p class="text-muted mb-0">
+        Preparing nearby provider search...
+    </p>
+</div>
+            </section>
+        `;
+
+        const latitude = Number(request.latitude);
+        const longitude = Number(request.longitude);
+
+        if (
+            request.latitude == null ||
+            request.longitude == null ||
+            !Number.isFinite(latitude) ||
+            !Number.isFinite(longitude) ||
+            latitude < -90 ||
+            latitude > 90 ||
+            longitude < -180 ||
+            longitude > 180
+        ) {
+            document.getElementById("requestNearbyProviders").innerHTML = `
+                <div class="alert alert-warning mb-0">
+                    This request does not have valid map coordinates.
+                </div>
+            `;
+            return;
+        }
+
+        console.log("Selected request location:", {
+            requestId: request.id,
+            latitude,
+            longitude
+        });
+
+       // Show providers inside this request's modal only.
+const nearbyContainer = contentElement.querySelector(
+    "#requestNearbyProviders"
+);
+
+console.log("Nearby container found:", Boolean(nearbyContainer));
+
+await loadRequestNearbyProviders(
+    latitude,
+    longitude,
+    nearbyContainer,
+    serviceId,
+   {
+    address: request.address || "",
+    latitude: latitude,
+    longitude: longitude,
+    date: request.preferred_date || "",
+    time: request.preferred_time || ""
+}
+);
+const radiusInput = document.getElementById("requestProviderRadius");
+
+if (radiusInput) {
+    radiusInput.onchange = () => {
+       loadRequestNearbyProviders(
+    latitude,
+    longitude,
+    nearbyContainer,
+    serviceId,
+    {
+        address: request.address || "",
+        latitude: latitude,
+        longitude: longitude
+    }
+);
+    };
+}
+    } catch (error) {
+        console.error("Failed to load request details:", error);
+
+        contentElement.innerHTML = `
+            <div class="alert alert-danger mb-0">
+                Unable to load request details.
+                Please close this window and try again.
+            </div>
+        `;
+    }
 }
 
 
@@ -1141,230 +1706,214 @@ function getBookingSortDate(
 
 
 
+
+
 /* =========================================================
-   CREATE BOOKING ROW
+   CREATE BOOKING CARD
    ========================================================= */
 
-function createBookingRow(
-    booking
-) {
+function createBookingRow(booking) {
 
     const bookingId =
         booking.id ?? "N/A";
 
     const serviceName =
-        booking.service_name ||
-        "Service";
+        booking.service_name || "Service";
 
     const providerName =
-        booking.provider_name ||
-        "Provider";
+        booking.provider_name || "Provider";
 
     const address =
-        booking.address ||
-        "Address not provided";
+        booking.address || "Address not provided";
 
-    const bookingDate =
-        formatBookingDate(
-            booking.booking_date
-        );
-
-    const bookingTime =
-        formatBookingTime(
-            booking.booking_time
-        );
+    
 
     const price =
-        formatBookingPrice(
-            booking.total_price
-        );
+        formatBookingPrice(booking.total_price);
 
     const status =
-        booking.status ||
-        "pending";
+        booking.status || "pending";
 
     const initials =
-        getInitials(
-            providerName
-        );
+        getInitials(providerName);
 
     const statusInfo =
-        getStatusInfo(
-            status
-        );
-
-
-    /*
-     * ---------------------------------------------------------
-     * CANCEL BUTTON
-     * ---------------------------------------------------------
-     *
-     * Customers can cancel:
-     *
-     * - pending bookings
-     * - accepted bookings
-     *
-     * Completed, rejected and already cancelled bookings
-     * do not show the cancel button.
-     */
+        getStatusInfo(status);
 
     const normalizedStatus =
-        String(status)
-            .trim()
-            .toLowerCase();
-
+        String(status).trim().toLowerCase();
 
     let cancelButton = "";
+    let deleteButton = "";
+    let trackButton = "";
 
+// Show tracking only while the provider is on the way.
+if (normalizedStatus === "in_progress") {
+    trackButton = `
+        <button
+            type="button"
+            class="oc-row-action oc-track-provider"
+            data-booking-id="${escapeHtml(bookingId)}"
+        >
+            <i class="fa-solid fa-location-crosshairs"></i>
+            <span>Track Provider</span>
+        </button>
+    `;
+}
 
+    // Cancel is available for pending or accepted bookings.
     if (
         normalizedStatus === "pending" ||
         normalizedStatus === "accepted"
     ) {
-
         cancelButton = `
-
             <button
                 type="button"
                 class="oc-row-action oc-cancel-booking"
                 title="Cancel booking"
+                aria-label="Cancel booking ${escapeHtml(bookingId)}"
                 data-booking-id="${escapeHtml(bookingId)}"
             >
-
                 <i class="fa-solid fa-xmark"></i>
-
+                <span>Cancel</span>
             </button>
-
         `;
-
     }
 
+    // Delete is available only for cancelled or rejected bookings.
+    if (
+        normalizedStatus === "cancelled" ||
+        normalizedStatus === "rejected"
+    ) {
+        deleteButton = `
+            <button
+                type="button"
+                class="oc-row-action oc-delete-booking"
+                title="Delete booking"
+                aria-label="Delete booking ${escapeHtml(bookingId)}"
+                data-booking-id="${escapeHtml(bookingId)}"
+            >
+                <i class="fa-solid fa-trash"></i>
+                <span>Delete</span>
+            </button>
+        `;
+    }
 
     return `
+        <article
+            class="oc-booking-card"
+            data-aos="fade-up"
+            data-booking-id="${escapeHtml(bookingId)}"
+        >
 
-        <tr>
+            <div class="oc-booking-card-top">
 
-            <td>
+                <div class="oc-booking-card-service">
 
-                <span class="oc-booking-id">
-                    #${escapeHtml(bookingId)}
-                </span>
+                    <span class="oc-booking-id">
+                        #${escapeHtml(bookingId)}
+                    </span>
 
-            </td>
-
-            <td>
-
-                <div class="oc-booking-service">
-
-                    <strong>
+                    <h3 class="oc-booking-service">
                         ${escapeHtml(serviceName)}
-                    </strong>
-
-                    <small>
-                        Service booking
-                    </small>
+                    </h3>
 
                 </div>
 
-            </td>
+                <span class="oc-badge ${statusInfo.className}">
+                    <i class="${statusInfo.icon}"></i>
+                    ${escapeHtml(statusInfo.text)}
+                </span>
 
-            <td>
+            </div>
 
-                <div class="oc-table-user">
+            <div class="oc-booking-card-provider">
 
-                    <span class="oc-table-avatar">
-                        ${escapeHtml(initials)}
-                    </span>
+                <span class="oc-table-avatar">
+                    ${escapeHtml(initials)}
+                </span>
+
+                <div>
+                    <strong>
+                        ${escapeHtml(providerName)}
+                    </strong>
+
+                    <small>Service Provider</small>
+                </div>
+
+            </div>
+
+            <div class="oc-booking-card-details">
+
+                <div class="oc-booking-detail">
+
+                    <i class="fa-solid fa-location-dot"></i>
 
                     <div>
+                        <small>Location</small>
 
-                        <strong>
-                            ${escapeHtml(providerName)}
-                        </strong>
-
-                        <small>
-                            Service Provider
-                        </small>
-
+                        <span
+                            class="oc-booking-address"
+                            title="${escapeHtml(address)}"
+                        >
+                            ${escapeHtml(address)}
+                        </span>
                     </div>
 
                 </div>
 
-            </td>
+                <div class="oc-booking-detail">
 
-            <td>
+                    <i class="fa-regular fa-calendar"></i>
 
-                <span
-                    class="oc-booking-address"
-                    title="${escapeHtml(address)}"
-                >
-                    ${escapeHtml(address)}
-                </span>
+                    <div>
+                        <small>Booking Date</small>
 
-            </td>
+                        <strong>
+    ${escapeHtml(booking.booking_date || booking.bookingDate || booking.date || "Not set")}
+</strong>
 
-            <td>
-
-                <div class="oc-booking-datetime">
-
-                    <strong>
-                        ${escapeHtml(bookingDate)}
-                    </strong>
-
-                    <small>
-                        ${escapeHtml(bookingTime)}
-                    </small>
+<span>
+    ${escapeHtml(booking.booking_time || booking.bookingTime || booking.time || "Not set")}
+</span>
+                    </div>
 
                 </div>
 
-            </td>
+            </div>
 
-            <td>
+            <div class="oc-booking-card-footer">
 
-                <span class="oc-booking-price">
-                    ${escapeHtml(price)}
-                </span>
+                <div class="oc-booking-card-price">
+                    <small>Total Price</small>
 
-            </td>
+                    <strong class="oc-booking-price">
+                        ${escapeHtml(price)}
+                    </strong>
+                </div>
 
-            <td>
+               <div class="oc-booking-card-actions">
 
-                <span
-                    class="oc-badge ${statusInfo.className}"
-                >
+    ${trackButton}
 
-                    <i class="${statusInfo.icon}"></i>
+                    <button
+                        type="button"
+                        class="oc-row-action"
+                        title="View booking"
+                        aria-label="View booking ${escapeHtml(bookingId)}"
+                        data-booking-id="${escapeHtml(bookingId)}"
+                    >
+                        <span>View Details</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
 
-                    ${escapeHtml(statusInfo.text)}
+                </div>
 
-                </span>
+            </div>
 
-            </td>
-
-            <td>
-
-                ${cancelButton}
-
-                <button
-                    type="button"
-                    class="oc-row-action"
-                    title="View booking"
-                    data-booking-id="${escapeHtml(bookingId)}"
-                >
-
-                    <i class="fa-solid fa-ellipsis-vertical"></i>
-
-                </button>
-
-            </td>
-
-        </tr>
-
+        </article>
     `;
-
 }
-
-
 
 
 /* =========================================================
@@ -1425,6 +1974,45 @@ function setupBookingActions() {
 
             }
 
+
+            /*
+             * -------------------------------------------------
+             * DELETE BOOKING
+             * -------------------------------------------------
+             */
+
+            if (
+                bookingButton.classList.contains(
+                    "oc-delete-booking"
+                )
+            ) {
+
+                event.preventDefault();
+
+                deleteCustomerBooking(bookingId);
+
+                return;
+            }
+
+/*
+ * -------------------------------------------------
+ * TRACK PROVIDER
+ * -------------------------------------------------
+ */
+
+if (
+    bookingButton.classList.contains(
+        "oc-track-provider"
+    )
+) {
+
+    event.preventDefault();
+
+    window.location.href =
+        `booking-details.html?id=${encodeURIComponent(bookingId)}&track=true`;
+
+    return;
+}
 
             /*
              * -------------------------------------------------
@@ -1538,6 +2126,57 @@ async function cancelCustomerBooking(
 
     }
 
+}
+
+
+/* =========================================================
+   DELETE CUSTOMER BOOKING
+   ========================================================= */
+
+async function deleteCustomerBooking(bookingId) {
+
+    const confirmed = window.confirm(
+        "Permanently delete this cancelled or rejected booking?"
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/bookings/${bookingId}/`,
+            {
+                method: "DELETE",
+                headers: {
+                    "Authorization":
+                        "Bearer " +
+                        localStorage.getItem("access_token")
+                }
+            }
+        );
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+
+            alert(
+                data.error ||
+                data.detail ||
+                "Unable to delete the booking."
+            );
+
+            return;
+        }
+
+        alert("Booking deleted successfully.");
+
+        await loadRecentBookings();
+
+    } catch (error) {
+        console.error("Booking deletion error:", error);
+
+        alert("Unable to delete the booking. Please try again.");
+    }
 }
 
 
@@ -1766,134 +2405,311 @@ function formatStatusText(
 
 
 /* =========================================================
-   LOAD RECOMMENDED PROVIDERS
-   ========================================================= */
+   LOAD RECOMMENDED PROVIDERS — LOCATION MATCHING
+========================================================= */
 
-async function loadRecommendedProviders() {
+async function loadRecommendedProviders(
+    searchNearby = false,
+    requestLatitude = null,
+    requestLongitude = null
+) {
+    const grid = document.getElementById("providersGrid");
+    if (!grid) return;
 
-    const grid =
-        document.getElementById(
-            "providersGrid"
-        );
+    // Load providers matching the customer's saved location.
+    async function loadLocationProviders(message) {
 
-    if (!grid) {
-        return;
-    }
+        let customer = window.oneClickCustomer;
 
-    try {
-
-        grid.innerHTML = `
-
-            <div class="col-12">
-
-                <div class="oc-loading-state">
-
-                    <i class="fa-solid fa-spinner fa-spin"></i>
-
-                    Loading providers...
-
-                </div>
-
-            </div>
-
-        `;
-
-        const response =
-            await fetch(
-                `${API_BASE}/providers/`,
+        // Fetch customer information if it is not already available.
+        if (
+            !customer ||
+            !customer.country ||
+            !customer.province ||
+            !customer.district ||
+            !customer.city
+        ) {
+            const userResponse = await fetch(
+                `${API_BASE}/users/me/`,
                 {
                     method: "GET",
                     headers: getHeaders()
                 }
             );
 
-        if (!response.ok) {
-
             if (
-                response.status === 401 ||
-                response.status === 403
+                userResponse.status === 401 ||
+                userResponse.status === 403
             ) {
-
                 logoutUser();
-
                 return;
-
             }
 
-            throw new Error(
-                `Providers API error: ${response.status}`
-            );
+            if (!userResponse.ok) {
+                throw new Error("Unable to load customer location.");
+            }
 
+            customer = await userResponse.json();
+            window.oneClickCustomer = customer;
         }
 
-        const data =
-            await response.json();
+        const location = {
+            country: customer.country?.trim(),
+            province: customer.province?.trim(),
+            district: customer.district?.trim(),
+            city: customer.city?.trim()
+        };
 
-        console.log(
-            "Providers data:",
-            data
+        // Require a complete location for exact matching.
+       if (
+    !location.country ||
+    !location.province ||
+    !location.district
+) {
+            grid.innerHTML = `
+                <div class="col-12">
+                    <div class="oc-loading-state">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <p>Please save your complete service location
+                        to see providers available in your area.</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        const params = new URLSearchParams({
+    country: location.country,
+    province: location.province,
+    district: location.district
+});
+
+// Only filter by city when the customer has selected one.
+if (location.city) {
+    params.set("city", location.city);
+}
+
+        const response = await fetch(
+            `${API_BASE}/providers/?${params.toString()}`,
+            {
+                method: "GET",
+                headers: getHeaders()
+            }
         );
 
-        const providers =
-            Array.isArray(data.results)
-                ? data.results
-                : Array.isArray(data)
-                    ? data
-                    : [];
+        if (
+            response.status === 401 ||
+            response.status === 403
+        ) {
+            logoutUser();
+            return;
+        }
 
-        window.oneClickProviders =
-            providers;
+        if (!response.ok) {
+            throw new Error(
+                `Location providers API error: ${response.status}`
+            );
+        }
 
-        console.log(
-            "Providers found:",
-            providers.length
-        );
+        const data = await response.json();
+
+        const providers = Array.isArray(data.results)
+            ? data.results
+            : Array.isArray(data)
+                ? data
+                : [];
+
+        window.oneClickProviders = providers;
+
+        console.log("Customer location:", location);
+        console.log("Location-matched providers:", providers);
 
         if (providers.length === 0) {
-
             renderProviderResults(
                 [],
-                "No verified providers are available right now."
+                `No providers are currently available in ${location.city}, ${location.district}.`
             );
-
             return;
-
         }
 
         renderProviderResults(
             providers,
-            "Verified service providers available on OneClick"
+            message ||
+            `Verified providers available in ${location.city}, ${location.district}`
         );
-
     }
 
-    catch (error) {
+
+    // Normal dashboard: show providers matching the customer's location.
+    if (!searchNearby) {
+        try {
+            await loadLocationProviders(
+                "Verified providers in your selected service area"
+            );
+        } catch (error) {
+            console.error(
+                "Location provider search failed:",
+                error
+            );
+
+            grid.innerHTML = `
+                <div class="col-12">
+                    <div class="oc-loading-state">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Unable to load providers. Please try again.
+                    </div>
+                </div>
+            `;
+        }
+
+        return;
+    }
+
+
+    // Nearby search: preserve your existing GPS feature.
+    try {
+
+        grid.innerHTML = `
+            <div class="col-12">
+                <div class="oc-loading-state">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    Finding nearby providers...
+                </div>
+            </div>
+        `;
+
+        let latitude =
+            requestLatitude ?? window.customerLatitude;
+
+        let longitude =
+            requestLongitude ?? window.customerLongitude;
+
+        if (latitude == null || longitude == null) {
+
+            if (!navigator.geolocation) {
+                await loadLocationProviders();
+                return;
+            }
+
+            const position = await new Promise(
+                (resolve, reject) => {
+
+                    navigator.geolocation.getCurrentPosition(
+                        resolve,
+                        reject,
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 60000
+                        }
+                    );
+
+                }
+            );
+
+            latitude = position.coords.latitude;
+            longitude = position.coords.longitude;
+
+            window.customerLatitude = latitude;
+            window.customerLongitude = longitude;
+        }
+
+        const radiusInput =
+            document.getElementById("requestProviderRadius");
+
+        const allowedRadii = [3, 5, 20, 100];
+
+        const selectedRadius = radiusInput
+            ? Number(radiusInput.value)
+            : 5;
+
+        const radius = allowedRadii.includes(selectedRadius)
+            ? selectedRadius
+            : 5;
+
+        const params = new URLSearchParams({
+            latitude: Number(latitude).toFixed(6),
+            longitude: Number(longitude).toFixed(6),
+            radius: String(radius)
+        });
+
+        const response = await fetch(
+            `${API_BASE}/providers/nearby/?${params.toString()}`,
+            {
+                method: "GET",
+                headers: getHeaders()
+            }
+        );
+
+        if (
+            response.status === 401 ||
+            response.status === 403
+        ) {
+            logoutUser();
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(
+                `Nearby providers API error: ${response.status}`
+            );
+        }
+
+        const data = await response.json();
+
+        const providers = Array.isArray(data.results)
+            ? data.results
+            : Array.isArray(data)
+                ? data
+                : [];
+
+        window.oneClickProviders = providers;
+
+        if (providers.length === 0) {
+            renderProviderResults(
+                [],
+                `No available providers found within ${radius} km.`
+            );
+            return;
+        }
+
+        renderProviderResults(
+            providers,
+            `Verified providers within ${radius} km, nearest first`
+        );
+
+    } catch (error) {
 
         console.error(
-            "Error loading providers:",
+            "Nearby provider search failed:",
             error
         );
 
-        grid.innerHTML = `
+        // IMPORTANT: Never fall back to all providers.
+        // Fall back to the customer's saved service area.
+        try {
 
-            <div class="col-12">
+            await loadLocationProviders(
+                "Showing providers in your selected service area."
+            );
 
-                <div class="oc-loading-state">
+        } catch (fallbackError) {
 
-                    <i class="fa-solid fa-triangle-exclamation"></i>
+            console.error(
+                "Location fallback failed:",
+                fallbackError
+            );
 
-                    Unable to load providers.
-
+            grid.innerHTML = `
+                <div class="col-12">
+                    <div class="oc-loading-state">
+                        Unable to load providers. Please try again.
+                    </div>
                 </div>
-
-            </div>
-
-        `;
-
+            `;
+        }
     }
-
 }
-
 /* =========================================================
    RENDER PROVIDERS
    ========================================================= */
@@ -1959,15 +2775,191 @@ function renderProviderResults(
 
 
 /* =========================================================
+   LOAD PROVIDERS INSIDE SERVICE REQUEST MODAL
+   ========================================================= */
+
+async function loadRequestNearbyProviders(
+    latitude,
+    longitude,
+    container,
+    serviceId,
+    requestLocation = null
+) {
+    if (!container) {
+        console.error("Nearby providers container was not passed.");
+        return;
+    }
+
+
+
+    container.innerHTML = `
+        <div class="text-center py-4">
+            <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+            <p class="mt-3 mb-0">Finding nearby providers...</p>
+        </div>
+    `;
+
+    try {
+        const radiusInput = document.getElementById("requestProviderRadius");
+        const allowedRadii = [3, 5, 20, 100];
+
+        const selectedRadius = radiusInput
+            ? Number(radiusInput.value)
+            : 5;
+
+        const radius = allowedRadii.includes(selectedRadius)
+            ? selectedRadius
+            : 5;
+
+        const params = new URLSearchParams({
+    latitude: Number(latitude).toFixed(6),
+    longitude: Number(longitude).toFixed(6),
+    radius: String(radius)
+});
+
+if (serviceId) {
+    params.set("service_id", String(serviceId));
+}
+
+        const response = await fetch(
+            `${API_BASE}/providers/nearby/?${params.toString()}`,
+            {
+                method: "GET",
+                headers: getHeaders()
+            }
+        );
+
+        if (response.status === 401 || response.status === 403) {
+            logoutUser();
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(
+                `Nearby providers API error: ${response.status}`
+            );
+        }
+
+        const data = await response.json();
+
+        const providers = Array.isArray(data.results)
+            ? data.results
+            : Array.isArray(data)
+                ? data
+                : [];
+
+        console.log("Providers near selected request:", providers);
+       console.table(
+    providers.map(provider => ({
+        id: provider.id,
+        name: provider.full_name,
+        category: provider.category_name,
+        service_id: provider.service_id,
+        service: provider.service
+    }))
+);
+console.table(
+    providers.map(provider => ({
+        id: provider.id,
+        name: provider.full_name,
+        category: provider.category_name,
+        service_id: provider.service_id,
+        service: provider.service
+    }))
+);console.log(
+    "Modal container found:",
+    document.getElementById("requestNearbyProviders")
+);
+
+console.log(
+    "Provider card HTML test:",
+    providers.length ? createProviderCard(providers[0]) : "No providers returned"
+);
+        if (providers.length === 0) {
+            container.innerHTML = `
+                <div class="alert alert-info mb-0">
+                    No available providers found within ${radius} km.
+                    Try increasing the search radius.
+                </div>
+            `;
+            return;
+        }
+
+       container.innerHTML = `
+    <p class="text-muted small mb-3">
+        ${providers.length} provider(s) found within ${radius} km,
+        nearest first.
+    </p>
+
+    <div class="row g-3">
+        ${providers.map(provider =>
+            createProviderCard(provider, requestLocation)
+        ).join("")}
+    </div>
+`;
+
+console.log("Rendered provider cards:", container.querySelectorAll(".oc-provider-card").length);
+
+console.log("Nearby container display:", getComputedStyle(container).display);
+console.log("Nearby container visibility:", getComputedStyle(container).visibility);
+console.log("Nearby container height:", container.offsetHeight);
+console.log("Provider card visibility:", getComputedStyle(container.querySelector(".oc-provider-card")).display);
+console.log("Nearby container parent:", container.parentElement);
+console.log("Nearby container parent height:", container.parentElement?.offsetHeight);
+console.log("Nearby container bounding box:", container.getBoundingClientRect());
+console.log("Provider card height:", container.querySelector(".oc-provider-card")?.offsetHeight);
+container.querySelectorAll("[data-aos]").forEach(card => {
+    card.removeAttribute("data-aos");
+    card.style.opacity = "1";
+    card.style.transform = "none";
+});
+
+        
+        
+
+    } catch (error) {
+        console.error(
+            "Failed to load nearby providers in modal:",
+            error
+        );
+
+        console.log("Modal container:", container);
+console.log("Provider card HTML:", providers.map(provider => createProviderCard(provider)));
+
+        container.innerHTML = `
+            <div class="alert alert-danger mb-0">
+                Unable to load nearby providers right now.
+                Please try again.
+            </div>
+        `;
+    }
+}
+
+
+/* =========================================================
    PROVIDER CARD
    ========================================================= */
 
 function createProviderCard(
-    provider
+    provider,
+    requestLocation = null
 ) {
 
     const providerId =
         provider.id;
+
+        const providerServices =
+    Array.isArray(provider.services)
+        ? provider.services
+        : [];
+
+const selectedService =
+    providerServices.length > 0
+        ? providerServices[0]
+        : null;
+
+const serviceId =
+    selectedService?.id || "";
 
     const providerName =
         provider.full_name ||
@@ -2119,11 +3111,17 @@ function createProviderCard(
 
                 </div>
 
-                <button
-                    class="btn oc-btn-book"
-                    type="button"
-                    data-provider-id="${escapeHtml(providerId)}"
-                >
+            <button
+    class="btn oc-btn-book"
+    type="button"
+    data-provider-id="${escapeHtml(providerId)}"
+    data-service-id="${escapeHtml(serviceId)}"
+    data-request-address="${escapeHtml(requestLocation?.address || "")}"
+    data-request-latitude="${escapeHtml(requestLocation?.latitude ?? "")}"
+    data-request-longitude="${escapeHtml(requestLocation?.longitude ?? "")}"
+    data-request-date="${escapeHtml(requestLocation?.date || "")}"
+data-request-time="${escapeHtml(requestLocation?.time || "")}"
+>
 
                     Book Now
 
@@ -2176,13 +3174,13 @@ function resolveMediaUrl(
 
 }
 
-
 /* =========================================================
    OPEN PROVIDER PROFILE
    ========================================================= */
 
 function openProviderProfile(
-    providerId
+    providerId,
+    serviceId = null
 ) {
 
     if (!providerId) {
@@ -2195,11 +3193,19 @@ function openProviderProfile(
 
     }
 
+    if (serviceId) {
+
+        window.location.href =
+            `provider-profile.html?id=${encodeURIComponent(providerId)}&service_id=${encodeURIComponent(serviceId)}`;
+
+        return;
+
+    }
+
     window.location.href =
         `provider-profile.html?id=${encodeURIComponent(providerId)}`;
 
 }
-
 
 /* =========================================================
    SERVICE / PROVIDER CLICK ACTIONS
@@ -2323,12 +3329,59 @@ function setupServiceClicks() {
                 event.preventDefault();
 
                 const providerId =
-                    providerButton.dataset.providerId;
+    providerButton.dataset.providerId;
 
-                openProviderProfile(
-                    providerId
-                );
+const serviceId =
+    providerButton.dataset.serviceId;
 
+if (!providerId || !serviceId) {
+    console.error("Provider ID or Service ID is missing.", {
+        providerId,
+        serviceId
+    });
+    return;
+}
+
+const params = new URLSearchParams({
+    provider_id: providerId,
+    service_id: serviceId
+});
+
+const requestAddress =
+    providerButton.dataset.requestAddress;
+
+const requestLatitude =
+    providerButton.dataset.requestLatitude;
+
+const requestLongitude =
+    providerButton.dataset.requestLongitude;
+
+    const requestDate =
+    providerButton.dataset.requestDate;
+
+const requestTime =
+    providerButton.dataset.requestTime;
+
+if (requestDate) {
+    params.set("date", requestDate);
+}
+
+if (requestTime) {
+    params.set("time", requestTime);
+}
+
+if (
+    requestAddress &&
+    requestLatitude &&
+    requestLongitude
+) {
+    params.set("address", requestAddress);
+    params.set("latitude", requestLatitude);
+    params.set("longitude", requestLongitude);
+}
+
+window.location.href =
+    `booking.html?${params.toString()}`;
                 return;
 
             }
@@ -3222,15 +4275,46 @@ function renderCustomerQuotations(
 
     }
 
-    grid.innerHTML =
-        quotations
-            .map(
-                createCustomerQuotationCard
-            )
-            .join("");
+    let quotationsExpanded = false;
+    const allQuotationCards = quotations.map(
+    createCustomerQuotationCard
+);
+
+function renderQuotations() {
+    const visibleQuotations = quotationsExpanded
+        ? allQuotationCards
+        : allQuotationCards.slice(0, 3);
+
+    grid.innerHTML = visibleQuotations.join("");
+
+    if (allQuotationCards.length > 3) {
+        grid.innerHTML += `
+            <div class="col-12 text-center mt-3">
+                <button
+                    type="button"
+                    class="btn btn-outline-primary btn-sm"
+                    id="seeMoreQuotationsBtn"
+                >
+                    ${quotationsExpanded ? "See Less" : "See More"}
+                    <i class="fa-solid fa-chevron-${quotationsExpanded ? "up" : "down"} ms-1"></i>
+                </button>
+            </div>
+        `;
+    }
 
     refreshAOS();
+}
 
+renderQuotations();
+
+grid.onclick = function (event) {
+    if (event.target.closest("#seeMoreQuotationsBtn")) {
+        quotationsExpanded = !quotationsExpanded;
+        renderQuotations();
+    }
+};
+
+refreshAOS();
 }
 
 
@@ -3534,6 +4618,43 @@ if (status === "pending") {
      * Final:
      * Customer can Accept or Reject.
      */
+/*
+ * Accepted:
+ * Provider accepted the customer's counter-offer.
+ * Customer can now proceed to booking.
+ */
+
+else if (status === "accepted") {
+
+    actionButtons = `
+
+        <div class="mt-3">
+
+            <div class="alert alert-success mb-2">
+
+                <i class="fa-solid fa-check-circle me-1"></i>
+
+                Your offer has been accepted by the provider.
+
+            </div>
+
+            <button
+                type="button"
+                class="btn btn-success w-100"
+                onclick="window.location.href='booking.html?quotation_id=${encodeURIComponent(quotationId)}'"
+            >
+
+                <i class="fa-solid fa-calendar-check me-1"></i>
+
+                Proceed to Booking
+
+            </button>
+
+        </div>
+
+    `;
+
+}
 
     else if (status === "final") {
 
@@ -3909,462 +5030,85 @@ function formatQuotationStatus(
    ACCEPT CUSTOMER QUOTATION
    ========================================================= */
 
-function acceptCustomerQuotation(
-    quotationId
-) {
-
-    const token =
-        localStorage.getItem(
-            "access_token"
-        );
+function acceptCustomerQuotation(quotationId) {
+    
+      const token = localStorage.getItem("access_token");
+      
 
     if (!token) {
-
-        window.location.href =
-            "login.html";
-
+        window.location.href = "login.html";
         return;
-
     }
 
-    const quotationIdInput =
-        document.getElementById(
-            "acceptQuotationId"
-        );
-
-    const bookingDate =
-        document.getElementById(
-            "bookingDate"
-        );
-
-    const bookingTime =
-        document.getElementById(
-            "bookingTime"
-        );
-
-    const bookingNote =
-        document.getElementById(
-            "bookingNote"
-        );
-
-    const errorBox =
-        document.getElementById(
-            "acceptQuotationError"
-        );
-
-    const modalElement =
-        document.getElementById(
-            "acceptQuotationModal"
-        );
-
-    if (
-        !quotationIdInput ||
-        !bookingDate ||
-        !bookingTime ||
-        !bookingNote ||
-        !errorBox ||
-        !modalElement
-    ) {
-
-        console.error(
-            "Accept quotation modal elements are missing."
-        );
-
+    if (!quotationId) {
+        alert("Quotation information is missing.");
         return;
-
     }
 
-    /*
-     * Store quotation ID
-     */
-    quotationIdInput.value =
-        quotationId;
-
-    /*
-     * Clear old values
-     */
-    bookingDate.value =
-        "";
-
-    bookingTime.value =
-        "";
-
-    bookingNote.value =
-        "";
-
-    errorBox.textContent =
-        "";
-
-    errorBox.classList.add(
-        "d-none"
+    const confirmed = confirm(
+        "Accept this quotation and create your booking?"
     );
 
-    /*
-     * Set minimum date to today
-     */
-    const today =
-        new Date();
+    if (!confirmed) {
+        return;
+    }
 
-    const year =
-        today.getFullYear();
-
-    const month =
-        String(
-            today.getMonth() + 1
-        ).padStart(
-            2,
-            "0"
-        );
-
-    const day =
-        String(
-            today.getDate()
-        ).padStart(
-            2,
-            "0"
-        );
-
-    bookingDate.min =
-        `${year}-${month}-${day}`;
-
-    /*
-     * Open Bootstrap modal
-     */
-    const modal =
-        bootstrap.Modal.getOrCreateInstance(
-            modalElement
-        );
-
-    modal.show();
-
+    console.log("Accepting quotation ID:", quotationId);
+confirmCustomerQuotationBooking(quotationId);
 }
-
 
 /* =========================================================
    CONFIRM QUOTATION BOOKING
    ========================================================= */
 
-async function confirmCustomerQuotationBooking() {
 
-    const token =
-        localStorage.getItem(
-            "access_token"
-        );
+
+async function confirmCustomerQuotationBooking(quotationId) {
+    const token = localStorage.getItem("access_token");
 
     if (!token) {
-
-        window.location.href =
-            "login.html";
-
+        window.location.href = "login.html";
         return;
-
     }
-
-    const quotationId =
-        document.getElementById(
-            "acceptQuotationId"
-        ).value;
-
-    const bookingDate =
-        document.getElementById(
-            "bookingDate"
-        ).value;
-
-    const bookingTime =
-        document.getElementById(
-            "bookingTime"
-        ).value;
-
-    const bookingNote =
-        document.getElementById(
-            "bookingNote"
-        ).value.trim();
-
-    const errorBox =
-        document.getElementById(
-            "acceptQuotationError"
-        );
-
-    const confirmButton =
-        document.getElementById(
-            "confirmQuotationBookingBtn"
-        );
-
-    /*
-     * Clear old error
-     */
-    errorBox.textContent =
-        "";
-
-    errorBox.classList.add(
-        "d-none"
-    );
-
-    /*
-     * Validate quotation
-     */
-    if (!quotationId) {
-
-        errorBox.textContent =
-            "Quotation information is missing.";
-
-        errorBox.classList.remove(
-            "d-none"
-        );
-
-        return;
-
-    }
-
-    /*
-     * Validate date
-     */
-    if (!bookingDate) {
-
-        errorBox.textContent =
-            "Please select a booking date.";
-
-        errorBox.classList.remove(
-            "d-none"
-        );
-
-        return;
-
-    }
-
-    /*
-     * Validate time
-     */
-    if (!bookingTime) {
-
-        errorBox.textContent =
-            "Please select a booking time.";
-
-        errorBox.classList.remove(
-            "d-none"
-        );
-
-        return;
-
-    }
-
-    /*
-     * Prevent double click
-     */
-    confirmButton.disabled =
-        true;
-
-    confirmButton.innerHTML = `
-
-        <i class="fa-solid fa-spinner fa-spin me-1"></i>
-
-        Creating Booking...
-
-    `;
-
-    console.log(
-        "Accepting quotation:",
-        quotationId
-    );
-
-    console.log(
-        "Booking date:",
-        bookingDate
-    );
-
-    console.log(
-        "Booking time:",
-        bookingTime
-    );
 
     try {
-
-        const response =
-            await fetch(
-                `${API_BASE}/services/quotations/${quotationId}/accept/`,
-                {
-                    method: "PUT",
-
-                    headers: {
-
-                        "Authorization":
-                            `Bearer ${token}`,
-
-                        "Content-Type":
-                            "application/json"
-
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            booking_date:
-                                bookingDate,
-
-                            booking_time:
-                                bookingTime,
-
-                            note:
-                                bookingNote
-
-                        })
-
+        const response = await fetch(
+            `${API_BASE}/services/quotations/${quotationId}/accept/`,
+            {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
                 }
-            );
-
-        const data =
-            await response
-                .json()
-                .catch(
-                    function () {
-                        return {};
-                    }
-                );
-
-        console.log(
-            "Accept quotation response:",
-            response.status
+            }
         );
 
-        console.log(
-            "Accept quotation data:",
-            data
-        );
+        const data = await response.json().catch(() => ({}));
 
-        /*
-         * Session expired
-         */
-        if (
-            response.status === 401
-        ) {
-
-            alert(
-                "Your login session has expired. Please login again."
-            );
-
-            localStorage.removeItem(
-                "access_token"
-            );
-
-            localStorage.removeItem(
-                "refresh_token"
-            );
-
-            window.location.href =
-                "login.html";
-
+        if (response.status === 401) {
+            alert("Your login session has expired. Please log in again.");
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("refresh_token");
+            window.location.href = "login.html";
             return;
-
         }
 
-        /*
-         * Backend error
-         */
         if (!response.ok) {
-
-            errorBox.textContent =
-                data.detail ||
-                data.error ||
-                "Unable to accept quotation.";
-
-            errorBox.classList.remove(
-                "d-none"
+            throw new Error(
+                data.detail || data.error || "Unable to accept quotation."
             );
-
-            return;
-
         }
 
-        /*
-         * Close modal
-         */
-        const modalElement =
-            document.getElementById(
-                "acceptQuotationModal"
-            );
+        // Open the booking form using the quotation ID.
+        // The booking will be created only after confirmation.
+        window.location.href =
+            `booking.html?quotation_id=${encodeURIComponent(quotationId)}`;
 
-        const modal =
-            bootstrap.Modal.getInstance(
-                modalElement
-            );
-
-        if (modal) {
-
-            modal.hide();
-
-        }
-
-        /*
-         * Show success
-         */
-        alert(
-            `Booking created successfully! Booking #${data.booking_id || "created"}`
-        );
-
-        /*
-         * Reload quotations
-         */
-        await loadCustomerQuotations();
-
-        /*
-         * Reload dashboard statistics
-         */
-        if (
-            typeof loadDashboardStats ===
-            "function"
-        ) {
-
-            await loadDashboardStats();
-
-        }
-
-        /*
-         * Reload recent bookings
-         */
-        if (
-            typeof loadRecentBookings ===
-            "function"
-        ) {
-
-            await loadRecentBookings();
-
-        }
-
+    } catch (error) {
+        console.error("Accept quotation error:", error);
+        alert(error.message || "Something went wrong while accepting the quotation.");
     }
-
-    catch (error) {
-
-        console.error(
-            "Accept quotation error:",
-            error
-        );
-
-        errorBox.textContent =
-            "Something went wrong while creating the booking.";
-
-        errorBox.classList.remove(
-            "d-none"
-        );
-
-    }
-
-    finally {
-
-        confirmButton.disabled =
-            false;
-
-        confirmButton.innerHTML = `
-
-            <i class="fa-solid fa-calendar-check"></i>
-
-            Confirm Booking
-
-        `;
-
-    }
-
 }
-
 
 
 
@@ -4630,10 +5374,51 @@ async function loadServiceRequestServices() {
             data
         );
 
-        const services =
-            Array.isArray(data)
-                ? data
-                : data.results || [];
+       let services = [];
+
+if (Array.isArray(data)) {
+
+    services = data;
+
+} else if (Array.isArray(data.results)) {
+
+    services = data.results;
+
+    // Load remaining service pages
+    let nextUrl = data.next;
+
+    while (nextUrl) {
+
+        const nextResponse =
+            await fetch(nextUrl);
+
+        if (!nextResponse.ok) {
+            break;
+        }
+
+        const nextData =
+            await nextResponse.json();
+
+        if (Array.isArray(nextData.results)) {
+
+            services =
+                services.concat(
+                    nextData.results
+                );
+
+        }
+
+        nextUrl =
+            nextData.next;
+
+    }
+
+}
+
+console.log(
+    "Service request services:",
+    services
+);
 
         select.innerHTML = `
 
@@ -4722,6 +5507,16 @@ async function submitServiceRequest(
         document.getElementById(
             "requestDescription"
         ).value.trim();
+
+        const preferredDate =
+    document.getElementById(
+        "requestDate"
+    ).value;
+
+const preferredTime =
+    document.getElementById(
+        "requestTime"
+    ).value;
 
     const address =
         document.getElementById(
@@ -4835,9 +5630,59 @@ async function submitServiceRequest(
         );
 
         formData.append(
+    "preferred_date",
+    preferredDate
+);
+
+formData.append(
+    "preferred_time",
+    preferredTime
+);
+
+
+        formData.append(
             "address",
             address
         );
+
+       // Add customer coordinates when available
+const latitudeInput = document.getElementById("requestLatitude");
+const longitudeInput = document.getElementById("requestLongitude");
+
+const latitudeValue = latitudeInput?.value?.trim();
+const longitudeValue = longitudeInput?.value?.trim();
+
+const latitude = latitudeValue
+    ? Number(latitudeValue)
+    : window.customerLatitude;
+
+const longitude = longitudeValue
+    ? Number(longitudeValue)
+    : window.customerLongitude;
+
+    console.log("=== SERVICE REQUEST LOCATION DEBUG ===");
+console.log("Address:", address);
+console.log("Latitude input:", latitudeValue);
+console.log("Longitude input:", longitudeValue);
+console.log("Final latitude:", latitude);
+console.log("Final longitude:", longitude);
+
+if (
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    longitude >= -180 &&
+    longitude <= 180
+) {
+    formData.append("latitude", latitude.toFixed(6));
+    formData.append("longitude", longitude.toFixed(6));
+} else {
+    console.warn(
+        "Service request has no valid coordinates. Address:",
+        address
+    );
+}
 
 
         if (
@@ -4882,7 +5727,9 @@ async function submitServiceRequest(
             response.status,
             data
         );
-
+console.log("Saved request latitude:", data.latitude);
+console.log("Saved request longitude:", data.longitude);
+console.log("Saved request address:", data.address);
 
         if (!response.ok) {
 
@@ -4927,6 +5774,23 @@ async function submitServiceRequest(
             "d-none"
         );
 
+// Refresh the customer's service requests
+if (typeof loadMyServiceRequests === "function") {
+    loadMyServiceRequests();
+}
+
+// Find providers near the submitted service location
+if (
+    data.latitude != null &&
+    data.longitude != null &&
+    typeof loadRecommendedProviders === "function"
+) {
+    loadRecommendedProviders(
+        true,
+        Number(data.latitude),
+        Number(data.longitude)
+    );
+}
 
         document
             .getElementById(
@@ -5444,5 +6308,359 @@ document.addEventListener(
 );
 
 
+document.getElementById("useMyLocationBtn")?.addEventListener("click", function () {
+    const status = document.getElementById("customerLocationStatus");
+
+    if (!navigator.geolocation) {
+        status.textContent = "Location is not supported by this browser.";
+        return;
+    }
+
+    status.textContent = "Getting your location...";
+
+    navigator.geolocation.getCurrentPosition(
+        
+async function (position) {
+    window.customerLatitude = position.coords.latitude;
+    window.customerLongitude = position.coords.longitude;
+    console.log("GPS latitude:", window.customerLatitude);
+console.log("GPS longitude:", window.customerLongitude);
+
+    status.textContent = "Coordinates captured. Finding address...";
+
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${window.customerLatitude}&lon=${window.customerLongitude}`
+        );
+
+        if (!response.ok) {
+            throw new Error("Address lookup failed");
+        }
+
+        const data = await response.json();
+
+        const addressInput = document.getElementById("requestAddress");
+
+        if (data.display_name && addressInput) {
+            addressInput.value = data.display_name;
+            status.textContent = "Location and address filled successfully!";
+        } else {
+            status.textContent = "Coordinates saved, but no readable address was found. Please type your address.";
+        }
+    } catch (error) {
+        status.textContent = "Coordinates saved, but address lookup failed. Please enter your address manually.";
+    }
+}
+,
+        function (error) {
+            if (error.code === error.PERMISSION_DENIED) {
+                status.textContent = "Location permission denied. Please allow location access.";
+            } else {
+                status.textContent = "Could not get your location. Please try again.";
+            }
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+});
 
 
+/* =========================================
+   SERVICE REQUEST — MANUAL MAP LOCATION
+========================================= */
+
+let requestLocationMap = null;
+let requestLocationMarker = null;
+
+
+document.getElementById("chooseOnMapBtn")?.addEventListener("click", function () {
+    const mapSection = document.getElementById("requestLocationMapSection");
+    const status = document.getElementById("customerLocationStatus");
+
+    // Toggle the map open and closed.
+    if (mapSection && !mapSection.classList.contains("d-none")) {
+        mapSection.classList.add("d-none");
+        status.textContent = "";
+        return;
+    }
+
+    mapSection?.classList.remove("d-none");
+
+    if (!window.L) {
+        status.textContent = "Map library did not load. Please refresh and try again.";
+        return;
+    }
+
+    if (!requestLocationMap) {
+       let latitude = Number(window.customerLatitude);
+let longitude = Number(window.customerLongitude);
+
+// Use Nepal's approximate center if GPS is unavailable.
+if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    (latitude === 0 && longitude === 0)
+) {
+    latitude = 28.3949;
+    longitude = 84.1240;
+}
+        requestLocationMap = L.map("requestLocationMap").setView(
+            [latitude, longitude],
+            14
+        );
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(requestLocationMap);
+
+        requestLocationMarker = L.marker(
+            [latitude, longitude],
+            { draggable: true }
+        ).addTo(requestLocationMap);
+
+        requestLocationMap.on("click", function (event) {
+            requestLocationMarker.setLatLng(event.latlng);
+        });
+
+        requestLocationMarker.on("dragend", function () {
+            status.textContent = "Pin moved. Confirm your location when ready.";
+        });
+    }
+
+    setTimeout(() => requestLocationMap.invalidateSize(), 150);
+
+    status.textContent = "Move the map pin to the exact service location.";
+});
+
+
+document.getElementById("confirmMapLocationBtn")?.addEventListener("click", async function () {
+    const status = document.getElementById("customerLocationStatus");
+    const addressInput = document.getElementById("requestAddress");
+    const latitudeInput = document.getElementById("requestLatitude");
+    const longitudeInput = document.getElementById("requestLongitude");
+
+    if (!requestLocationMarker) {
+        status.textContent = "Choose a location on the map first.";
+        return;
+    }
+
+    const position = requestLocationMarker.getLatLng();
+
+    window.customerLatitude = position.lat;
+    window.customerLongitude = position.lng;
+
+    if (latitudeInput) latitudeInput.value = position.lat;
+    if (longitudeInput) longitudeInput.value = position.lng;
+
+    status.textContent = "Location selected. Looking up the address...";
+
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${position.lat}&lon=${position.lng}`
+        );
+
+        if (!response.ok) throw new Error("Address lookup failed");
+
+        const data = await response.json();
+
+        if (data.display_name && addressInput) {
+            addressInput.value = data.display_name;
+            status.textContent = "Map location and address confirmed!";
+        } else {
+            status.textContent = "Coordinates selected. Please enter the address manually.";
+        }
+    } catch (error) {
+        status.textContent = "Coordinates selected, but address lookup failed. Please enter the address manually.";
+    }
+});
+
+
+/* =========================================================
+   CUSTOMER SERVICE LOCATION — LOAD AND SAVE
+========================================================= */
+
+async function loadCustomerServiceLocation() {
+
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `${API_BASE}/users/me/`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Unable to load customer location.");
+        }
+
+        const user = await response.json();
+
+        document.getElementById("customerCountry").value =
+            user.country || "Nepal";
+
+        document.getElementById("customerProvince").value =
+            user.province || "";
+
+        document.getElementById("customerDistrict").value =
+            user.district || "";
+
+        document.getElementById("customerCity").value =
+            user.city || "";
+
+    } catch (error) {
+
+        console.error("Load customer location error:", error);
+
+    }
+}
+
+
+/* =========================================================
+   SAVE CUSTOMER SERVICE LOCATION
+========================================================= */
+
+function setupCustomerServiceLocationForm() {
+
+    const form = document.getElementById("customerLocationForm");
+
+    if (!form) {
+        return;
+    }
+
+    form.addEventListener("submit", async function (event) {
+
+        event.preventDefault();
+
+        const token = localStorage.getItem("access_token");
+
+        const message = document.getElementById(
+            "customerLocationMessage"
+        );
+
+        const button = document.getElementById(
+            "saveCustomerLocationBtn"
+        );
+
+        if (!token) {
+            message.textContent = "Please log in to save your location.";
+            message.className = "mt-3 text-danger";
+            return;
+        }
+
+        const locationData = {
+            country: document.getElementById("customerCountry").value.trim(),
+            province: document.getElementById("customerProvince").value.trim(),
+            district: document.getElementById("customerDistrict").value.trim(),
+            city: document.getElementById("customerCity").value.trim()
+        };
+
+        if (
+    !locationData.country ||
+    !locationData.province ||
+    !locationData.district
+) {
+            message.textContent = "Please complete all location fields.";
+            message.className = "mt-3 text-danger";
+            return;
+        }
+
+        button.disabled = true;
+        button.innerHTML =
+            '<i class="fa-solid fa-spinner fa-spin me-2"></i>Saving...';
+
+        message.textContent = "";
+
+        try {
+
+            const response = await fetch(
+                `${API_BASE}/users/me/`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(locationData)
+                }
+            );
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                    data.error ||
+                    "Unable to save your location."
+                );
+            }
+
+            message.textContent =
+                "Your service location has been saved successfully!";
+
+            message.className = "mt-3 text-success";
+
+            console.log("Customer location saved:", locationData);
+
+        } catch (error) {
+
+            console.error("Save customer location error:", error);
+
+            message.textContent =
+                error.message || "Something went wrong.";
+
+            message.className = "mt-3 text-danger";
+
+        } finally {
+
+            button.disabled = false;
+
+            button.innerHTML =
+                '<i class="fa-solid fa-location-crosshairs me-2"></i>Save My Location';
+
+        }
+
+    });
+
+}
+/* =========================================================
+   REQUEST SERVICE — MINIMUM DATE
+========================================================= */
+
+function setRequestMinimumDate() {
+
+    const dateInput = document.getElementById("requestDate");
+
+    if (!dateInput) return;
+
+    const today = new Date();
+
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    const todayString = `${year}-${month}-${day}`;
+
+    dateInput.min = todayString;
+
+    if (dateInput.value && dateInput.value < todayString) {
+        dateInput.value = "";
+    }
+}
+document.addEventListener("DOMContentLoaded", function () {
+    setRequestMinimumDate();
+});

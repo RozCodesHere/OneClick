@@ -834,3 +834,12 @@ html[data-theme="dark"] .bg-white {
   background-color: #111827 !important;
 }
 }
+
+
+
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    margin-left: 10px;
+}

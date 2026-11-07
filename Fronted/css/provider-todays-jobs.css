@@ -1,0 +1,649 @@
+
+/* ============================================================
+   ONECLICK — PROVIDER TODAY'S JOBS
+   ============================================================ */
+
+body {
+    font-family: "Poppins", sans-serif;
+    margin: 0;
+    background: #f6f7fb;
+}
+
+/* Main content */
+.main-content {
+    margin-left: 250px;
+    min-height: 100vh;
+    background: #f6f7fb;
+    color: #172b4d;
+}
+
+/* Top bar */
+.topbar {
+    height: 70px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.topbar-title h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.provider-top-info {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Page */
+.page-content {
+    padding: 30px;
+}
+
+.page-header {
+    margin-bottom: 25px;
+}
+
+.page-header h2 {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.page-header p {
+    color: #777;
+    margin-bottom: 12px;
+}
+
+.today-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: #ffffff;
+    border: 1px solid #eeeeee;
+    border-radius: 8px;
+    color: #555;
+    font-size: 14px;
+}
+
+/* Schedule */
+.schedule-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 25px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
+}
+
+.schedule-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    padding: 20px 0;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.schedule-item:first-child {
+    padding-top: 5px;
+}
+
+.schedule-item:last-child {
+    border-bottom: none;
+    padding-bottom: 5px;
+}
+
+.schedule-time {
+    min-width: 90px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.schedule-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 5px;
+    background: #0d6efd;
+    flex-shrink: 0;
+}
+
+.schedule-details {
+    flex: 1;
+}
+
+.schedule-service {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 7px;
+}
+
+.schedule-customer,
+.schedule-address {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.schedule-customer i,
+.schedule-address i {
+    width: 20px;
+}
+
+.status-badge {
+    margin-top: 7px;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 70px 20px;
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: #bbb;
+    margin-bottom: 18px;
+}
+
+.empty-state h4 {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: #777;
+    margin-bottom: 0;
+}
+
+/* Mobile */
+@media (max-width: 991px) {
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .page-content {
+        padding: 25px 20px;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .topbar {
+        padding: 0 18px;
+    }
+
+    .page-content {
+        padding: 20px 15px;
+    }
+
+    .schedule-item {
+        gap: 10px;
+    }
+
+    .schedule-time {
+        min-width: 65px;
+        font-size: 12px;
+    }
+
+    .schedule-service {
+        font-size: 15px;
+    }
+}
+
+/* ============================================================
+   TODAY / UPCOMING JOB ITEMS
+   ============================================================ */
+
+.today-job-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.today-job-item:first-child {
+    padding-top: 5px;
+}
+
+.today-job-item:last-child {
+    border-bottom: none;
+    padding-bottom: 5px;
+}
+
+
+/* ===============================
+   DATE & TIME
+   =============================== */
+
+.job-time {
+    min-width: 150px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    line-height: 1.6;
+}
+
+.job-time i {
+    margin-right: 6px;
+    color: #666;
+}
+
+.job-time strong {
+    display: block;
+    margin-top: 3px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #222;
+}
+
+
+/* ===============================
+   JOB DETAILS
+   =============================== */
+
+.job-details {
+    flex: 1;
+}
+
+.job-details h5 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.job-details p {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.job-details p i {
+    width: 20px;
+}
+
+
+/* ===============================
+   STATUS
+   =============================== */
+
+.job-status {
+    min-width: 100px;
+    text-align: right;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+/* Accepted */
+
+.status-badge.accepted {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+
+/* Completed */
+
+.status-badge.completed {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+
+/* ===============================
+   MOBILE
+   =============================== */
+
+@media (max-width: 768px) {
+
+    .today-job-item {
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .job-time {
+        width: 100%;
+        min-width: 0;
+        font-size: 13px;
+    }
+
+    .job-time strong {
+        display: inline;
+        margin-left: 8px;
+    }
+
+    .job-details {
+        width: 100%;
+    }
+
+    .job-details h5 {
+        font-size: 15px;
+    }
+
+    .job-status {
+        width: 100%;
+        min-width: 0;
+        text-align: left;
+    }
+
+}
+
+
+
+
+/* ============================================================
+   MY JOBS — IMPROVED JOB CARD DESIGN
+   ============================================================ */
+
+/* Improve page spacing */
+.page-content {
+    padding: 28px 25px;
+}
+
+/* Job group heading */
+.schedule-card h4,
+.schedule-card h5 {
+    color: #172b4d;
+}
+
+/* Job card */
+.today-job-item {
+    display: grid;
+    grid-template-columns: 165px minmax(0, 1fr) 150px;
+    align-items: center;
+    gap: 22px;
+    padding: 24px 10px;
+    border-bottom: 1px solid #edf0f4;
+    transition: background 0.2s ease;
+}
+
+.today-job-item:hover {
+    background: #fafbfe;
+}
+
+/* Date and time */
+.job-time {
+    min-width: 0;
+    color: #526174;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.job-time i {
+    color: #64748b;
+    margin-right: 5px;
+}
+
+.job-time strong {
+    display: inline-block;
+    margin-left: 7px;
+    margin-top: 0;
+    font-size: 14px;
+    color: #172b4d;
+}
+
+/* Service and customer details */
+.job-details {
+    min-width: 0;
+}
+
+.job-details h5 {
+    color: #172b4d;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.job-details p {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 6px;
+    overflow-wrap: anywhere;
+}
+
+.job-details p i {
+    color: #8492a6;
+    width: 20px;
+}
+
+/* Status and actions */
+.job-status {
+    min-width: 0;
+    text-align: right;
+}
+
+.status-badge {
+    padding: 7px 13px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-badge.accepted {
+    background: #eaf3ff;
+    color: #1769c2;
+}
+
+.status-badge.completed {
+    background: #e8f7ee;
+    color: #21834a;
+}
+
+/* Improve schedule container */
+.schedule-card {
+    padding: 25px 28px;
+    border: 1px solid #edf0f4;
+    box-shadow: 0 4px 18px rgba(20, 40, 70, 0.05);
+}
+
+/* Mobile layout */
+@media (max-width: 900px) {
+    .today-job-item {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 20px 5px;
+    }
+
+    .job-status {
+        text-align: left;
+    }
+
+    .job-time strong {
+        margin-left: 8px;
+    }
+}
+
+@media (max-width: 576px) {
+    .page-content {
+        padding: 18px 12px;
+    }
+
+    .schedule-card {
+        padding: 18px 15px;
+    }
+
+    .job-details h5 {
+        font-size: 15px;
+    }
+}
+
+
+
+
+
+/* ============================================================
+   MY JOBS — SIDEBAR AND MAIN LAYOUT FIX
+   Uses the existing My Jobs HTML class names
+   ============================================================ */
+
+body {
+    background: #F8FAFC;
+    color: #1E293B;
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 264px;
+    background: #1E293B;
+    color: #E2E8F0;
+    display: flex;
+    flex-direction: column;
+    z-index: 1030;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Sidebar brand area */
+.sidebar-header {
+    min-height: 76px;
+    padding: 20px 22px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.brand:hover {
+    color: #FFFFFF;
+}
+
+/* Navigation */
+.sidebar-nav {
+    flex: 1;
+    padding: 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    color: #CBD5E1;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.sidebar .nav-link i {
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar .nav-link:hover {
+    background: rgba(255,255,255,0.08);
+    color: #FFFFFF;
+}
+
+.sidebar .nav-link.active {
+    background: linear-gradient(135deg, #2563EB, #3B82F6);
+    color: #FFFFFF;
+}
+
+/* Sidebar logout */
+.sidebar-footer {
+    padding: 14px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-footer .nav-link {
+    color: #FCA5A5;
+}
+
+/* Main content */
+.main-content {
+    margin-left: 264px;
+    min-height: 100vh;
+    background: #F8FAFC;
+    color: #1E293B;
+    min-width: 0;
+}
+
+/* Topbar */
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1010;
+    height: 76px;
+    background: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 0 28px;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.topbar-title h5 {
+    margin: 0;
+    color: #1E293B;
+    font-weight: 600;
+}
+
+.provider-top-info {
+    color: #1E293B;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .sidebar {
+        width: 264px;
+        transform: translateX(-100%);
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .topbar {
+        padding: 0 15px;
+    }
+
+    .provider-top-info {
+        font-size: 12px;
+    }
+}
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    margin-left: 10px;
+}

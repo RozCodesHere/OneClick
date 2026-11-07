@@ -11,6 +11,8 @@ class BookingSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    customer_name = serializers.SerializerMethodField()
+    customer_image = serializers.SerializerMethodField()
     provider_name = serializers.SerializerMethodField()
     provider_image = serializers.SerializerMethodField()
     provider_rating = serializers.SerializerMethodField()
@@ -34,12 +36,15 @@ class BookingSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "customer_email",
+            "customer_name",
+            "customer_image",
 
             "provider",
             "provider_name",
             "provider_image",
             "provider_rating",
             "provider_experience",
+            
 
             "service",
             "service_name",
@@ -47,34 +52,61 @@ class BookingSerializer(serializers.ModelSerializer):
             "service_price",
 
             "booking_date",
-"booking_time",
-"address",
-"latitude",
-"longitude",
-"note",
+            "booking_time",
+            "address",
+            "latitude",
+            "longitude",
+            "provider_latitude",
+            "provider_longitude",
+            "note",
 
-            "status",
-            "total_price",
-            "created_at",
+           "status",
+"total_price",
+"payment_status",
+"created_at",
+
+# Booking workflow timestamps
+"accepted_at",
+"provider_on_way_at",
+"started_at",
+"completed_at",
         ]
 
         read_only_fields = [
             "id",
             "customer_email",
+            "customer_name",
+            "customer_image",
 
             "provider_name",
             "provider_image",
             "provider_rating",
             "provider_experience",
+            "provider_latitude",
+        "provider_longitude",
 
             "service_name",
             "service_category",
             "service_price",
 
-            "status",
-            "total_price",
-            "created_at",
+           "status",
+"total_price",
+"payment_status",
+"created_at",
+            "accepted_at",
+"provider_on_way_at",
+"started_at",
+"completed_at",
         ]
+
+    def get_customer_name(self, obj):
+
+        first_name = obj.customer.first_name
+        last_name = obj.customer.last_name
+
+        full_name = f"{first_name} {last_name}".strip()
+
+        return full_name or obj.customer.email
 
     def get_provider_name(self, obj):
 
@@ -98,6 +130,20 @@ class BookingSerializer(serializers.ModelSerializer):
             return obj.provider.profile_image.url
 
         return None
+    def get_customer_image(self, obj):
+
+     if obj.customer.profile_picture:
+        request = self.context.get("request")
+
+        if request:
+            return request.build_absolute_uri(
+                obj.customer.profile_picture.url
+            )
+
+        return obj.customer.profile_picture.url
+
+     return None
+
 
     def get_provider_rating(self, obj):
 
@@ -175,7 +221,8 @@ class BookingSerializer(serializers.ModelSerializer):
         if not provider_service:
             raise serializers.ValidationError({
                 "service": (
-                    "This provider does not offer the selected service."
+                    "This provider does not offer "
+                    "the selected service."
                 )
             })
 

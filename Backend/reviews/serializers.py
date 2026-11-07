@@ -10,11 +10,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    provider = serializers.IntegerField(
+        source="booking.provider_id",
+        read_only=True,
+    )
+
     class Meta:
         model = Review
 
         fields = [
             "id",
+            "booking",
             "customer_name",
             "provider",
             "rating",
@@ -25,6 +31,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "customer_name",
+            "provider",
             "created_at",
         ]
 

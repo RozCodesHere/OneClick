@@ -22,6 +22,7 @@
 
   <!-- Page-specific styles -->
   <link rel="stylesheet" href="css/login.css">
+<script src="https://accounts.google.com/gsi/client?hl=en" async defer></script>
 </head>
 <body class="oc-auth-body">
 
@@ -35,10 +36,11 @@
       <div class="oc-auth-brand-blob oc-auth-blob-2"></div>
 
       <div class="oc-auth-brand-content">
-        <a href="index.html" class="oc-brand oc-auth-brand-logo">
-          <span class="oc-brand-mark"><i class="fa-solid fa-bolt"></i></span>
-          One<span class="text-accent">Click</span>
-        </a>
+       <a class="navbar-brand oc-brand" href="index.html"></a>
+    <img src="assests/images/logo.png"
+         alt="OneClick"
+         class="oneclick-logo">
+</a>
 
         <h1 class="oc-auth-headline">
           Book trusted home services<br> in one click.
@@ -68,9 +70,9 @@
         </div>
 
         <ul class="oc-auth-stats-row">
-          <li><strong>1,000+</strong><span>Providers</span></li>
-          <li><strong>5,000+</strong><span>Customers</span></li>
-          <li><strong>4.9★</strong><span>Rated</span></li>
+          <li><span>Verified Providers<span></li>
+          <li><span>Easy Booking<span></li>
+          <li><span>Nearby Services<span></li>
         </ul>
       </div>
     </section>
@@ -154,7 +156,7 @@
               <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
               <label class="form-check-label" for="rememberMe">Remember me</label>
             </div>
-            <a href="#" class="oc-forgot-link">Forgot Password?</a>
+            <a href="forgot-password.html" class="oc-forgot-link">Forgot Password?</a>
           </div>
 
           <!-- Server / general form alert (hidden by default) -->
@@ -177,10 +179,17 @@
             Continue with Google
           </button>
 
-          <!-- Register Link -->
-          <p class="oc-auth-switch">
-            Don't have an account? <a href="register.html">Register</a>
-          </p>
+          <!-- Account Links -->
+<p class="oc-auth-switch">
+  Don't have an account? <a href="register.html">Register</a>
+</p>
+
+<p class="text-center mt-2">
+  <a href="reactivate-account.html">
+    <i class="fa-solid fa-rotate-right me-1"></i>
+    Reactivate Account
+  </a>
+</p>
         </form>
 
       </div>

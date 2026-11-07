@@ -1,11 +1,7 @@
-``/* ==========================================================
-   OneClick — Review Page JS
-   Connected to Django REST review API
-   ========================================================== */
-
 const API_BASE = "http://127.0.0.1:8000/api";
 
 document.addEventListener("DOMContentLoaded", () => {
+
     const accessToken = localStorage.getItem("access_token");
 
     if (!accessToken) {
@@ -13,91 +9,104 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    /* ======================================================
-       ELEMENTS
-       ====================================================== */
+    const params = new URLSearchParams(window.location.search);
+    const bookingId = params.get("booking");
 
-    const reviewForm =
-        document.getElementById("reviewForm");
+    const reviewForm = document.getElementById("reviewForm");
+    const starButtons = document.querySelectorAll(".star-btn");
+    const ratingInput = document.getElementById("rating");
+    const ratingText = document.getElementById("ratingText");
+    const reviewText = document.getElementById("reviewText");
+    const characterCount = document.getElementById("characterCount");
+    const reviewMessage = document.getElementById("reviewMessage");
+    const providerName = document.getElementById("reviewProviderName");
+    const serviceName = document.getElementById("reviewServiceName");
 
-    const starButtons =
-        document.querySelectorAll(".star-btn");
-
-    const ratingInput =
-        document.getElementById("rating");
-
-    const ratingText =
-        document.getElementById("ratingText");
-
-    const reviewText =
-        document.getElementById("reviewText");
-
-    const characterCount =
-        document.getElementById("characterCount");
-
-    const reviewMessage =
-        document.getElementById("reviewMessage");
-
-    const submitButton =
-        reviewForm
-            ? reviewForm.querySelector(
-                'button[type="submit"]'
-            )
-            : null;
+    const submitButton = reviewForm.querySelector(
+        'button[type="submit"]'
+    );
 
     let selectedRating = 0;
+    let validBooking = false;
 
-    /* ======================================================
-       GET PROVIDER ID
-       ====================================================== */
-
-    function getProviderId() {
-        const params =
-            new URLSearchParams(
-                window.location.search
-            );
-
-        return (
-            params.get("provider_id") ||
-            params.get("provider")
-        );
+    function showMessage(message, type) {
+        reviewMessage.textContent = message;
+        reviewMessage.className = `review-message show ${type}`;
     }
 
-    /* ======================================================
-       STAR RATING
-       ====================================================== */
+    // LOAD BOOKING DETAILS
+    async function loadBooking() {
 
-    starButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-            selectedRating =
-                Number(button.dataset.rating);
+        if (!bookingId) {
+            showMessage("Booking information is missing.", "error");
+            submitButton.disabled = true;
+            return;
+        }
 
-            if (ratingInput) {
-                ratingInput.value =
-                    selectedRating;
+        try {
+            const response = await fetch(
+                `${API_BASE}/bookings/${bookingId}/`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Unable to load booking.");
             }
 
-            starButtons.forEach((star) => {
-                const starRating =
-                    Number(
-                        star.dataset.rating
-                    );
+            const booking = await response.json();
 
-                if (
-                    starRating <=
-                    selectedRating
-                ) {
-                    star.classList.add(
-                        "selected"
-                    );
-                } else {
-                    star.classList.remove(
-                        "selected"
-                    );
-                }
+            providerName.textContent =
+                booking.provider_name || "Service Provider";
+
+            serviceName.textContent =
+                booking.service_name || "OneClick Service";
+
+            if (booking.status !== "completed") {
+                showMessage(
+                    "You can only review completed bookings.",
+                    "error"
+                );
+
+                submitButton.disabled = true;
+                return;
+            }
+
+            validBooking = true;
+
+        } catch (error) {
+            console.error("BOOKING ERROR:", error);
+
+            showMessage(
+                "Unable to load booking details.",
+                "error"
+            );
+
+            submitButton.disabled = true;
+        }
+    }
+
+    loadBooking();
+
+    // STAR RATING
+    starButtons.forEach(button => {
+
+        button.addEventListener("click", () => {
+
+            selectedRating = Number(button.dataset.rating);
+            ratingInput.value = selectedRating;
+
+            starButtons.forEach(star => {
+                star.classList.toggle(
+                    "selected",
+                    Number(star.dataset.rating) <= selectedRating
+                );
             });
 
-            const ratingLabels = {
+            const labels = {
                 1: "Poor",
                 2: "Fair",
                 3: "Good",
@@ -105,332 +114,120 @@ document.addEventListener("DOMContentLoaded", () => {
                 5: "Excellent"
             };
 
-            if (ratingText) {
-                ratingText.textContent =
-                    ratingLabels[
-                        selectedRating
-                    ];
-            }
+            ratingText.textContent = labels[selectedRating];
         });
+
     });
 
-    /* ======================================================
-       CHARACTER COUNT
-       ====================================================== */
+    // CHARACTER COUNT
+    reviewText.addEventListener("input", () => {
+        characterCount.textContent = reviewText.value.length;
+    });
 
-    if (reviewText && characterCount) {
-        reviewText.addEventListener(
-            "input",
-            () => {
-                characterCount.textContent =
-                    reviewText.value.length;
-            }
-        );
-    }
+    // SUBMIT REVIEW
+    reviewForm.addEventListener("submit", async event => {
 
-    /* ======================================================
-       MESSAGE
-       ====================================================== */
+        event.preventDefault();
 
-    function showMessage(message, type) {
-        if (!reviewMessage) {
+        if (!validBooking) {
+            showMessage("This booking cannot be reviewed.", "error");
             return;
         }
 
-        reviewMessage.textContent =
-            message;
+        const comment = reviewText.value.trim();
 
-        reviewMessage.className =
-            `review-message show ${type}`;
-    }
-
-    /* ======================================================
-       REVIEW ERROR
-       ====================================================== */
-
-    function getReviewErrorMessage(data) {
-        if (!data) {
-            return "Unable to submit review.";
+        if (selectedRating < 1 || selectedRating > 5) {
+            showMessage("Please select a star rating.", "error");
+            return;
         }
 
-        if (data.error) {
-            return data.error;
+        if (!comment) {
+            showMessage("Please write your review.", "error");
+            return;
         }
 
-        if (data.detail) {
-            return data.detail;
-        }
+        submitButton.disabled = true;
+        submitButton.textContent = "Submitting...";
 
-        if (data.rating) {
-            return Array.isArray(data.rating)
-                ? data.rating[0]
-                : data.rating;
-        }
+        try {
 
-        if (data.provider) {
-            return Array.isArray(data.provider)
-                ? data.provider[0]
-                : data.provider;
-        }
+            const response = await fetch(`${API_BASE}/reviews/`, {
+                method: "POST",
 
-        if (data.comment) {
-            return Array.isArray(data.comment)
-                ? data.comment[0]
-                : data.comment;
-        }
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json"
+                },
 
-        if (data.non_field_errors) {
-            return Array.isArray(
-                data.non_field_errors
-            )
-                ? data.non_field_errors[0]
-                : data.non_field_errors;
-        }
+                body: JSON.stringify({
+                    booking: Number(bookingId),
+                    rating: selectedRating,
+                    comment: comment
+                })
+            });
 
-        return "Unable to submit review.";
-    }
+            const data = await response.json();
 
-    /* ======================================================
-       SUBMIT REVIEW
-       ====================================================== */
-
-    if (reviewForm) {
-        reviewForm.addEventListener(
-            "submit",
-            async (event) => {
-                event.preventDefault();
-
-                const providerId =
-                    getProviderId();
-
-                const review =
-                    reviewText
-                        ? reviewText.value.trim()
-                        : "";
-
-                if (!providerId) {
-                    showMessage(
-                        "Provider information is missing.",
-                        "error"
-                    );
-
-                    return;
-                }
-
-                if (
-                    selectedRating < 1 ||
-                    selectedRating > 5
-                ) {
-                    showMessage(
-                        "Please select a rating from 1 to 5 stars.",
-                        "error"
-                    );
-
-                    return;
-                }
-
-                if (!review) {
-                    showMessage(
-                        "Please write a review.",
-                        "error"
-                    );
-
-                    return;
-                }
-
-                if (submitButton) {
-                    submitButton.disabled =
-                        true;
-
-                    submitButton.innerHTML = `
-                        <i class="fa-solid fa-spinner fa-spin me-1"></i>
-                        Submitting...
-                    `;
-                }
-
-                try {
-                    const response =
-                        await fetch(
-                            `${API_BASE}/reviews/`,
-                            {
-                                method: "POST",
-
-                                headers: {
-                                    "Authorization":
-                                        `Bearer ${accessToken}`,
-
-                                    "Content-Type":
-                                        "application/json"
-                                },
-
-                                body:
-                                    JSON.stringify({
-                                        provider:
-                                            Number(
-                                                providerId
-                                            ),
-
-                                        rating:
-                                            selectedRating,
-
-                                        comment:
-                                            review
-                                    })
-                            }
-                        );
-
-                    let data = null;
-
-                    try {
-                        data =
-                            await response.json();
-                    } catch (error) {
-                        data = null;
-                    }
-
-                    console.log(
-                        "REVIEW RESPONSE:",
-                        response.status,
-                        data
-                    );
-
-                    /* --------------------------------------
-                       UNAUTHORIZED
-                       -------------------------------------- */
-
-                    if (
-                        response.status === 401
-                    ) {
-                        localStorage.removeItem(
-                            "access_token"
-                        );
-
-                        localStorage.removeItem(
-                            "refresh_token"
-                        );
-
-                        localStorage.removeItem(
-                            "user"
-                        );
-
-                        window.location.href =
-                            "login.html";
-
-                        return;
-                    }
-
-                    /* --------------------------------------
-                       BACKEND ERROR
-                       -------------------------------------- */
-
-                    if (!response.ok) {
-                        showMessage(
-                            getReviewErrorMessage(
-                                data
-                            ),
-                            "error"
-                        );
-
-                        return;
-                    }
-
-                    /* --------------------------------------
-                       SUCCESS
-                       -------------------------------------- */
-
-                    console.log(
-                        "Review submitted:",
-                        data
-                    );
-
-                    showMessage(
-                        "Review submitted successfully!",
-                        "success"
-                    );
-
-                    if (reviewText) {
-                        reviewText.value =
-                            "";
-
-                        if (characterCount) {
-                            characterCount.textContent =
-                                "0";
-                        }
-                    }
-
-                    selectedRating = 0;
-
-                    if (ratingInput) {
-                        ratingInput.value =
-                            "0";
-                    }
-
-                    starButtons.forEach(
-                        (star) => {
-                            star.classList.remove(
-                                "selected"
-                            );
-                        }
-                    );
-
-                    if (ratingText) {
-                        ratingText.textContent =
-                            "Select a rating";
-                    }
-                } catch (error) {
-                    console.error(
-                        "REVIEW ERROR:",
-                        error
-                    );
-
-                    showMessage(
-                        "Something went wrong while submitting your review.",
-                        "error"
-                    );
-                } finally {
-                    if (submitButton) {
-                        submitButton.disabled =
-                            false;
-
-                        submitButton.innerHTML = `
-                            <i class="fa-solid fa-paper-plane me-1"></i>
-                            Submit Review
-                        `;
-                    }
-                }
+            if (!response.ok) {
+                showMessage(
+                    data.error || "Unable to submit review.",
+                    "error"
+                );
+                return;
             }
-        );
-    }
 
-    /* ======================================================
-       LOGOUT
-       ====================================================== */
+            showMessage(
+                "Review submitted successfully!",
+                "success"
+            );
 
-    const logoutButton =
-        document.querySelector(".btn-logout");
+            reviewForm.reset();
+            selectedRating = 0;
+            ratingInput.value = "";
+            ratingText.textContent = "Select a rating";
+            characterCount.textContent = "0";
+
+            starButtons.forEach(star => {
+                star.classList.remove("selected");
+            });
+
+            validBooking = false;
+            submitButton.disabled = true;
+
+        } catch (error) {
+
+            console.error("REVIEW ERROR:", error);
+
+            showMessage(
+                "Something went wrong. Please try again.",
+                "error"
+            );
+
+        } finally {
+
+            if (validBooking) {
+                submitButton.disabled = false;
+            }
+
+            submitButton.innerHTML =
+                '<i class="fa-solid fa-paper-plane"></i> Submit Review';
+        }
+
+    });
+
+    // LOGOUT
+    const logoutButton = document.querySelector(".btn-logout");
 
     if (logoutButton) {
-        logoutButton.addEventListener(
-            "click",
-            (event) => {
-                event.preventDefault();
+        logoutButton.addEventListener("click", event => {
+            event.preventDefault();
 
-                localStorage.removeItem(
-                    "access_token"
-                );
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("refresh_token");
+            localStorage.removeItem("user");
 
-                localStorage.removeItem(
-                    "refresh_token"
-                );
-
-                localStorage.removeItem(
-                    "user"
-                );
-
-                window.location.href =
-                    "login.html";
-            }
-        );
+            window.location.href = "login.html";
+        });
     }
-});
 
+});

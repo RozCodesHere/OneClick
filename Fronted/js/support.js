@@ -384,7 +384,16 @@ async function loadCurrentUser() {
 
         const user =
             await response.json();
+const dashboardLink = document.querySelector(
+    'a[href="customer-dashboard.html"]'
+);
 
+if (dashboardLink) {
+    dashboardLink.href =
+        user.role === "provider"
+            ? "provider-dashboard.html"
+            : "customer-dashboard.html";
+}
 
         const fullName =
             `${user.first_name || ""} ${user.last_name || ""}`

@@ -824,117 +824,376 @@ else if (requestedRole === "provider") {
     }
 
 
-    /* =========================================================
-       PROVIDER CATEGORIES
-       GET /api/services/categories/
-    ========================================================= */
+   
 
-    var provCategory =
-        document.getElementById(
-            "provCategory"
-        );
+/* =========================================================
+   PROVIDER SERVICES + CATEGORY FILTER
+========================================================= */
 
 
-    async function loadProviderCategories() {
+var provCategory =
+    document.getElementById("provCategory");
 
-        if (!provCategory) {
-            return;
-        }
+var provServices =
+    document.getElementById("provServices");
 
-        try {
+var allProviderServices = [];
 
-            var response =
-                await fetch(
-                    API_BASE +
-                    "/services/categories/"
-                );
+async function loadProviderServices() {
 
-            var responseText =
-                await response.text();
+    if (!provServices || !provCategory) {
+        return;
+    }
+
+    try {
+
+        allProviderServices = [];
+
+        var nextUrl = API_BASE + "/services/";
+
+        /* ---------------------------------------------
+           LOAD ALL SERVICE PAGES
+        --------------------------------------------- */
+
+        while (nextUrl) {
+
+            var response = await fetch(nextUrl);
+
+            var responseText = await response.text();
 
             console.log(
-                "Categories status:",
+                "Services status:",
                 response.status
             );
 
             console.log(
-                "Categories response:",
+                "Services response:",
                 responseText
             );
 
             if (!response.ok) {
-
                 throw new Error(
-                    "Could not load service categories."
+                    "Could not load services."
                 );
             }
 
-            var data =
-                responseText
-                    ? JSON.parse(responseText)
-                    : {};
+            var data = responseText
+                ? JSON.parse(responseText)
+                : {};
 
-            var categories =
-                Array.isArray(data.results)
-                    ? data.results
-                    : Array.isArray(data)
-                        ? data
-                        : [];
+            if (Array.isArray(data)) {
 
-            provCategory.innerHTML =
-                '<option value="">Select your service category</option>';
+                allProviderServices =
+                    allProviderServices.concat(data);
 
-            categories.forEach(
-                function (category) {
+                nextUrl = null;
 
-                    if (
-                        category.is_active === false
-                    ) {
-                        return;
-                    }
+            } else {
 
-                    var option =
-                        document.createElement(
-                            "option"
+                if (Array.isArray(data.results)) {
+
+                    allProviderServices =
+                        allProviderServices.concat(
+                            data.results
                         );
+                }
 
-                    option.value =
-                        String(category.id);
+                nextUrl = data.next || null;
+            }
+        }
 
-                    option.textContent =
-                        category.icon
-                            ? category.icon +
-                              " " +
-                              category.name
-                            : category.name;
+        /* ---------------------------------------------
+           ONLY ACTIVE SERVICES
+        --------------------------------------------- */
 
-                    provCategory.appendChild(
-                        option
-                    );
+        allProviderServices =
+            allProviderServices.filter(
+                function (service) {
+                    return service.is_active !== false;
                 }
             );
 
-            console.log(
-                "Provider categories loaded:",
-                categories
-            );
+        console.log(
+            "All active provider services:",
+            allProviderServices
+        );
 
-        } catch (error) {
+        /* ---------------------------------------------
+           BUILD UNIQUE CATEGORIES
+        --------------------------------------------- */
 
-            console.error(
-                "Category loading error:",
-                error
-            );
+        var categories = [];
 
-            provCategory.innerHTML =
-                '<option value="">Unable to load categories</option>';
-        }
+        allProviderServices.forEach(
+            function (service) {
+
+                if (
+    service.category &&
+    service.category_name
+) {
+
+                    var exists =
+                        categories.some(
+                            function (category) {
+                                return (
+                                   String(
+    category.id
+) ===
+String(
+    service.category
+)
+                                );
+                            }
+                        );
+
+                    if (!exists) {
+
+                        categories.push({
+    id:
+        service.category,
+
+    name:
+        service.category_name
+});
+                    }
+                }
+            }
+        );
+
+        /* ---------------------------------------------
+           SORT CATEGORIES
+        --------------------------------------------- */
+
+        categories.sort(
+            function (a, b) {
+                return a.name.localeCompare(
+                    b.name
+                );
+            }
+        );
+
+        /* ---------------------------------------------
+           POPULATE CATEGORY DROPDOWN
+        --------------------------------------------- */
+
+        provCategory.innerHTML =
+            '<option value="">Select a service category</option>';
+
+        categories.forEach(
+            function (category) {
+
+                var option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    String(category.id);
+
+                option.textContent =
+                    category.name;
+
+                provCategory.appendChild(
+                    option
+                );
+            }
+        );
+
+        /* ---------------------------------------------
+           CATEGORY CHANGE
+        --------------------------------------------- */
+
+        provCategory.addEventListener(
+            "change",
+            function () {
+
+                validateSelectField(
+                    provCategory
+                );
+
+                renderProviderServicesByCategory();
+            }
+        );
+
+        console.log(
+            "Provider categories loaded:",
+            categories
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Service loading error:",
+            error
+        );
+
+        provCategory.innerHTML =
+            '<option value="">Unable to load categories</option>';
+
+        provServices.innerHTML = `
+            <div class="text-danger small">
+                Unable to load services.
+            </div>
+        `;
+    }
+}
+
+
+/* =========================================================
+   RENDER SERVICES FOR SELECTED CATEGORY
+========================================================= */
+
+function renderProviderServicesByCategory() {
+
+    if (!provServices || !provCategory) {
+        return;
     }
 
+    var selectedCategoryId =
+        provCategory.value;
 
-    loadProviderCategories();
+    /* ---------------------------------------------
+       NO CATEGORY SELECTED
+    --------------------------------------------- */
+
+    if (!selectedCategoryId) {
+
+        provServices.innerHTML = `
+            <div class="text-muted small">
+                Please select a category first.
+            </div>
+        `;
+
+        return;
+    }
+
+    /* ---------------------------------------------
+       FILTER SERVICES
+    --------------------------------------------- */
+
+    var categoryServices =
+        allProviderServices.filter(
+            function (service) {
+
+               return (
+    String(
+        service.category
+    ) ===
+    String(
+        selectedCategoryId
+    )
+);
+            }
+        );
+
+    /* ---------------------------------------------
+       NO SERVICES
+    --------------------------------------------- */
+
+    if (categoryServices.length === 0) {
+
+        provServices.innerHTML = `
+            <div class="text-danger small">
+                No services available in this category.
+            </div>
+        `;
+
+        return;
+    }
+
+    /* ---------------------------------------------
+       RENDER SERVICES
+    --------------------------------------------- */
+
+    provServices.innerHTML = "";
+
+    categoryServices.forEach(
+        function (service) {
+
+            var wrapper =
+                document.createElement(
+                    "div"
+                );
+
+            wrapper.className =
+                "form-check oc-service-check";
+
+            var input =
+                document.createElement(
+                    "input"
+                );
+
+            input.type = "checkbox";
+
+            input.className =
+                "form-check-input";
+
+            input.id =
+                "provService_" +
+                service.id;
+
+            input.name =
+                "services";
+
+            input.value =
+                String(service.id);
+
+            input.dataset.serviceId =
+                String(service.id);
+
+            input.dataset.categoryId =
+    String(service.category);
+
+            var label =
+                document.createElement(
+                    "label"
+                );
+
+            label.className =
+                "form-check-label";
+
+            label.htmlFor =
+                input.id;
+
+            label.innerHTML = `
+                <strong>${service.name}</strong>
+                <small class="text-muted d-block">
+                    ${service.category_name || ""}
+                </small>
+            `;
+
+            wrapper.appendChild(input);
+
+            wrapper.appendChild(label);
+
+            provServices.appendChild(
+                wrapper
+            );
+
+            input.addEventListener(
+                "change",
+                function () {
+                    validateProviderServices();
+                }
+            );
+        }
+    );
+
+    console.log(
+        "Services rendered for category:",
+        selectedCategoryId,
+        categoryServices
+    );
+
+    validateProviderServices();
+}
 
 
+/* ---------------------------------------------
+   LOAD SERVICES
+--------------------------------------------- */
+
+loadProviderServices();
     /* =========================================================
        CUSTOMER FORM ELEMENTS
     ========================================================= */
@@ -1287,101 +1546,45 @@ else if (requestedRole === "provider") {
 
                     if (customerSuccessAlert) {
 
-                        customerSuccessAlert.classList.remove(
-                            "d-none"
-                        );
+    customerSuccessAlert.classList.remove("d-none");
 
-                        customerSuccessAlert.innerHTML = `
-                            <strong>
-                                <i class="fa-solid fa-circle-check me-2"></i>
-                                Account created successfully!
-                            </strong>
-                            <br>
-                            Your customer account has been created.
-                            Redirecting you to the login page...
-                        `;
+    customerSuccessAlert.innerHTML = `
+        <strong>
+            <i class="fa-solid fa-envelope me-2"></i>
+            Verification email sent!
+        </strong>
+        <br>
+        Please check your email for the verification code.
+        You must verify your email before logging in.
+    `;
 
-                        customerSuccessAlert.scrollIntoView({
-                            behavior: "smooth",
-                            block: "start"
-                        });
-                    }
+    customerSuccessAlert.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
 
+sessionStorage.setItem(
+    "pending_verification_email",
+    custEmail.value.trim()
+);
 
-                    /* =============================================
-                       RESET FORM
-                    ============================================= */
+setSubmitLoading(
+    customerForm,
+    false,
+    "Creating Account...",
+    "Create Customer Account"
+);
 
-                    customerForm.reset();
+setTimeout(function () {
 
-                    customerForm.classList.remove(
-                        "was-validated"
-                    );
+    window.location.href =
+        "verify-email.html";
 
-
-                    [
-                        custFirstName,
-                        custLastName,
-                        custEmail,
-                        custPhone,
-                        custPassword,
-                        custConfirmPassword
-                    ].forEach(
-                        function (input) {
-
-                            if (input) {
-
-                                input.classList.remove(
-                                    "is-valid",
-                                    "is-invalid"
-                                );
-                            }
-                        }
-                    );
-
-
-                    if (custAgreeTerms) {
-
-                        custAgreeTerms.classList.remove(
-                            "is-valid",
-                            "is-invalid"
-                        );
-                    }
-
-
-                    /* =============================================
-                       STOP LOADING
-                    ============================================= */
-
-                    setSubmitLoading(
-                        customerForm,
-                        false,
-                        "Creating Account...",
-                        "Create Customer Account"
-                    );
-
-
-                    /* =============================================
-                       REDIRECT TO LOGIN PAGE
-                    ============================================= */
-
-                    setTimeout(
-                        function () {
-
-                            window.location.href =
-    "login.html?role=customer";
-
-                        },
-                        1500
-                    );
+}, 1500);
 
                 } catch (error) {
 
-                    console.error(
-                        "Customer registration error:",
-                        error
-                    );
-
                     setSubmitLoading(
                         customerForm,
                         false,
@@ -1389,25 +1592,26 @@ else if (requestedRole === "provider") {
                         "Create Customer Account"
                     );
 
-                    alert(
-                        error.message ||
-                        "Something went wrong during registration."
-                    );
+                    alert(error.message);
                 }
+
             }
         );
     }
 
+                   
+
+                    
 
     /* =========================================================
        PROVIDER FORM ELEMENTS
     ========================================================= */
 
-    var providerForm =
-        document.getElementById(
-            "providerForm"
-        );
-
+  var providerForm =
+    document.getElementById(
+        "providerForm"
+    );
+    
     var provFullName =
         document.getElementById(
             "provFullName"
@@ -1447,6 +1651,20 @@ else if (requestedRole === "provider") {
         document.getElementById(
             "provAddress"
         );
+
+        /* ---------- Provider Service Location ---------- */
+
+var provCountry =
+    document.getElementById("provCountry");
+
+var provProvince =
+    document.getElementById("provProvince");
+
+var provDistrict =
+    document.getElementById("provDistrict");
+
+var provCity =
+    document.getElementById("provCity");
 
     var provBio =
         document.getElementById(
@@ -1512,19 +1730,7 @@ else if (requestedRole === "provider") {
     );
 
 
-    if (provCategory) {
-
-        provCategory.addEventListener(
-            "change",
-            function () {
-
-                validateSelectField(
-                    provCategory
-                );
-            }
-        );
-    }
-
+  
 
     wireLiveValidation(
         provPassword,
@@ -1626,6 +1832,32 @@ else if (requestedRole === "provider") {
         );
     }
 
+function validateProviderServices() {
+
+    if (!provServices) {
+        return false;
+    }
+
+    var selected =
+        provServices.querySelectorAll(
+            'input[name="services"]:checked'
+        );
+
+    var valid =
+        selected.length > 0;
+
+    provServices.classList.toggle(
+        "is-invalid",
+        !valid
+    );
+
+    provServices.classList.toggle(
+        "is-valid",
+        valid
+    );
+
+    return valid;
+}
 
     /* =========================================================
        PROVIDER FORM SUBMIT
@@ -1669,10 +1901,15 @@ else if (requestedRole === "provider") {
                         provPhone
                     );
 
-                var categoryValid =
-                    validateSelectField(
-                        provCategory
-                    );
+                    var categoryValid =
+    validateSelectField(
+        provCategory
+    );
+
+var servicesValid =
+    validateProviderServices();
+
+               
 
                 var passwordValid =
                     validatePasswordField(
@@ -1705,6 +1942,18 @@ else if (requestedRole === "provider") {
                         5
                     );
 
+                    var countryValid =
+    validateRequiredText(provCountry, 2);
+
+var provinceValid =
+    validateRequiredText(provProvince, 2);
+
+var districtValid =
+    validateRequiredText(provDistrict, 2);
+
+// City is optional, so it does not block registration.
+
+
                 var bioValid =
                     validateRequiredText(
                         provBio,
@@ -1733,15 +1982,19 @@ else if (requestedRole === "provider") {
 
 
                 var allValid =
-                    nameValid &&
-                    emailValid &&
-                    phoneValid &&
-                    categoryValid &&
+    nameValid &&
+    emailValid &&
+    phoneValid &&
+    categoryValid &&
+    servicesValid &&
                     passwordValid &&
                     confirmValid &&
                     experienceValid &&
                     hourlyRateValid &&
                     addressValid &&
+                    countryValid &&
+provinceValid &&
+districtValid &&
                     bioValid &&
                     citizenshipValid &&
                     photoValid &&
@@ -1761,6 +2014,24 @@ else if (requestedRole === "provider") {
 
                     return;
                 }
+
+                sessionStorage.setItem(
+    "pending_verification_email",
+    provEmail.value.trim()
+);
+
+sessionStorage.setItem(
+    "pending_verification_role",
+    "provider"
+);
+
+var verificationWindow =
+    window.open("about:blank", "_blank");
+
+if (!verificationWindow) {
+    alert("Please allow pop-ups to continue email verification.");
+    return;
+}
 
 
                 /* =================================================
@@ -1903,6 +2174,55 @@ else if (requestedRole === "provider") {
                        LOGIN
                     ============================================= */
 
+
+                    /* =============================================
+   STEP 2
+   VERIFY EMAIL OTP
+============================================= */
+
+/* =============================================
+   STEP 2
+   OPEN EMAIL VERIFICATION PAGE
+============================================= */
+
+setSubmitLoading(
+    providerForm,
+    true,
+    "Waiting for Email Verification...",
+    "Apply as Provider"
+);
+
+await new Promise(function (resolve, reject) {
+
+    function handleVerification(event) {
+
+        if (event.origin !== window.location.origin) {
+            return;
+        }
+
+        if (
+            event.data &&
+            event.data.type === "ONECLICK_EMAIL_VERIFIED" &&
+            event.data.email.toLowerCase() ===
+                provEmail.value.trim().toLowerCase()
+        ) {
+            window.removeEventListener(
+                "message",
+                handleVerification
+            );
+
+            resolve();
+        }
+    }
+
+    window.addEventListener(
+        "message",
+        handleVerification
+    );
+
+    verificationWindow.location.href =
+        "verify-email.html";
+});
                     setSubmitLoading(
                         providerForm,
                         true,
@@ -2022,13 +2342,41 @@ else if (requestedRole === "provider") {
                     var formData =
                         new FormData();
 
+/* ---------- Category ---------- */
 
-                    /* ---------- Category ---------- */
+formData.append(
+    "category",
+    provCategory.value
+);
 
-                    formData.append(
-                        "category",
-                        provCategory.value
-                    );
+                    /* ---------- Services ---------- */
+
+var selectedServices =
+    provServices.querySelectorAll(
+        'input[name="services"]:checked'
+    );
+
+selectedServices.forEach(
+    function (checkbox) {
+
+        formData.append(
+            "services",
+            checkbox.value
+        );
+
+    }
+);
+
+console.log(
+    "Selected provider services:",
+    Array.from(
+        selectedServices
+    ).map(
+        function (checkbox) {
+            return checkbox.value;
+        }
+    )
+);
 
 
                     /* ---------- Experience ---------- */
@@ -2045,6 +2393,28 @@ else if (requestedRole === "provider") {
                         "address",
                         provAddress.value.trim()
                     );
+
+                    /* ---------- Primary Service Location ---------- */
+
+formData.append(
+    "country",
+    provCountry.value.trim()
+);
+
+formData.append(
+    "province",
+    provProvince.value.trim()
+);
+
+formData.append(
+    "district",
+    provDistrict.value.trim()
+);
+
+formData.append(
+    "city",
+    provCity.value.trim()
+);
 
 
                     /* ---------- Bio ---------- */
@@ -2217,20 +2587,23 @@ else if (requestedRole === "provider") {
                     );
 
 
-                    [
-                        provFullName,
-                        provEmail,
-                        provPhone,
-                        provCategory,
-                        provPassword,
-                        provConfirmPassword,
-                        provExperience,
-                        provHourlyRate,
-                        provAddress,
-                        provBio,
-                        provCitizenship,
-                        provPhoto
-                    ].forEach(
+                   [
+    provFullName,
+    provEmail,
+    provPhone,
+    provPassword,
+    provConfirmPassword,
+    provExperience,
+    provHourlyRate,
+    provAddress,
+    provCountry,
+    provProvince,
+    provDistrict,
+    provCity,
+    provBio,
+    provCitizenship,
+    provPhoto
+].forEach(
                         function (input) {
 
                             if (input) {
@@ -2253,12 +2626,7 @@ else if (requestedRole === "provider") {
                     }
 
 
-                    /* ---------- Reset category ---------- */
-
-                    if (provCategory) {
-                        provCategory.value = "";
-                    }
-
+                   
 
                     /* ---------- Reset citizenship label ---------- */
 

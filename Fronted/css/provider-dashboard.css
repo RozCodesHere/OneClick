@@ -291,6 +291,7 @@ img {
     flex: 1;
     overflow-y: auto;
     padding: 18px 14px;
+    color:#0F172A
 }
 
 .nav-section-label {
@@ -356,7 +357,7 @@ img {
 .nav-badge {
     margin-left: auto;
     background: var(--primary);
-    color: #fff;
+    color: #090909;
     font-size: 0.68rem;
     font-weight: 600;
     padding: 2px 7px;
@@ -2797,4 +2798,648 @@ html[data-theme="dark"] .weather-card {
     *::after {
         transition-duration: 0.01ms !important;
     }
+}
+.message-shared-image {
+  max-width: 180px;
+  max-height: 150px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  display: block;
+}
+
+
+/* ============================================================
+   ONECLICK GLOBAL PAGE BACKGROUND / BRAND OVERRIDE
+   ============================================================ */
+
+/* =========================================================
+   GLOBAL THEME FIX — LIGHT + DARK MODE
+   ========================================================= */
+
+:root {
+    color-scheme: light;
+
+    --page-bg: #F8FAFC;
+    --surface-bg: #FFFFFF;
+    --surface-secondary: #F1F5F9;
+    --text-primary: #1E293B;
+    --text-secondary: #64748B;
+    --border-color: #E2E8F0;
+}
+
+html[data-theme="dark"],
+body.dark-mode,
+body[data-theme="dark"] {
+    color-scheme: dark;
+
+    --page-bg: #0F172A;
+    --surface-bg: #1E293B;
+    --surface-secondary: #273449;
+    --text-primary: #F1F5F9;
+    --text-secondary: #CBD5E1;
+    --border-color: #334155;
+}
+
+html,
+body {
+    background-color: var(--page-bg);
+    color: var(--text-primary);
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Main page surfaces */
+.app-shell,
+.oc-main,
+main {
+    background-color: var(--page-bg);
+    color: var(--text-primary);
+}
+
+/* Cards and panels */
+.card,
+.provider-card,
+.service-card,
+.stat-card,
+.dashboard-card,
+.booking-card,
+.profile-card,
+.modal-content,
+.dropdown-menu {
+    background-color: var(--surface-bg);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+/* Secondary surfaces */
+.sidebar,
+.sidebar-nav,
+.table,
+.form-control,
+.form-select {
+    border-color: var(--border-color);
+}
+
+.form-control,
+.form-select {
+    background-color: var(--surface-bg);
+    color: var(--text-primary);
+}
+
+.form-control::placeholder {
+    color: var(--text-secondary);
+}
+
+/* Text */
+h1, h2, h3, h4, h5, h6,
+p, label, span {
+    color: inherit;
+}
+
+/* Borders */
+hr,
+.border,
+.card,
+.provider-card {
+    border-color: var(--border-color);
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Main OneClick application area */
+.app-shell {
+    background: #F8FAFC;
+    min-height: 100vh;
+}
+
+/* Main content */
+.oc-main {
+    background: #F8FAFC;
+    min-height: 100vh;
+}
+
+/* Keep sidebar OneClick navy */
+.oc-sidebar {
+    background: #282f3d !important;
+}
+
+/* OneClick brand */
+.sidebar-brand {
+    background:#282f3d !important;
+}
+
+.brand-link {
+    color: #FFFFFF !important;
+}
+
+.brand-icon {
+    background: linear-gradient(
+        135deg,
+        #2563EB,
+        #3B82F6
+    ) !important;
+    color: #FFFFFF !important;
+}
+
+/* Blue active navigation */
+.nav-item.active .nav-link {
+    background: linear-gradient(
+        135deg,
+        #2563EB,
+        #3B82F6
+    ) !important;
+    color: #FFFFFF !important;
+}
+
+/* Normal navigation */
+.nav-link {
+    color: #CBD5E1 !important;
+}
+
+.nav-link:hover {
+    background: rgba(255,255,255,0.06) !important;
+    color: #FFFFFF !important;
+}
+
+/* Topbar */
+.oc-topbar {
+    background: #ffffff !important;
+    border-bottom: 1px solid #E2E8F0 !important;
+}
+
+/* Main page area */
+.oc-body {
+    background: #F8FAFC;
+}
+
+/* White cards */
+.oc-panel,
+.stat-card,
+.side-card,
+.request-card,
+.review-card,
+.availability-card,
+.quick-action-card {
+    background: #FFFFFF;
+}
+
+
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    margin-left: 10px;
+}
+
+
+
+
+
+/* =========================================================
+   CURRENT JOB — FIX WHITE TEXT ON WHITE BACKGROUND
+   ========================================================= */
+
+.current-job-panel {
+    background: #FFFFFF !important;
+    color: #1E293B !important;
+    border: 1px solid #E2E8F0 !important;
+}
+
+/* Panel heading */
+.current-job-panel .panel-heading h2 {
+    color: #1E293B !important;
+}
+
+.current-job-panel .panel-heading h2 i {
+    color: #2563EB !important;
+}
+
+/* Customer name */
+.current-job-panel .current-job-customer h4,
+.current-job-panel #currentJobCustomer {
+    color: #1E293B !important;
+}
+
+/* Customer email and address */
+.current-job-panel .current-job-customer p,
+.current-job-panel #currentJobAddress {
+    color: #475569 !important;
+    opacity: 1 !important;
+}
+
+/* Service name */
+.current-job-panel .cj-service,
+.current-job-panel #currentJobService {
+    color: #2563EB !important;
+    opacity: 1 !important;
+}
+
+/* Booking status label */
+.current-job-panel .progress-label,
+.current-job-panel .progress-label span,
+.current-job-panel #currentJobProgressText {
+    color: #1E293B !important;
+    opacity: 1 !important;
+}
+
+/* Pending / Accepted / Completed steps */
+.current-job-panel .progress-steps,
+.current-job-panel .progress-steps .step {
+    color: #64748B !important;
+    opacity: 1 !important;
+}
+
+.current-job-panel .progress-steps .step.done {
+    color: #16A34A !important;
+}
+
+/* Live status badge */
+.current-job-panel .badge-live {
+    background: #DBEAFE !important;
+    color: #1D4ED8 !important;
+}
+
+/* Progress bar background */
+.current-job-panel .oc-progress {
+    background: #E2E8F0 !important;
+}
+
+/* Progress bar */
+.current-job-panel .oc-progress-bar {
+    background: linear-gradient(90deg, #2563EB, #60A5FA) !important;
+}
+
+/* Remove glow if it reduces text clarity */
+.current-job-panel .current-job-glow {
+    opacity: 0.15;
+}
+
+
+
+
+/* =========================================================
+   ONECLICK — PROVIDER DASHBOARD LAYOUT FIX
+   Keep this at the VERY BOTTOM of provider-dashboard.css
+========================================================= */
+
+/* Main page layout */
+.app-shell {
+    width: 100%;
+    min-height: 100vh;
+}
+
+.oc-main {
+    width: calc(100% - var(--sidebar-width, 250px));
+    min-width: 0;
+    flex: 1;
+}
+
+.oc-body {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 250px !important;
+    align-items: start;
+    gap: 18px;
+    width: 100%;
+    max-width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Main content: one clean vertical column */
+.oc-content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch;
+    gap: 18px;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Cancel old grid placement and forced widths */
+.oc-content > section,
+.oc-content > .oc-panel,
+.oc-content > .page-header {
+    display: block;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+}
+
+/* Page header */
+.page-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Statistics */
+.stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px;
+    width: 100%;
+}
+
+.stat-card {
+    min-width: 0;
+    width: 100%;
+}
+
+/* Panels */
+.oc-panel {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding: 20px;
+    overflow: hidden;
+    border-radius: 15px;
+}
+
+.panel-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Current job */
+.current-job-panel {
+    color: #fff;
+}
+
+.current-job-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+.current-job-customer,
+.current-job-progress {
+    min-width: 0;
+    width: 100%;
+}
+
+.current-job-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Counter offers and reviews */
+.job-requests-grid,
+.reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    width: 100%;
+    min-width: 0;
+}
+
+.request-empty-state,
+.review-empty-state,
+.schedule-empty-state {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Today's schedule */
+.timeline {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Earnings */
+.earnings-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    width: 100%;
+    min-width: 0;
+}
+
+.earnings-highlight,
+.earnings-mini-stats,
+.earnings-chart {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.earnings-chart {
+    grid-column: 1 / -1;
+    overflow: hidden;
+}
+
+.mini-bar-chart {
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* Messages */
+.messages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    max-height: 420px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.messages-list > * {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.messages-list img {
+    max-width: 220px;
+    max-height: 180px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Performance */
+.performance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
+}
+
+/* Availability */
+.availability-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+}
+
+.availability-card {
+    min-width: 0;
+    width: 100%;
+}
+
+/* Quick actions */
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+}
+
+.quick-action-card {
+    min-width: 0;
+}
+
+/* Right sidebar */
+.oc-right-sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px;
+    position: sticky;
+    top: 90px;
+    width: 100%;
+    min-width: 0;
+    max-width: 250px;
+}
+
+.side-card {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Prevent children from forcing horizontal overflow */
+.oc-content *,
+.oc-right-sidebar * {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.oc-content img {
+    max-width: 100%;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+@media (max-width: 1100px) {
+    .oc-body {
+        grid-template-columns: minmax(0, 1fr) 220px !important;
+        gap: 14px;
+        padding: 15px;
+    }
+
+    .oc-right-sidebar {
+        max-width: 220px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .current-job-body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* =========================================================
+   SMALL TABLET AND MOBILE
+========================================================= */
+@media (max-width: 850px) {
+    .oc-body {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .oc-right-sidebar {
+        position: static;
+        max-width: none;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .support-card {
+        grid-column: 1 / -1;
+    }
+
+    .availability-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .oc-body {
+        padding: 12px;
+        gap: 14px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px;
+    }
+
+    .oc-panel {
+        padding: 15px;
+    }
+
+    .page-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .earnings-grid,
+    .performance-grid,
+    .availability-grid,
+    .oc-right-sidebar {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .earnings-chart {
+        grid-column: auto;
+    }
+
+    .quick-actions-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .current-job-actions {
+        flex-direction: column;
+    }
+
+    .current-job-actions .btn {
+        width: 100%;
+    }
+}
+
+
+
+/* FORCE COMPLETED JOBS PAGE LAYOUT */
+.oc-main .oc-body {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+.oc-main .oc-body .page-header,
+.oc-main .oc-body .completed-jobs-card {
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
 }

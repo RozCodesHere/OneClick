@@ -1,0 +1,1673 @@
+/* ============================================================
+   OneClick - Provider Job Requests
+   ============================================================ */
+
+
+/* ============================================================
+   PAGE
+   ============================================================ */
+
+.page-content {
+    padding: 30px;
+}
+
+.page-header {
+    margin-bottom: 25px;
+}
+
+.page-header h2 {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.page-header p {
+    color: #777;
+    margin-bottom: 0;
+}
+
+
+/* ============================================================
+   JOB REQUEST HEADING
+   ============================================================ */
+
+.job-requests-heading {
+    width: 100%;
+}
+
+
+/* ============================================================
+   JOB REQUEST GRID
+   ============================================================ */
+
+/*
+   Bootstrap .row already handles the columns.
+   These rules make sure custom dashboard CSS does not
+   collapse the grid.
+*/
+
+#jobRequestsGrid {
+    width: 100%;
+    max-width: 100%;
+
+    display: flex;
+    flex-wrap: wrap;
+
+    margin-top: 0;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+
+/*
+   Make Bootstrap columns behave correctly inside the grid.
+*/
+
+#jobRequestsGrid > [class*="col-"] {
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+
+/* ============================================================
+   JOB REQUEST CARD
+   ============================================================ */
+
+.request-card {
+    width: 100%;
+    height: 100%;
+
+    box-sizing: border-box;
+
+    background: #fff;
+
+    border-radius: 14px;
+
+    padding: 22px;
+
+    margin-bottom: 0;
+
+    box-shadow:
+        0 3px 15px rgba(0, 0, 0, 0.07);
+
+    overflow: hidden;
+}
+
+
+/* ============================================================
+   REQUEST HEADER
+   ============================================================ */
+
+.request-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    gap: 15px;
+
+    margin-bottom: 18px;
+
+    min-width: 0;
+}
+
+
+.customer-info {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    min-width: 0;
+
+    width: 100%;
+}
+
+
+.customer-avatar {
+    width: 48px;
+    height: 48px;
+
+    min-width: 48px;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    background: #eee;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-shrink: 0;
+}
+
+
+.customer-avatar i {
+    color: #777;
+
+    font-size: 18px;
+}
+
+
+.customer-name {
+    font-weight: 600;
+
+    margin: 0;
+
+    overflow-wrap: anywhere;
+
+    word-break: break-word;
+}
+
+
+.request-date {
+    color: #888;
+
+    font-size: 13px;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* ============================================================
+   SERVICE
+   ============================================================ */
+
+.request-service {
+    font-size: 18px;
+
+    font-weight: 600;
+
+    margin-bottom: 15px;
+
+    overflow-wrap: anywhere;
+
+    word-break: break-word;
+}
+
+
+/* ============================================================
+   REQUEST DETAILS
+   ============================================================ */
+
+.request-detail {
+    color: #666;
+
+    margin-bottom: 8px;
+
+    width: 100%;
+}
+
+
+.request-detail > div {
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 4px;
+
+    width: 100%;
+
+    overflow-wrap: anywhere;
+
+    word-break: break-word;
+}
+
+
+.request-detail i {
+    width: 22px;
+
+    min-width: 22px;
+
+    text-align: center;
+
+    margin-top: 3px;
+}
+
+
+/* ============================================================
+   ACTION BUTTONS
+   ============================================================ */
+
+.request-actions {
+    margin-top: 20px;
+
+    display: flex;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+
+    width: 100%;
+}
+
+
+.request-actions .btn {
+    flex: 1;
+
+    min-width: 110px;
+}
+
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+
+.empty-state {
+    width: 100%;
+
+    text-align: center;
+
+    padding: 70px 20px;
+
+    background: #fff;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 3px 15px rgba(0, 0, 0, 0.07);
+}
+
+
+.empty-state i {
+    font-size: 50px;
+
+    color: #bbb;
+
+    margin-bottom: 20px;
+}
+
+
+.empty-state h4,
+.empty-state h5 {
+    margin-bottom: 8px;
+}
+
+
+.empty-state p {
+    color: #777;
+}
+
+
+/* ============================================================
+   COUNTER OFFERS
+   ============================================================ */
+
+.counter-offer-card {
+    background: #fff;
+
+    border-radius: 14px;
+
+    padding: 20px;
+
+    margin-bottom: 15px;
+
+    box-shadow:
+        0 3px 15px rgba(0, 0, 0, 0.07);
+
+    border-left: 4px solid #ffc107;
+
+    width: 100%;
+
+    box-sizing: border-box;
+}
+
+
+.counter-price {
+    font-size: 22px;
+
+    font-weight: 700;
+}
+
+
+.original-price {
+    text-decoration: line-through;
+
+    color: #999;
+
+    margin-right: 8px;
+}
+
+
+/* ============================================================
+   RESPONSIVE - LARGE
+   ============================================================ */
+
+@media (min-width: 992px) {
+
+    /*
+       Bootstrap:
+       col-lg-4 = 3 cards per row
+    */
+
+    #jobRequestsGrid > .col-lg-4 {
+        flex: 0 0 auto;
+
+        width: 33.333333%;
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE - TABLET
+   ============================================================ */
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+
+    /*
+       Bootstrap:
+       col-md-6 = 2 cards per row
+    */
+
+    #jobRequestsGrid > .col-md-6 {
+        flex: 0 0 auto;
+
+        width: 50%;
+    }
+
+}
+
+
+/* ============================================================
+   RESPONSIVE - MOBILE
+   ============================================================ */
+
+@media (max-width: 767.98px) {
+
+    .page-content {
+        padding: 20px 15px;
+    }
+
+
+    .request-card {
+        padding: 20px;
+    }
+
+
+    .request-header {
+        flex-direction: column;
+    }
+
+
+    .request-actions {
+        flex-direction: column;
+    }
+
+
+    .request-actions .btn {
+        flex: none;
+
+        width: 100%;
+
+        min-width: 0;
+    }
+
+
+    .job-requests-heading {
+        align-items: flex-start !important;
+
+        gap: 10px;
+
+        flex-wrap: wrap;
+    }
+
+}
+
+
+/* ============================================================
+   VERY SMALL SCREENS
+   ============================================================ */
+
+@media (max-width: 400px) {
+
+    .request-card {
+        padding: 16px;
+    }
+
+
+    .customer-avatar {
+        width: 42px;
+        height: 42px;
+
+        min-width: 42px;
+    }
+
+
+    .request-service {
+        font-size: 16px;
+    }
+
+}
+.customer-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.customer-avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+
+
+
+
+
+/* ============================================================
+   JOB REQUESTS PAGE - CLEAN LAYOUT
+   ============================================================ */
+
+.oc-main .oc-body {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 30px;
+}
+
+.oc-main .page-header {
+    display: block;
+    width: 100%;
+    margin-bottom: 28px;
+}
+
+#counterOffersSection {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 32px;
+}
+
+.oc-main .job-requests-heading {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px !important;
+}
+
+/* Two cards per row on desktop */
+#jobRequestsGrid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 !important;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Override Bootstrap column widths */
+#jobRequestsGrid > [class*="col-"] {
+    width: 100% !important;
+    max-width: 100%;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+#jobRequestsGrid .request-card {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+#providerCounterOffersContainer {
+    width: 100%;
+    min-width: 0;
+}
+
+#providerCounterOffersContainer .counter-offer-card {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Tablet and mobile */
+@media (max-width: 767.98px) {
+    .oc-main .oc-body {
+        padding: 22px 16px;
+    }
+
+    #jobRequestsGrid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    .oc-main .job-requests-heading {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
+
+              /* Modified */
+              
+/* =========================================================
+   OneClick Provider — Modern Job Request Cards
+   Append to the bottom of provider-job-requests.css
+   ========================================================= */
+
+.request-card-modern {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    height: 100%;
+    border: 1px solid #e8edf4;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 5px 24px rgba(26, 43, 70, 0.06);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.request-card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(26, 43, 70, 0.12);
+}
+
+.request-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px;
+    border-bottom: 1px solid #edf0f5;
+}
+
+.request-card-modern .customer-info {
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.request-card-modern .customer-avatar {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    overflow: hidden;
+    border: 2px solid #edf2ff;
+    background: #eef3ff;
+}
+
+.request-card-modern .customer-avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.request-avatar-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #3563c7;
+    font-size: 18px;
+}
+
+.request-card-modern .customer-heading {
+    min-width: 0;
+}
+
+.request-card-modern .customer-name {
+    margin: 0 0 4px;
+    color: #202c40;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.request-card-modern .request-date {
+    display: block;
+    color: #8792a5;
+    font-size: 12px;
+}
+
+.request-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding: 6px 10px;
+    border-radius: 20px;
+    background: #fff5d9;
+    color: #946200;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.status-accepted {
+    background: #e5f8ed;
+    color: #18794e;
+}
+
+.status-rejected {
+    background: #ffebeb;
+    color: #c52e3c;
+}
+
+.request-card-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 22px 20px 18px;
+}
+
+.request-section-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #8b96a8;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.1px;
+}
+
+.request-card-modern .request-service-block {
+    margin-bottom: 22px;
+}
+
+.request-card-modern .request-service {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+    color: #202c40;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.request-card-modern .request-service i {
+    margin-top: 4px;
+    color: #3867d6;
+    font-size: 17px;
+}
+
+.request-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 14px;
+}
+
+.request-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+}
+
+.request-info-location {
+    grid-column: 1 / -1;
+}
+
+.request-info-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    border-radius: 10px;
+    background: #f0f4ff;
+    color: #426bd1;
+    font-size: 13px;
+}
+
+.request-info-item > div {
+    min-width: 0;
+}
+
+.request-info-label {
+    display: block;
+    margin-bottom: 5px;
+    color: #8a94a5;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.request-info-item strong {
+    display: block;
+    color: #344054;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.request-description {
+    margin-top: 22px;
+    padding: 14px;
+    border: 1px solid #edf0f5;
+    border-radius: 12px;
+    background: #f8faff;
+}
+
+.request-description .request-info-label {
+    color: #596780;
+    font-weight: 700;
+}
+
+.request-description p {
+    margin: 7px 0 0;
+    color: #596579;
+    font-size: 12px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+}
+
+.request-price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.request-price {
+    display: block;
+    color: #168653;
+    font-size: 23px;
+    font-weight: 700;
+}
+
+.request-price-note {
+    max-width: 120px;
+    color: #929bad;
+    font-size: 10px;
+    line-height: 1.6;
+    text-align: right;
+}
+
+.request-actions-modern {
+    display: flex;
+    gap: 10px;
+    margin: 0;
+    padding: 16px 20px 20px;
+    border-top: 1px solid #edf0f5;
+}
+
+.request-actions-modern .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 43px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.request-actions-modern .btn-success {
+    border-color: #168653;
+    background: #168653;
+}
+
+.request-actions-modern .btn-success:hover {
+    border-color: #116c42;
+    background: #116c42;
+}
+
+.request-actions-modern .btn-outline-danger:hover {
+    color: #fff;
+}
+
+.request-actions-modern .btn:active {
+    transform: scale(0.98);
+}
+
+/* Tablet and mobile */
+@media (max-width: 767.98px) {
+    .request-card-top {
+        padding: 17px;
+    }
+
+    .request-card-body {
+        padding: 19px 17px;
+    }
+
+    .request-actions-modern {
+        padding: 15px 17px 17px;
+    }
+}
+
+@media (max-width: 420px) {
+    .request-card-top {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .request-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .request-info-location {
+        grid-column: auto;
+    }
+
+    .request-price-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .request-price-note {
+        max-width: none;
+        text-align: left;
+    }
+
+    .request-actions-modern {
+        flex-direction: column;
+    }
+
+    .request-actions-modern .btn {
+        width: 100%;
+    }
+}
+
+
+
+
+/* ============================================================
+   OneClick — Premium Job Requests Page Background
+   ============================================================ */
+
+/* Soft gradient canvas */
+body {
+    background-color: #f3f6fc;
+}
+
+.oc-main {
+    min-height: 100vh;
+    background:
+        radial-gradient(
+            ellipse at 85% 8%,
+            rgba(83, 125, 231, 0.10) 0%,
+            transparent 34%
+        ),
+        radial-gradient(
+            ellipse at 12% 52%,
+            rgba(76, 190, 176, 0.07) 0%,
+            transparent 32%
+        ),
+        linear-gradient(
+            135deg,
+            #f7f9fe 0%,
+            #f0f4fb 52%,
+            #f8faff 100%
+        );
+}
+
+/* Keep the main content transparent so the gradient shows */
+.oc-body {
+    min-height: calc(100vh - 65px);
+    background: transparent;
+    padding: 30px;
+}
+
+/* Give the page title more visual presence */
+.page-header {
+    position: relative;
+    margin-bottom: 30px;
+    padding: 4px 0 20px 17px;
+    border-bottom: 1px solid rgba(211, 220, 236, 0.8);
+}
+
+.page-header::before {
+    content: "";
+    position: absolute;
+    top: 5px;
+    bottom: 24px;
+    left: 0;
+    width: 4px;
+    border-radius: 10px;
+    background: linear-gradient(
+        180deg,
+        #4778ed,
+        #6b9cff
+    );
+}
+
+.page-header h2 {
+    color: #192b49;
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -0.6px;
+}
+
+.page-header p {
+    max-width: 600px;
+    color: #77849a;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+/* Separate the two request sections visually */
+#counterOffersSection,
+.job-requests-heading {
+    position: relative;
+}
+
+/* Refine section titles */
+.job-requests-heading h4,
+#counterOffersSection h4 {
+    color: #233654;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.job-requests-heading h4 i,
+#counterOffersSection h4 i {
+    color: #4775d8;
+}
+
+/* Small count indicators */
+#requestCount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    min-height: 26px;
+    padding: 4px 9px;
+    border: 1px solid #e1e8f5;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.8);
+    color: #536783;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* Let cards stand out against the new canvas */
+.request-card-modern {
+    border-color: rgba(224, 231, 243, 0.95);
+    box-shadow:
+        0 4px 12px rgba(33, 54, 91, 0.035),
+        0 14px 34px rgba(33, 54, 91, 0.045);
+}
+
+.request-card-modern:hover {
+    border-color: #d5e1fb;
+    box-shadow:
+        0 8px 20px rgba(33, 54, 91, 0.07),
+        0 20px 42px rgba(33, 54, 91, 0.08);
+}
+
+/* Counter-offer cards match the page theme */
+.counter-offer-card {
+    border: 1px solid #e4eaf5;
+    border-left: 4px solid #eab747;
+    box-shadow: 0 8px 24px rgba(33, 54, 91, 0.045);
+}
+
+/* Consistent empty state */
+.empty-state {
+    border: 1px dashed #d6dfef;
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 8px 24px rgba(33, 54, 91, 0.035);
+}
+
+/* Responsive spacing */
+@media (max-width: 767.98px) {
+    .oc-body {
+        padding: 22px 16px;
+    }
+
+    .page-header {
+        margin-bottom: 24px;
+    }
+
+    .page-header h2 {
+        font-size: 23px;
+    }
+
+    .job-requests-heading h4,
+    #counterOffersSection h4 {
+        font-size: 15px;
+    }
+}
+
+
+/* ============================================================
+   OneClick — Final Job Requests Background
+   ============================================================ */
+
+html,
+body {
+    min-height: 100%;
+}
+
+body {
+    background: #f3f6fc;
+}
+
+.oc-main {
+    min-height: 100vh;
+    background-color: #f3f6fc;
+    background-image:
+        radial-gradient(
+            ellipse at 85% 5%,
+            rgba(91, 130, 235, 0.13) 0%,
+            transparent 36%
+        ),
+        radial-gradient(
+            ellipse at 10% 48%,
+            rgba(71, 184, 174, 0.09) 0%,
+            transparent 34%
+        ),
+        linear-gradient(
+            135deg,
+            #f8faff 0%,
+            #edf2fb 48%,
+            #f7f9fe 100%
+        );
+    background-attachment: fixed;
+}
+
+.oc-main .oc-body {
+    min-height: calc(100vh - 60px);
+    background: transparent !important;
+}
+
+/* Preserve the existing layout and card styling */
+.oc-main #jobRequestsGrid {
+    background: transparent;
+}
+
+.oc-main #counterOffersSection {
+    background: transparent;
+}
+
+
+
+/* ============================================================
+   OneClick — Premium Provider Dashboard Background
+   ============================================================ */
+
+.oc-main {
+    min-height: 100vh !important;
+    background-color: #f4f7fd !important;
+
+    background-image:
+        radial-gradient(
+            circle at 88% 8%,
+            rgba(76, 110, 245, 0.13) 0,
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 8% 45%,
+            rgba(20, 184, 166, 0.09) 0,
+            transparent 32%
+        ),
+        radial-gradient(
+            circle at 75% 90%,
+            rgba(129, 140, 248, 0.08) 0,
+            transparent 35%
+        ),
+        linear-gradient(
+            135deg,
+            #f9fbff 0%,
+            #eff3fc 48%,
+            #f7f9ff 100%
+        ) !important;
+
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+/* Allow the gradient to show through the content */
+.oc-main .oc-body {
+    background: transparent !important;
+}
+
+/* Keep request sections transparent */
+.oc-main #jobRequestsGrid,
+.oc-main #counterOffersSection {
+    background-color: transparent !important;
+}
+
+/* Keep cards clean and readable above the gradient */
+.oc-main .request-card-modern {
+    background: #ffffff;
+    border: 1px solid rgba(220, 229, 244, 0.95);
+    box-shadow:
+        0 4px 12px rgba(31, 50, 86, 0.04),
+        0 16px 38px rgba(31, 50, 86, 0.06);
+}
+
+.oc-main .request-card-modern:hover {
+    border-color: #cfdbf7;
+    box-shadow:
+        0 8px 22px rgba(31, 50, 86, 0.07),
+        0 20px 44px rgba(31, 50, 86, 0.09);
+    transform: translateY(-3px);
+    transition: all 0.22s ease;
+}
+
+
+
+
+
+
+/* =====================================================
+   ONECLICK — BALANCED JOB REQUESTS LAYOUT
+   Add at the very bottom of provider-job-requests.css
+   ===================================================== */
+
+.oc-main .oc-body {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 28px 30px;
+    box-sizing: border-box;
+}
+
+/* Page heading */
+.oc-main .page-header {
+    width: 100%;
+    margin-bottom: 26px;
+}
+
+/* Section headings */
+.oc-main .job-requests-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px !important;
+}
+
+/* Request cards */
+#jobRequestsGrid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 22px;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Override Bootstrap column sizing */
+#jobRequestsGrid > [class*="col-"] {
+    width: 100% !important;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Keep cards filling their grid columns */
+#jobRequestsGrid .request-card,
+#jobRequestsGrid .request-card-modern {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* When there is only one request, use a wider card */
+#jobRequestsGrid:has(> :only-child) {
+    grid-template-columns: minmax(0, 900px);
+}
+
+/* Counter-offer section */
+#counterOffersSection,
+#providerCounterOffersContainer {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+#providerCounterOffersContainer .counter-offer-card {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Tablet */
+@media (max-width: 1000px) {
+    .oc-main .oc-body {
+        padding: 24px 20px;
+    }
+
+    #jobRequestsGrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    #jobRequestsGrid:has(> :only-child) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Mobile */
+@media (max-width: 576px) {
+    .oc-main .oc-body {
+        padding: 20px 14px;
+    }
+
+    .oc-main .job-requests-heading {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    #jobRequestsGrid {
+        gap: 16px;
+    }
+}
+
+/* =====================================================
+   ONECLICK — JOB REQUEST GRID FIX
+   ===================================================== */
+
+#jobRequestsGrid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0;
+    box-sizing: border-box;
+    align-items: stretch;
+}
+
+/* Override Bootstrap column classes generated by JavaScript */
+#jobRequestsGrid > [class*="col-"] {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+}
+
+/* Make the request card fill its grid column */
+#jobRequestsGrid .request-card-modern {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* One request: give the card more room */
+#jobRequestsGrid > :only-child {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Keep the loading and empty states centered */
+#jobRequestsGrid > .col-12:only-child:has(.empty-state),
+#jobRequestsGrid > .col-12:only-child:has(.spinner-border),
+#jobRequestsGrid > .col-12:only-child:has(.alert) {
+    grid-column: 1 / -1;
+}
+
+/* Tablet and mobile */
+@media (max-width: 900px) {
+    #jobRequestsGrid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 20px;
+    }
+
+    #jobRequestsGrid > :only-child {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .oc-main .oc-body {
+        padding: 20px 14px;
+    }
+}
+
+
+
+/* =====================================================
+   ONECLICK — PREMIUM JOB REQUESTS FINISH
+   ===================================================== */
+
+.oc-main .page-header h2 {
+    font-size: 26px;
+    font-weight: 750;
+    letter-spacing: -0.6px;
+    color: #172b4d;
+}
+
+.oc-main .page-header p {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+}
+
+/* Clearer section headings */
+.oc-main .job-requests-heading {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#counterOffersSection {
+    padding: 18px 20px;
+    margin-bottom: 28px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+}
+
+#counterOffersSection h3,
+#counterOffersSection h4,
+#counterOffersSection .section-title {
+    color: #1e293b;
+    font-weight: 700;
+}
+
+/* Refined request card */
+#jobRequestsGrid .request-card-modern {
+    border: 1px solid #e0e7f0;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 28px rgba(30, 50, 90, 0.07);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#jobRequestsGrid .request-card-modern:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 34px rgba(30, 50, 90, 0.12);
+}
+
+#jobRequestsGrid .request-card-top {
+    padding: 20px 22px;
+    border-bottom: 1px solid #edf1f7;
+}
+
+#jobRequestsGrid .request-card-body {
+    padding: 22px;
+}
+
+#jobRequestsGrid .request-service {
+    font-size: 19px;
+    font-weight: 750;
+    color: #172b4d;
+}
+
+#jobRequestsGrid .request-info-label {
+    color: #64748b;
+    font-size: 12px;
+}
+
+#jobRequestsGrid .request-info-item strong {
+    color: #334155;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+#jobRequestsGrid .request-description {
+    border: 1px solid #e5ebf5;
+    border-radius: 12px;
+    background: #f8faff;
+    padding: 14px;
+}
+
+#jobRequestsGrid .request-price-row {
+    padding-top: 18px;
+    margin-top: 18px;
+    border-top: 1px solid #edf1f7;
+}
+
+#jobRequestsGrid .request-price {
+    font-size: 22px;
+    font-weight: 800;
+    color: #07804b;
+}
+
+#jobRequestsGrid .request-actions-modern {
+    display: flex;
+    gap: 12px;
+    padding: 16px 22px;
+    border-top: 1px solid #edf1f7;
+}
+
+#jobRequestsGrid .request-actions-modern .btn {
+    flex: 1;
+    min-height: 44px;
+    border-radius: 9px;
+    font-weight: 650;
+}
+
+/* Keep the card comfortable on small screens */
+@media (max-width: 576px) {
+    #jobRequestsGrid .request-card-top,
+    #jobRequestsGrid .request-card-body {
+        padding: 16px;
+    }
+
+    #jobRequestsGrid .request-actions-modern {
+        padding: 14px 16px;
+        gap: 8px;
+    }
+}
+
+
+
+/* =====================================================
+   ONECLICK — PREMIUM COUNTER OFFERS PANEL
+   ===================================================== */
+
+#counterOffersSection.counter-offers-panel {
+    width: 100%;
+    padding: 22px 24px;
+    margin-bottom: 28px !important;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 6px 22px rgba(30, 50, 90, 0.05);
+    box-sizing: border-box;
+}
+
+/* Header layout */
+#counterOffersSection .counter-offers-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* Icon + title */
+#counterOffersSection .counter-offers-title-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+#counterOffersSection .counter-offers-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    color: #2563eb;
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+    border-radius: 13px;
+    font-size: 19px;
+}
+
+#counterOffersSection .counter-offers-title {
+    margin: 0;
+    color: #172b4d;
+    font-size: 16px;
+    font-weight: 750;
+    line-height: 1.5;
+}
+
+#counterOffersSection .counter-offers-subtitle {
+    margin: 3px 0 0;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* Count badge */
+#counterOffersSection .counter-offers-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    color: #92400e !important;
+    background: #fef3c7 !important;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+/* Counter offers area */
+#providerCounterOffersContainer {
+    width: 100%;
+    margin-top: 20px;
+    box-sizing: border-box;
+}
+
+/* Existing counter-offer cards */
+#providerCounterOffersContainer .counter-offer-card {
+    width: 100%;
+    margin-bottom: 14px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(30, 50, 90, 0.04);
+    box-sizing: border-box;
+}
+
+/* Responsive spacing */
+@media (max-width: 576px) {
+    #counterOffersSection.counter-offers-panel {
+        padding: 16px;
+        border-radius: 13px;
+    }
+
+    #counterOffersSection .counter-offers-title-group {
+        gap: 10px;
+    }
+
+    #counterOffersSection .counter-offers-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    #counterOffersSection .counter-offers-title {
+        font-size: 14px;
+    }
+
+    #counterOffersSection .counter-offers-subtitle {
+        font-size: 11px;
+    }
+}
+
+
+/* Keep counter-offer title and count close together */
+#counterOffersSection .counter-offers-header {
+    justify-content: flex-start;
+    gap: 14px;
+}
+
+#counterOffersSection .counter-offers-title-group {
+    flex: 0 1 auto;
+}
+
+#counterOffersSection .counter-offers-badge {
+    margin-left: 0;
+}
+
+/* Keep New Service Requests count beside its heading */
+.oc-main .job-requests-heading {
+    justify-content: flex-start;
+    gap: 14px;
+}
+
+.oc-main .job-requests-heading #requestCount {
+    margin-left: 0;
+    
+}
+
+
+
+
+/* Customer-selected map in provider job cards */
+#jobRequestsGrid .request-map-section {
+    width: 100%;
+    margin-top: 14px;
+}
+
+#jobRequestsGrid .request-location-map {
+    display: block;
+    width: 100%;
+    height: 220px;
+    border: 1px solid #dbe4f0;
+    border-radius: 12px;
+    background: #f1f5f9;
+}
+
+#jobRequestsGrid .request-map-directions {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 10px;
+    color: #2563eb;
+    font-size: 13px;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+#jobRequestsGrid .request-map-directions:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+#jobRequestsGrid .request-map-unavailable {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 13px;
+}

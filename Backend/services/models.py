@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -105,14 +106,36 @@ class ServiceRequest(models.Model):
         null=True,
     )
 
-    address = models.CharField(
-        max_length=255,
+    address = models.CharField(max_length=255)
+
+    preferred_date = models.DateField(
+        null=True,
+        blank=True,
+    )
+
+    preferred_time = models.TimeField(
+        null=True,
+        blank=True,
+    )
+    
+    latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+    )
+
+    longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
     )
 
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default=STATUS_PENDING,
+        default=STATUS_PENDING
     )
 
     created_at = models.DateTimeField(
@@ -203,6 +226,14 @@ class Quotation(models.Model):
 
 class ProviderService(models.Model):
 
+    PRICE_FIXED = "fixed"
+    PRICE_NEGOTIABLE = "negotiable"
+
+    PRICE_TYPE_CHOICES = [
+        (PRICE_FIXED, "Fixed Price"),
+        (PRICE_NEGOTIABLE, "Negotiable"),
+    ]
+
     provider = models.ForeignKey(
         "providers.ProviderProfile",
         on_delete=models.CASCADE,
@@ -215,18 +246,34 @@ class ProviderService(models.Model):
         related_name="provider_services",
     )
 
+    price_type = models.CharField(
+        max_length=20,
+        choices=PRICE_TYPE_CHOICES,
+        default=PRICE_FIXED,
+    )
+
     price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
+        default=0,
     )
 
-    is_active = models.BooleanField(
-        default=True,
-    )
+    is_active = models.BooleanField(default=True)
 
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["service__name"]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["provider", "service"],
+                name="unique_provider_service",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.provider} - {self.service.name}"
 
     class Meta:
         ordering = ["service__name"]
@@ -244,3 +291,54 @@ class ProviderService(models.Model):
             f"{self.provider} - "
             f"{self.service.name}"
         )
+
+    # =========================================================
+# PROVIDER MESSAGES
+# =========================================================
+
+class Message(models.Model):
+
+    sender = models.ForeignKey(
+      settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="sent_messages",
+    )
+
+    receiver = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="received_messages",
+    )
+
+    provider = models.ForeignKey(
+        "providers.ProviderProfile",
+        on_delete=models.CASCADE,
+        related_name="messages",
+    )
+
+    content = models.TextField()
+    image = models.ImageField(
+        upload_to="chat/images/",
+        blank=True,
+        null=True,
+    )
+
+    file = models.FileField(
+        upload_to="chat/files/",
+        blank=True,
+        null=True,
+    )
+
+    is_read = models.BooleanField(
+        default=False
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"{self.sender.email} → {self.receiver.email}"

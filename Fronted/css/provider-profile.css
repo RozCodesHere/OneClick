@@ -515,19 +515,21 @@ input:focus-visible{
 /* ---------------------------------------------------------
    13. GALLERY
    --------------------------------------------------------- */
-.gallery-grid{
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    max-width: 850px;
 }
 
-.gallery-item{
-  position: relative;
-  border-radius: var(--oc-radius-md);
-  overflow: hidden;
-  aspect-ratio: 4 / 3;
-  cursor: pointer;
-  box-shadow: var(--oc-shadow-sm);
+.gallery-item {
+    position: relative;
+    border-radius: var(--oc-radius-md);
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    max-height: 150px;
+    cursor: pointer;
+    box-shadow: var(--oc-shadow-sm);
 }
 
 .gallery-item img{
@@ -1218,4 +1220,140 @@ html[data-theme="dark"] .text-dark {
 .empty-gallery-state p {
     margin: 0;
     opacity: 0.7;
+}
+
+
+/* =========================================================
+   PROVIDER PROFILE — RESPONSIVE FIXES
+========================================================= */
+
+@media (max-width: 991.98px) {
+
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-aside {
+        position: static;
+    }
+
+    .profile-header-card {
+        gap: 18px;
+    }
+
+}
+
+@media (max-width: 767.98px) {
+
+    .oc-breadcrumb {
+        font-size: 0.7rem;
+        overflow-wrap: anywhere;
+    }
+
+    .profile-header-card {
+        padding: 20px 15px;
+        text-align: center;
+    }
+
+    .profile-header-info {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .profile-name-row h1 {
+        font-size: 1.25rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .profile-meta-row {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .meta-divider {
+        display: none;
+    }
+
+    .profile-header-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .profile-header-actions .btn {
+        width: 100%;
+    }
+
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .panel-card {
+        padding: 16px;
+    }
+
+    .reviews-header {
+        align-items: flex-start;
+    }
+
+    .floating-summary-card {
+        padding: 18px;
+    }
+
+}
+
+@media (max-width: 480px) {
+
+    .container {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .profile-photo {
+        width: 90px;
+        height: 90px;
+    }
+
+    .profile-name-row h1 {
+        font-size: 1.1rem;
+    }
+
+    .profile-header-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-strip {
+        gap: 10px;
+    }
+
+    .mini-stat-card {
+        padding: 15px 8px;
+    }
+
+    .gallery-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+    }
+
+    .review-item {
+        padding: 12px;
+    }
+
+    .mobile-action-bar {
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+
+    body {
+        overflow-x: hidden;
+    }
+
+}
+
+
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    margin-left: 10px;
 }

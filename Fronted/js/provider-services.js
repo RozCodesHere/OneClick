@@ -59,6 +59,27 @@ document.addEventListener(
     }
 );
 
+
+function updatePriceField() {
+
+    const priceType =
+        document.getElementById("servicePriceType").value;
+
+    const priceGroup =
+        document.getElementById("servicePriceGroup");
+
+    const priceInput =
+        document.getElementById("servicePrice");
+
+    const isFixed = priceType === "fixed";
+
+    priceGroup.classList.toggle("d-none", !isFixed);
+
+    priceInput.required = isFixed;
+}
+
+
+
 /* =========================================================
    EVENT SETUP
    ========================================================= */
@@ -95,6 +116,10 @@ function setupEvents() {
             "click",
             deleteService
         );
+
+        document
+    .getElementById("servicePriceType")
+    .addEventListener("change", updatePriceField);
 
 }
 
@@ -271,13 +296,14 @@ function createServiceCard(
                 </div>
 
 
-                <div class="service-price">
+               <div class="service-price">
 
-                    Rs. ${escapeHtml(
-                        providerService.price
-                    )}
+    ${providerService.price_type === "negotiable"
+        ? "Negotiable"
+        : "Rs. " + escapeHtml(providerService.price)
+    }
 
-                </div>
+</div>
 
 
                 <div class="service-price-label">
@@ -361,7 +387,7 @@ async function openAddServiceModal() {
     document.getElementById(
         "serviceForm"
     ).reset();
-
+updatePriceField();
 
     document.getElementById(
         "serviceActive"
@@ -444,35 +470,29 @@ async function loadAvailableServices() {
 
     try {
 
-        const response =
-            await fetch(
-                SERVICES_API,
-                {
-                    headers: {
-                        "Authorization":
-                            `Bearer ${accessToken}`
-                    }
-                }
-            );
+       let services = [];
+let nextUrl = SERVICES_API;
 
+while (nextUrl) {
 
-        if (!response.ok) {
-
-            throw new Error(
-                "Unable to load services."
-            );
-
+    const response = await fetch(nextUrl, {
+        headers: {
+            "Authorization": `Bearer ${accessToken}`
         }
+    });
 
+    if (!response.ok) {
+        throw new Error("Unable to load services.");
+    }
 
-        const data =
-            await response.json();
+    const data = await response.json();
 
+    services = services.concat(
+        Array.isArray(data) ? data : data.results || []
+    );
 
-        const services =
-            Array.isArray(data)
-                ? data
-                : data.results || [];
+    nextUrl = data.next || null;
+}
 
 
         const existingIds =
@@ -651,6 +671,10 @@ function openEditServiceModal(
     ).checked =
         providerService.is_active;
 
+document.getElementById("servicePriceType").value =
+    providerService.price_type || "fixed";
+
+updatePriceField();
 
     const modal =
         bootstrap.Modal.getOrCreateInstance(
@@ -669,162 +693,94 @@ function openEditServiceModal(
    SUBMIT ADD / EDIT
    ========================================================= */
 
-async function handleServiceSubmit(
-    event
-) {
+
+async function handleServiceSubmit(event) {
 
     event.preventDefault();
-
-
     clearFormError();
 
+    const serviceSelect = document.getElementById("serviceSelect");
+    const priceInput = document.getElementById("servicePrice");
+    const activeInput = document.getElementById("serviceActive");
+    const saveButton = document.getElementById("saveServiceBtn");
 
-    const serviceSelect =
-        document.getElementById(
-            "serviceSelect"
-        );
+    const serviceId = serviceSelect.value;
+    const priceType = document.getElementById("servicePriceType").value;
 
+    const price = priceType === "negotiable"
+        ? 0
+        : priceInput.value;
 
-    const priceInput =
-        document.getElementById(
-            "servicePrice"
-        );
+    const isActive = activeInput.checked;
 
-
-    const activeInput =
-        document.getElementById(
-            "serviceActive"
-        );
-
-
-    const saveButton =
-        document.getElementById(
-            "saveServiceBtn"
-        );
-
-
-    const serviceId =
-        serviceSelect.value;
-
-
-    const price =
-        priceInput.value;
-
-
-    const isActive =
-        activeInput.checked;
-
-
-    if (!price || Number(price) <= 0) {
-
-        showFormError(
-            "Please enter a valid price."
-        );
-
+    if (
+        priceType === "fixed" &&
+        (!price || Number(price) <= 0)
+    ) {
+        showFormError("Please enter a valid price.");
         return;
-
     }
 
+    if (!editingServiceId && !serviceId) {
+        showFormError("Please select a service.");
+        return;
+    }
 
     saveButton.disabled = true;
 
-
     try {
+
+        const payload = {
+            price_type: priceType,
+            price: price,
+            is_active: isActive
+        };
 
         let response;
 
-
         if (editingServiceId) {
 
-            response =
-                await fetch(
-                    `${PROVIDER_SERVICES_API}${editingServiceId}/`,
-                    {
-                        method: "PATCH",
+            response = await fetch(
+                `${PROVIDER_SERVICES_API}${editingServiceId}/`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Authorization": `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                }
+            );
 
-                        headers: {
-                            "Authorization":
-                                `Bearer ${accessToken}`,
+        } else {
 
-                            "Content-Type":
-                                "application/json"
-                        },
+            payload.service = Number(serviceId);
 
-                        body: JSON.stringify({
-                            price: price,
-                            is_active: isActive
-                        })
-                    }
-                );
-
-        }
-
-        else {
-
-            if (!serviceId) {
-
-                showFormError(
-                    "Please select a service."
-                );
-
-                saveButton.disabled = false;
-
-                return;
-
-            }
-
-
-            response =
-                await fetch(
-                    PROVIDER_SERVICES_API,
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Authorization":
-                                `Bearer ${accessToken}`,
-
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-                            service:
-                                Number(serviceId),
-
-                            price:
-                                price,
-
-                            is_active:
-                                isActive
-                        })
-                    }
-                );
-
-        }
-
-
-        const data =
-            await response.json();
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                getApiErrorMessage(data)
+            response = await fetch(
+                PROVIDER_SERVICES_API,
+                {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                }
             );
 
         }
 
+        const data = response.status === 204
+            ? {}
+            : await response.json();
+
+        if (!response.ok) {
+            throw new Error(getApiErrorMessage(data));
+        }
 
         bootstrap.Modal
-            .getInstance(
-                document.getElementById(
-                    "serviceModal"
-                )
-            )
+            .getInstance(document.getElementById("serviceModal"))
             ?.hide();
-
 
         showAlert(
             editingServiceId
@@ -833,33 +789,21 @@ async function handleServiceSubmit(
             "success"
         );
 
-
         editingServiceId = null;
-
+        serviceSelect.disabled = false;
 
         await loadProviderServices();
 
-    }
+    } catch (error) {
 
-    catch (error) {
+        console.error("Save service error:", error);
+        showFormError(error.message);
 
-        console.error(
-            "Save service error:",
-            error
-        );
-
-        showFormError(
-            error.message
-        );
-
-    }
-
-    finally {
+    } finally {
 
         saveButton.disabled = false;
 
     }
-
 }
 
 

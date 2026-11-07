@@ -12,9 +12,9 @@ def public_stats(request):
     Values come directly from the database.
     """
 
-    verified_providers = ProviderProfile.objects.filter(
-        verified=True,
-        available=True
+    approved_providers = ProviderProfile.objects.filter(
+        verification_status=ProviderProfile.APPROVED,
+        available=True,
     ).count()
 
     customers = User.objects.filter(
@@ -28,7 +28,7 @@ def public_stats(request):
     bookings = Booking.objects.count()
 
     return JsonResponse({
-        "verified_providers": verified_providers,
+        "verified_providers": approved_providers,
         "customers": customers,
         "service_categories": service_categories,
         "bookings": bookings,

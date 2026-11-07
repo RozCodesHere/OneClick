@@ -770,3 +770,11 @@ a { text-decoration: none; }
   .status-timeline { flex-wrap: wrap; row-gap: 1.25rem; }
   .status-timeline::before { display: none; }
 }
+
+
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    margin-left: 10px;
+}

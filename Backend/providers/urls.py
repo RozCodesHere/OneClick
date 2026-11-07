@@ -1,16 +1,19 @@
 from django.urls import path
 
 from .views import (
+    NearbyProviderListView,
     ProviderListView,
     ProviderDetailView,
     ProviderDashboardView,
     ProviderAvailabilityView,
     ProviderOnboardingView,
+    ProviderLocationUpdateView,
+    ProviderWorkPhotoUploadView,
     SavedProviderListCreateView,
     SavedProviderDeleteView,
     AdminProviderListView,
+    ProviderWorkPhotoDeleteView,
 )
-
 
 urlpatterns = [
 
@@ -79,10 +82,31 @@ urlpatterns = [
         ProviderListView.as_view(),
         name="provider-list",
     ),
-
+    
+    path("nearby/", NearbyProviderListView.as_view(), name="nearby-providers"),
+  
     path(
         "<int:pk>/",
         ProviderDetailView.as_view(),
         name="provider-detail",
     ),
+
+    path(
+    "location/",
+    ProviderLocationUpdateView.as_view(),
+    name="provider-location-update",
+),
+
+    path(
+        "work-photos/upload/",
+        ProviderWorkPhotoUploadView.as_view(),
+        name="provider-work-photo-upload",
+    ),
+
+    path(
+    "work-photos/<int:photo_id>/delete/",
+    ProviderWorkPhotoDeleteView.as_view(),
+    name="provider-work-photo-delete",
+),
+
 ]

@@ -23,9 +23,11 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    loadProfile();
-    setupProfileForm();
-    setupLogout();
+  loadProfile();
+setupProfileForm();
+setupProfilePicture();
+setupLogout();
+    
 });
 
 /* =========================================================
@@ -36,8 +38,13 @@ async function apiRequest(endpoint, options = {}) {
     const token =
         localStorage.getItem("access_token");
 
+    const isFormData =
+        options.body instanceof FormData;
+
     const headers = {
-        "Content-Type": "application/json",
+        ...(isFormData
+            ? {}
+            : { "Content-Type": "application/json" }),
         ...(options.headers || {})
     };
 
@@ -55,23 +62,11 @@ async function apiRequest(endpoint, options = {}) {
     );
 
     if (response.status === 401) {
-        console.warn(
-            "Authentication expired."
-        );
-
-        localStorage.removeItem(
-            "access_token"
-        );
-
-        localStorage.removeItem(
-            "refresh_token"
-        );
-
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
         localStorage.removeItem("user");
 
-        window.location.href =
-            "login.html";
-
+        window.location.href = "login.html";
         return null;
     }
 
@@ -165,6 +160,26 @@ function renderProfile(user) {
         `${firstName} ${lastName}`
             .trim();
 
+            const dashboardLink =
+    document.getElementById("dashboardLink");
+
+if (dashboardLink) {
+    dashboardLink.href =
+        user.role === "provider"
+            ? "provider-dashboard.html"
+            : "customer-dashboard.html";
+}
+const brandDashboardLink =
+    document.getElementById("brandDashboardLink");
+
+if (brandDashboardLink) {
+    brandDashboardLink.href =
+        user.role === "provider"
+            ? "provider-dashboard.html"
+            : "customer-dashboard.html";
+}
+
+
     const profileName =
         document.getElementById(
             "profileName"
@@ -223,6 +238,7 @@ function renderProfile(user) {
         profileRole.textContent =
             formatRole(user.role);
     }
+    renderProfilePicture(user.profile_picture);
 
     /* -----------------------------------------------------
        FORM
@@ -237,6 +253,12 @@ function renderProfile(user) {
         lastNameInput.value =
             lastName;
     }
+
+    document.getElementById("phone").value = user.phone || "";
+document.getElementById("country").value = user.country || "";
+document.getElementById("province").value = user.province || "";
+document.getElementById("district").value = user.district || "";
+document.getElementById("city").value = user.city || "";
 
     if (emailInput) {
         emailInput.value =
@@ -379,7 +401,11 @@ async function updateProfile() {
         lastNameInput
             ? lastNameInput.value.trim()
             : "";
-
+const phone = document.getElementById("phone").value.trim();
+const country = document.getElementById("country").value.trim();
+const province = document.getElementById("province").value.trim();
+const district = document.getElementById("district").value.trim();
+const city = document.getElementById("city").value.trim();
     /* -----------------------------------------------------
        VALIDATION
        ----------------------------------------------------- */
@@ -421,14 +447,15 @@ async function updateProfile() {
                 {
                     method: "PATCH",
 
-                    body:
-                        JSON.stringify({
-                            first_name:
-                                firstName,
-
-                            last_name:
-                                lastName
-                        })
+                    body: JSON.stringify({
+    first_name: firstName,
+    last_name: lastName,
+    phone: phone,
+    country: country,
+    province: province,
+    district: district,
+    city: city
+})
                 }
             );
 
@@ -470,6 +497,11 @@ async function updateProfile() {
                 "Profile update failed:",
                 data
             );
+
+            console.log(
+    "BACKEND ERROR DETAILS:",
+    JSON.stringify(data, null, 2)
+);
 
             let message =
                 "Unable to update profile.";
@@ -599,3 +631,156 @@ function setupLogout() {
     });
 }
 
+
+
+/* =========================================================
+   PROFILE PICTURE — UPLOAD, PREVIEW & DELETE
+   ========================================================= */
+
+function setupProfilePicture() {
+    const avatar = document.getElementById("profileAvatar");
+    const fileInput = document.getElementById("profilePictureInput");
+    const uploadButton = document.getElementById("uploadPictureBtn");
+    const removeButton = document.getElementById("removePictureBtn");
+
+    if (!avatar || !fileInput || !uploadButton || !removeButton) {
+        return;
+    }
+
+    // Open file picker
+    uploadButton.addEventListener("click", function () {
+        fileInput.click();
+    });
+
+    // Preview and upload selected image
+    fileInput.addEventListener("change", async function () {
+        const file = fileInput.files[0];
+
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            showAlert("Please select an image file.", "warning");
+            fileInput.value = "";
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("profile_picture", file);
+
+        try {
+            uploadButton.disabled = true;
+            uploadButton.textContent = "Uploading...";
+
+            const response = await apiRequest("/users/me/", {
+                method: "PATCH",
+                body: formData
+            });
+
+            if (!response) return;
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                showAlert("Unable to upload photo.", "danger");
+                return;
+            }
+
+            window.currentUser = data;
+
+            localStorage.setItem("user", JSON.stringify(data));
+
+            renderProfilePicture(data.profile_picture);
+
+            showAlert("Profile photo updated successfully!", "success");
+
+        } catch (error) {
+            console.error("Photo upload error:", error);
+            showAlert("Unable to upload photo.", "danger");
+
+        } finally {
+            uploadButton.disabled = false;
+            uploadButton.innerHTML =
+                '<i class="fa-solid fa-camera"></i> Change Photo';
+
+            fileInput.value = "";
+        }
+    });
+
+    // Delete photo
+    removeButton.addEventListener("click", async function () {
+        if (!window.currentUser?.profile_picture) {
+            showAlert("No profile photo to remove.", "warning");
+            return;
+        }
+
+        if (!confirm("Are you sure you want to remove your profile photo?")) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("remove_profile_picture", "true");
+
+        try {
+            removeButton.disabled = true;
+            removeButton.textContent = "Removing...";
+
+            const response = await apiRequest("/users/me/", {
+                method: "PATCH",
+                body: formData
+            });
+
+            if (!response) return;
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                showAlert("Unable to remove photo.", "danger");
+                return;
+            }
+
+            window.currentUser = data;
+
+            localStorage.setItem("user", JSON.stringify(data));
+
+            renderProfilePicture(data.profile_picture);
+
+            showAlert("Profile photo removed successfully.", "success");
+
+        } catch (error) {
+            console.error("Photo removal error:", error);
+            showAlert("Unable to remove photo.", "danger");
+
+        } finally {
+            removeButton.disabled = false;
+            removeButton.innerHTML =
+                '<i class="fa-solid fa-trash"></i> Remove';
+        }
+    });
+}
+
+/* =========================================================
+   DISPLAY PROFILE PICTURE
+   ========================================================= */
+
+function renderProfilePicture(picture) {
+    const avatar = document.getElementById("profileAvatar");
+
+    if (!avatar) return;
+
+    if (picture) {
+        const imageUrl = picture.startsWith("http")
+            ? picture
+            : `http://127.0.0.1:8000${picture}`;
+
+        avatar.innerHTML = `
+            <img
+                src="${imageUrl}"
+                alt="Profile picture"
+                class="profile-avatar-image"
+            >
+        `;
+    } else {
+        avatar.innerHTML =
+            '<i class="fa-solid fa-user"></i>';
+    }
+}

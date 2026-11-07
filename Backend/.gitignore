@@ -1,16 +1,2 @@
-# Environment variables
 .env
-.env.*
-!.env.example
-
-# Python virtual environment
-venv/
-.venv/
-env/
-
-# Python cache
-__pycache__/
-*.py[cod]
-
-# Django local files
-*.log
+**/.env

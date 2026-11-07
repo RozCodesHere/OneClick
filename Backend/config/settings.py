@@ -9,15 +9,17 @@ https://docs.djangoproject.com/en/6.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
-
+import os
 from datetime import timedelta
 from pathlib import Path
+from dotenv import load_dotenv
 
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+load_dotenv(BASE_DIR / ".env")
+GOOGLE_CLIENT_ID = os.getenv("673099442634-24da2mp2sqofhqv2uh28pt8309k2pl3r.apps.googleusercontent.com", "")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
@@ -28,7 +30,12 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "192.168.1.94",
+    "levitra-lower-debian-announces.trycloudflare.com",
+]
 
 
 # Application definition
@@ -145,12 +152,20 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 
+EMAIL_HOST_USER = config("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+
+DEFAULT_FROM_EMAIL = f"OneClick Support <{EMAIL_HOST_USER}>"
+
+PASSWORD_RESET_FRONTEND_URL = config(
+    "PASSWORD_RESET_FRONTEND_URL",
+    default="http://127.0.0.1:5501/Fronted"
+)
 AUTH_USER_MODEL = "users.User"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -172,6 +187,36 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": True,
 }
 
+
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    "http://127.0.0.1:5501",
+    "http://localhost:5501",
+    "http://192.168.1.94:5501",
+    "https://wagon-rising-horizon-affair.trycloudflare.com",
 ]
+
+GOOGLE_CLIENT_ID = "673099442634-24da2mp2sqofhqv2uh28pt8309k2pl3r.apps.googleusercontent.com"
+
+
+
+
+
+# Khalti Sandbox Payment Configuration
+KHALTI_API_BASE_URL = "https://dev.khalti.com/api/v2"
+
+KHALTI_SECRET_KEY = config(
+    "KHALTI_SECRET_KEY",
+    default="",
+)
+
+KHALTI_WEBSITE_URL = config(
+    "KHALTI_WEBSITE_URL",
+    default="http://127.0.0.1:5501",
+)
+
+KHALTI_RETURN_URL = config(
+    "KHALTI_RETURN_URL",
+    default="http://127.0.0.1:8000/api/bookings/payment/khalti/return/",
+)

@@ -6,14 +6,14 @@
 
 /* ---------- Design Tokens ---------- */
 :root {
-  --oc-primary: #2563EB;
-  --oc-secondary: #3B82F6;
+  --oc-primary: #d86334;
+  --oc-secondary: #E09A65;
   --oc-accent: #F59E0B;
-  --oc-bg: #F8FAFC;
-  --oc-dark: #1E293B;
+  --oc-bg: #ffffff;
+  --oc-dark: #1c468a;
   --oc-success: #22C55E;
 
-  --oc-text-muted: #64748B;
+  --oc-text-muted: #0c0c0c;
   --oc-border: #E2E8F0;
   --oc-white: #FFFFFF;
 
@@ -46,7 +46,7 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0;
 }
 
-p { color: var(--oc-text-muted); line-height: 1.7; margin: 0; }
+p { color: black; line-height: 1.7; margin: 0; }
 
 a { text-decoration: none; color: inherit; }
 
@@ -491,6 +491,75 @@ html { scroll-behavior: smooth; }
 .oc-feature-card h6 { font-weight: 700; }
 .oc-feature-card p { font-size: 0.88rem; }
 
+/* ---------- Featured Providers ---------- */
+.oc-provider-card {
+  background: var(--oc-white);
+  border-radius: var(--oc-radius-md);
+  border: 1px solid var(--oc-border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: var(--oc-transition);
+}
+.oc-provider-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--oc-shadow-md);
+  border-color: transparent;
+}
+.oc-provider-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+  background: #f1f5f9;
+}
+.oc-provider-img-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: var(--oc-primary);
+  background: rgba(37, 99, 235, 0.08);
+}
+.oc-provider-info {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.oc-provider-info h5 {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 0.25rem;
+}
+.oc-provider-category {
+  font-size: 0.82rem;
+  color: var(--oc-text-muted);
+  margin-bottom: 0.6rem;
+}
+.oc-provider-rating {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--oc-accent);
+  margin-bottom: 0.75rem;
+}
+.oc-provider-rating small {
+  color: var(--oc-text-muted);
+  font-weight: 400;
+}
+.oc-provider-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--oc-text-muted);
+  margin-top: auto;
+}
+.oc-provider-meta i {
+  color: var(--oc-primary);
+  margin-right: 0.35rem;
+}
+
 /* ---------- Statistics ---------- */
 .oc-stats {
   background: linear-gradient(135deg, var(--oc-dark), #0F172A);
@@ -655,12 +724,12 @@ html { scroll-behavior: smooth; }
 
 /* ---------- Footer ---------- */
 .oc-footer {
-  background: #0F172A;
+  background: #1c468a;
   color: #94A3B8;
   padding: 4.5rem 0 2rem;
 }
 .oc-footer-brand { color: #fff; margin-bottom: 1rem; display: inline-flex; }
-.oc-footer-about { font-size: 0.88rem; margin-bottom: 1.25rem; max-width: 320px; }
+.oc-footer-about { color: white; font-size: 0.88rem; margin-bottom: 1.25rem; max-width: 320px; }
 .oc-social-icons { display: flex; gap: 0.75rem; }
 .oc-social-icons a {
   width: 38px; height: 38px;
@@ -988,4 +1057,290 @@ html[data-theme="dark"] .oc-testimonial-card {
     background-color 0.25s ease,
     color 0.25s ease,
     border-color 0.25s ease;
+}
+
+
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+}
+
+
+/* OneClick Nepal scenic hero background */
+.oc-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+
+    background-image:
+        linear-gradient(
+            90deg,
+            rgba(248, 250, 255, 0.97) 0%,
+            rgba(248, 250, 255, 0.90) 32%,
+            rgba(248, 250, 255, 0.55) 49%,
+            rgba(248, 250, 255, 0.08) 72%,
+            rgba(248, 250, 255, 0.02) 100%
+        ),
+        url("../assests/images/background.jpg");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.oc-hero > .container {
+    position: relative;
+    z-index: 1;
+}
+
+.oc-hero-blob {
+    opacity: 0.18;
+}
+
+@media (max-width: 767.98px) {
+    .oc-hero {
+        background-position: 58% center;
+
+        background-image:
+            linear-gradient(
+                90deg,
+                rgba(248, 250, 255, 0.94),
+                rgba(248, 250, 255, 0.78)
+            ),
+            url("../assests/images/background.jpg");
+    }
+}
+
+
+
+/* =========================================================
+   HOMEPAGE SERVICE CATEGORY IMAGES
+========================================================= */
+
+.oc-cat-card {
+    height: 100%;
+    overflow: hidden;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid #e8edf5;
+    box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.oc-cat-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+}
+
+.oc-cat-image {
+    width: 100%;
+    height: 175px;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+    background: #f1f5f9;
+}
+
+.oc-cat-content {
+    padding: 18px;
+}
+
+.oc-cat-content h5 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #172554;
+}
+
+.oc-cat-content > span {
+    color: #f97316;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.oc-cat-content > span i {
+    transition: transform 0.2s ease;
+}
+
+.oc-cat-card:hover .oc-cat-content > span i {
+    transform: translateX(4px);
+}
+
+@media (max-width: 575.98px) {
+    .oc-cat-image {
+        height: 125px;
+    }
+
+    .oc-cat-content {
+        padding: 12px;
+    }
+
+    .oc-cat-content h5 {
+        font-size: 14px;
+    }
+}
+
+
+/* =========================================================
+   HOMEPAGE SERVICE CATEGORY IMAGES
+========================================================= */
+
+.oc-cat-card {
+    height: 100%;
+    overflow: hidden;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid #e8edf5;
+    box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.oc-cat-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+}
+
+.oc-cat-image {
+    width: 100%;
+    height: 175px;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+    background: #f1f5f9;
+}
+
+.oc-cat-content {
+    padding: 18px;
+}
+
+.oc-cat-content h5 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #172554;
+}
+
+.oc-cat-content > span {
+    color: #f97316;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.oc-cat-content > span i {
+    transition: transform 0.2s ease;
+}
+
+.oc-cat-card:hover .oc-cat-content > span i {
+    transform: translateX(4px);
+}
+
+.oc-cat-icon {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    background: #f1f5f9;
+}
+
+.oc-cat-fallback {
+    min-height: 100px;
+}
+
+@media (max-width: 575.98px) {
+    .oc-cat-image {
+        height: 125px;
+    }
+
+    .oc-cat-content {
+        padding: 12px;
+    }
+
+    .oc-cat-content h5 {
+        font-size: 14px;
+    }
+}
+
+
+
+
+
+
+/* Four larger service boxes with balanced spacing */
+
+#services .row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 22px;
+    row-gap: 22px;
+}
+
+#services .row > * {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 0;
+}
+
+#services .oc-cat-card {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Service images */
+
+
+#services .oc-cat-image {
+    display: block;
+    width: 100%;
+    height: 280px;
+    padding: 0;
+    object-fit: cover;
+    object-position: center;
+}
+
+
+
+/* Text area inside each box */
+#services .oc-cat-content {
+    padding: 18px 12px;
+    text-align: center;
+}
+
+#services .oc-cat-content h5 {
+    font-size: 16px;
+}
+
+#services .oc-cat-content > span {
+    font-size: 13px;
+}
+
+/* Tablet */
+@media (max-width: 767px) {
+    #services .row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    #services .oc-cat-image {
+        height: 180px;
+    }
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+    #services .row {
+        gap: 10px;
+    }
+
+    #services .oc-cat-image {
+        height: 130px;
+    }
+
+    #services .oc-cat-content h5 {
+        font-size: 14px;
+    }
 }

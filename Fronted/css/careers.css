@@ -1,0 +1,142 @@
+:root {
+    --oc-primary: #d86334;
+    --oc-dark: #1E293B;
+    --oc-bg: #edf2f7;
+}
+
+body {
+    margin: 0;
+    background: var(--oc-bg);
+    color: var(--oc-dark);
+    font-family: "Inter", sans-serif;
+}
+
+.page-wrap {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Navbar */
+.navbar {
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    margin-right: auto;
+    text-decoration: none;
+}
+
+.oneclick-logo {
+    display: block;
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    object-position: left center;
+}
+
+/* Main content */
+main {
+    flex: 1;
+    padding: 80px 0;
+}
+
+.hero {
+    max-width: 800px;
+    margin: 0 auto 45px;
+    text-align: center;
+}
+
+.hero h1 {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    margin-bottom: 15px;
+}
+
+.hero h1 span {
+    color: var(--oc-primary);
+}
+
+.hero p {
+    color: #64748b;
+    line-height: 1.8;
+}
+
+/* Careers card */
+.career-card {
+    max-width: 850px;
+    margin: auto;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 35px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.career-card h2 {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 1.35rem;
+    margin-bottom: 12px;
+}
+
+.career-card p {
+    color: #64748b;
+    line-height: 1.75;
+}
+
+/* Information box */
+.info-box {
+    margin-top: 25px;
+    padding: 20px;
+    border-radius: 12px;
+    background: #fff1e9;
+}
+
+.info-box i {
+    color: var(--oc-primary);
+    margin-right: 8px;
+}
+
+/* Footer */
+.footer {
+    padding: 25px 0;
+    background: #fff;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.footer a {
+    color: var(--oc-primary);
+    text-decoration: none;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
+
+/* Mobile */
+@media (max-width: 576px) {
+    .oneclick-logo {
+        width: 200px;
+        height: 70px;
+    }
+
+    main {
+        padding: 50px 0;
+    }
+
+    .career-card {
+        padding: 24px;
+    }
+}

@@ -1,3 +1,4 @@
+
 /* =========================================================
    ONECLICK — MAIN JAVASCRIPT
    Homepage + shared navigation
@@ -37,8 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // NAVBAR
     // =====================================================
 
-    const navbar =
-        document.getElementById("mainNavbar");
+    const navbar = document.getElementById("mainNavbar");
 
     if (navbar) {
 
@@ -54,10 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         handleNavbarScroll();
 
-        window.addEventListener(
-            "scroll",
-            handleNavbarScroll
-        );
+        window.addEventListener("scroll", handleNavbarScroll);
     }
 
 
@@ -65,37 +62,29 @@ document.addEventListener("DOMContentLoaded", function () {
     // MOBILE NAVBAR
     // =====================================================
 
-    const navMenu =
-        document.getElementById("navMenu");
+    const navMenu = document.getElementById("navMenu");
 
-    const navLinks =
-        navMenu
-            ? navMenu.querySelectorAll(
-                ".nav-link, .oc-nav-actions .btn"
-            )
-            : [];
+    const navLinks = navMenu
+        ? navMenu.querySelectorAll(".nav-link, .oc-nav-actions .btn")
+        : [];
 
     navLinks.forEach(function (link) {
 
-        link.addEventListener(
-            "click",
-            function () {
+        link.addEventListener("click", function () {
 
-                if (
-                    navMenu &&
-                    navMenu.classList.contains("show")
-                ) {
+            if (
+                navMenu &&
+                navMenu.classList.contains("show") &&
+                window.bootstrap
+            ) {
 
-                    const bsCollapse =
-                        bootstrap.Collapse.getOrCreateInstance(
-                            navMenu
-                        );
+                const bsCollapse =
+                    bootstrap.Collapse.getOrCreateInstance(navMenu);
 
-                    bsCollapse.hide();
-                }
-
+                bsCollapse.hide();
             }
-        );
+
+        });
 
     });
 
@@ -112,6 +101,13 @@ document.addEventListener("DOMContentLoaded", function () {
     // =====================================================
 
     loadHomepageStats();
+
+
+    // =====================================================
+    // FEATURED PROVIDERS
+    // =====================================================
+
+    loadFeaturedProviders();
 
 
     // =====================================================
@@ -143,27 +139,18 @@ async function loadHomepageCategories() {
         return;
     }
 
-
     try {
 
         const response =
-            await fetch(
-                `${API_BASE_URL}/services/categories/`
-            );
-
+            await fetch(`${API_BASE_URL}/services/categories/`);
 
         if (!response.ok) {
-
             throw new Error(
                 `Failed to load categories: ${response.status}`
             );
-
         }
 
-
-        const data =
-            await response.json();
-
+        const data = await response.json();
 
         const categories =
             Array.isArray(data)
@@ -172,14 +159,9 @@ async function loadHomepageCategories() {
                     ? data.results
                     : [];
 
-
-        const activeCategories =
-            categories.filter(function (category) {
-
-                return category.is_active !== false;
-
-            });
-
+        const activeCategories = categories.filter(function (category) {
+            return category.is_active !== false;
+        });
 
         if (activeCategories.length === 0) {
 
@@ -194,34 +176,102 @@ async function loadHomepageCategories() {
             return;
         }
 
-
         container.innerHTML = "";
 
+        activeCategories.forEach(function (category) {
 
-        activeCategories.forEach(
-            function (category) {
+            const column = document.createElement("div");
 
-                const column =
-                    document.createElement("div");
-
-                column.className =
-                    "col-6 col-md-4 col-lg-3";
+            column.className = "col-6 col-md-4 col-lg-3";
 
 
-                const icon =
-                    category.icon || "🛠️";
+            // =================================================
+            // CATEGORY IMAGE MAPPING
+            // Match image to category name
+            // =================================================
+
+            const categoryName =
+                String(category.name || "").toLowerCase().trim();
+
+            let categoryImage = "";
+
+            if (categoryName.includes("clean")) {
+
+                categoryImage =
+                    "assests/images/SERVICE/cleaning (2).jpg";
+
+            } else if (
+                categoryName.includes("electric")
+            ) {
+
+                categoryImage =
+                    "assests/images/SERVICE/electrical.jpg";
+
+            } else if (
+                categoryName.includes("home repair") ||
+                categoryName.includes("home maintenance")
+            ) {
+
+                categoryImage =
+                    "assests/images/SERVICE/Plumbing (2).jpg";
+
+            } else if (
+                categoryName.includes("vehicle") ||
+                categoryName.includes("car") ||
+                categoryName.includes("bike") ||
+                categoryName.includes("automotive")
+            ) {
+
+                categoryImage =
+                    "assests/images/SERVICE/vechile.jpg";
+
+            } else if (categoryName.includes("repair")) {
+
+                categoryImage =
+                    "assest-images-service/home-repair.jpg";
+
+            }
 
 
-                column.innerHTML = `
-                    <a
-                        href="services.html?category=${encodeURIComponent(category.id)}"
-                        class="text-decoration-none">
+            // =================================================
+            // CATEGORY CARD
+            // =================================================
 
-                        <div class="oc-cat-card h-100">
+            column.innerHTML = `
+                <a
+                    href="services.html?category=${encodeURIComponent(category.id)}"
+                    class="text-decoration-none">
 
-                            <div class="oc-cat-icon">
-                                ${escapeHtml(icon)}
-                            </div>
+                    <div class="oc-cat-card h-100">
+
+                        ${
+                            categoryImage
+                                ? `
+                                    <img
+                                        src="${categoryImage}"
+                                        alt="${escapeHtml(category.name)}"
+                                        class="oc-cat-image"
+                                        loading="lazy"
+                                        onerror="
+                                            this.style.display='none';
+                                            this.nextElementSibling.style.display='flex';
+                                        "
+                                    >
+
+                                    <div
+                                        class="oc-cat-icon oc-cat-fallback"
+                                        style="display:none;">
+                                        ${escapeHtml(category.icon || "🛠️")}
+                                    </div>
+                                `
+                                : `
+                                    <div class="oc-cat-icon">
+                                        ${escapeHtml(category.icon || "🛠️")}
+                                    </div>
+                                `
+                        }
+
+                        <div class="oc-cat-content">
 
                             <h5>
                                 ${escapeHtml(category.name)}
@@ -234,42 +284,31 @@ async function loadHomepageCategories() {
 
                         </div>
 
-                    </a>
-                `;
+                    </div>
 
+                </a>
+            `;
 
-                container.appendChild(column);
+            container.appendChild(column);
 
-            }
-        );
-
+        });
 
         if (window.AOS) {
             AOS.refresh();
         }
 
-
     } catch (error) {
 
-        console.error(
-            "Homepage category error:",
-            error
-        );
-
+        console.error("Homepage category error:", error);
 
         container.innerHTML = `
             <div class="col-12 text-center">
-
                 <div class="py-4">
-
                     <i class="fa-solid fa-triangle-exclamation fa-2x mb-3"></i>
-
                     <p class="text-muted mb-0">
                         Unable to load service categories.
                     </p>
-
                 </div>
-
             </div>
         `;
 
@@ -286,55 +325,186 @@ async function loadHomepageStats() {
 
     try {
 
-        const response =
-            await fetch(
-                `${API_BASE_URL}/stats/`
-            );
-
+        const response = await fetch(`${API_BASE_URL}/stats/`);
 
         if (!response.ok) {
-
             throw new Error(
                 `Failed to load homepage statistics: ${response.status}`
             );
-
         }
 
+        const data = await response.json();
 
-        const data =
-            await response.json();
-
-
-        setStat(
-            "statProviders",
-            data.verified_providers
-        );
-
-        setStat(
-            "statCustomers",
-            data.customers
-        );
-
-        setStat(
-            "statCategories",
-            data.service_categories
-        );
-
-        setStat(
-            "statBookings",
-            data.bookings
-        );
-
+        setStat("statProviders", data.verified_providers);
+        setStat("statCustomers", data.customers);
+        setStat("statCategories", data.service_categories);
+        setStat("statBookings", data.bookings);
 
         setupCounterAnimation();
 
+    } catch (error) {
+
+        console.error("Homepage statistics error:", error);
+
+    }
+
+}
+
+
+// =========================================================
+// FEATURED PROVIDERS
+// =========================================================
+
+async function loadFeaturedProviders() {
+
+    const container = document.getElementById("featuredProviders");
+
+    if (!container) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(`${API_BASE_URL}/providers/`);
+
+        if (!response.ok) {
+            throw new Error(
+                `Failed to load providers: ${response.status}`
+            );
+        }
+
+        const data = await response.json();
+
+        const providers =
+            Array.isArray(data)
+                ? data
+                : Array.isArray(data.results)
+                    ? data.results
+                    : [];
+
+        const featured = providers
+            .filter(function (provider) {
+                return (
+                    provider.verification_status === "approved" &&
+                    provider.available === true
+                );
+            })
+            .slice(0, 4);
+
+        if (featured.length === 0) {
+
+            container.innerHTML = `
+                <div class="col-12 text-center">
+                    <p class="text-muted">
+                        Available service providers will appear here.
+                    </p>
+                </div>
+            `;
+
+            return;
+        }
+
+        container.innerHTML = "";
+
+        featured.forEach(function (provider) {
+
+            const column = document.createElement("div");
+
+            column.className = "col-12 col-sm-6 col-lg-3";
+
+            const name = provider.full_name || "Service Provider";
+
+            const category = provider.category_name || "General Service";
+
+            const experience = provider.experience || 0;
+
+            const rating = Number(provider.rating ?? 0);
+
+            const reviewCount = provider.review_count || 0;
+
+            const hourlyRate = provider.hourly_rate
+                ? `Rs. ${Number(provider.hourly_rate).toLocaleString()}/hr`
+                : "Contact for pricing";
+
+            const image = provider.profile_image
+                ? `
+                    <img
+                        src="${escapeHtml(provider.profile_image)}"
+                        alt="${escapeHtml(name)}"
+                        class="oc-provider-img">
+                  `
+                : `
+                    <div class="oc-provider-img oc-provider-img-placeholder">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                  `;
+
+            column.innerHTML = `
+                <div class="oc-provider-card h-100" data-aos="fade-up">
+
+                    ${image}
+
+                    <div class="oc-provider-info">
+
+                        <h5>${escapeHtml(name)}</h5>
+
+                        <span class="oc-provider-category">
+                            ${escapeHtml(category)}
+                        </span>
+
+                        <div class="oc-provider-rating">
+                            <i class="fa-solid fa-star"></i>
+                            ${rating.toFixed(1)}
+                            <small>(${reviewCount})</small>
+                        </div>
+
+                        <div class="oc-provider-meta">
+
+                            <span>
+                                <i class="fa-solid fa-briefcase"></i>
+                                ${experience}+ yrs
+                            </span>
+
+                            <span>
+                                <i class="fa-solid fa-tag"></i>
+                                ${escapeHtml(hourlyRate)}
+                            </span>
+
+                        </div>
+
+                        <a
+                            href="provider-profile.html?id=${encodeURIComponent(provider.id)}"
+                            class="btn oc-btn-primary btn-sm w-100 mt-3">
+                            View Profile
+                        </a>
+
+                    </div>
+
+                </div>
+            `;
+
+            container.appendChild(column);
+
+        });
+
+        if (window.AOS) {
+            AOS.refresh();
+        }
 
     } catch (error) {
 
-        console.error(
-            "Homepage statistics error:",
-            error
-        );
+        console.error("Featured providers error:", error);
+
+        container.innerHTML = `
+            <div class="col-12 text-center">
+                <div class="py-4">
+                    <i class="fa-solid fa-triangle-exclamation fa-2x mb-3"></i>
+                    <p class="text-muted mb-0">
+                        Unable to load service providers.
+                    </p>
+                </div>
+            </div>
+        `;
 
     }
 
@@ -347,22 +517,15 @@ async function loadHomepageStats() {
 
 function setStat(elementId, value) {
 
-    const element =
-        document.getElementById(elementId);
+    const element = document.getElementById(elementId);
 
     if (!element) {
         return;
     }
 
+    const number = Number(value);
 
-    const number =
-        Number(value);
-
-
-    element.textContent =
-        Number.isFinite(number)
-            ? number
-            : 0;
+    element.textContent = Number.isFinite(number) ? number : 0;
 
 }
 
@@ -373,62 +536,40 @@ function setStat(elementId, value) {
 
 function setupCounterAnimation() {
 
-    const counters =
-        document.querySelectorAll(
-            ".oc-stat-num"
-        );
-
+    const counters = document.querySelectorAll(".oc-stat-num");
 
     if (!counters.length) {
         return;
     }
 
-
     if (!("IntersectionObserver" in window)) {
         return;
     }
 
+    const observer = new IntersectionObserver(
+        function (entries) {
 
-    const observer =
-        new IntersectionObserver(
-            function (entries) {
+            entries.forEach(function (entry) {
 
-                entries.forEach(
-                    function (entry) {
+                if (!entry.isIntersecting) {
+                    return;
+                }
 
-                        if (
-                            !entry.isIntersecting
-                        ) {
-                            return;
-                        }
+                animateCounter(entry.target);
 
+                observer.unobserve(entry.target);
 
-                        animateCounter(
-                            entry.target
-                        );
+            });
 
-
-                        observer.unobserve(
-                            entry.target
-                        );
-
-                    }
-                );
-
-            },
-            {
-                threshold: 0.5
-            }
-        );
-
-
-    counters.forEach(
-        function (counter) {
-
-            observer.observe(counter);
-
+        },
+        {
+            threshold: 0.5
         }
     );
+
+    counters.forEach(function (counter) {
+        observer.observe(counter);
+    });
 
 }
 
@@ -440,56 +581,36 @@ function setupCounterAnimation() {
 function animateCounter(element) {
 
     const target =
-        parseInt(
-            element.textContent,
-            10
-        ) || 0;
-
+        parseInt(element.textContent, 10) || 0;
 
     const duration = 1200;
 
-    const startTime =
-        performance.now();
-
+    const startTime = performance.now();
 
     function update(currentTime) {
 
-        const progress =
-            Math.min(
-                (currentTime - startTime) / duration,
-                1
-            );
+        const progress = Math.min(
+            (currentTime - startTime) / duration,
+            1
+        );
 
+        const eased = 1 - Math.pow(1 - progress, 3);
 
-        const eased =
-            1 - Math.pow(1 - progress, 3);
+        const current = Math.floor(target * eased);
 
-
-        const current =
-            Math.floor(
-                target * eased
-            );
-
-
-        element.textContent =
-            current.toLocaleString();
-
+        element.textContent = current.toLocaleString();
 
         if (progress < 1) {
 
-            requestAnimationFrame(
-                update
-            );
+            requestAnimationFrame(update);
 
         } else {
 
-            element.textContent =
-                target.toLocaleString();
+            element.textContent = target.toLocaleString();
 
         }
 
     }
-
 
     requestAnimationFrame(update);
 
@@ -503,70 +624,47 @@ function animateCounter(element) {
 function setupHomepageSearch() {
 
     const searchInput =
-        document.getElementById(
-            "landingServiceSearch"
-        );
-
+        document.getElementById("landingServiceSearch");
 
     const searchButton =
-        document.getElementById(
-            "landingSearchButton"
-        );
-
+        document.getElementById("landingSearchButton");
 
     if (!searchInput) {
         return;
     }
 
-
     function performSearch() {
 
-        const searchValue =
-            searchInput.value.trim();
-
+        const searchValue = searchInput.value.trim();
 
         if (!searchValue) {
 
-            window.location.href =
-                "services.html";
+            window.location.href = "services.html";
 
             return;
 
         }
 
-
         window.location.href =
             "services.html?search=" +
-            encodeURIComponent(
-                searchValue
-            );
+            encodeURIComponent(searchValue);
 
     }
 
+    searchInput.addEventListener("keydown", function (event) {
 
-    searchInput.addEventListener(
-        "keydown",
-        function (event) {
+        if (event.key === "Enter") {
 
-            if (event.key === "Enter") {
+            event.preventDefault();
 
-                event.preventDefault();
-
-                performSearch();
-
-            }
+            performSearch();
 
         }
-    );
 
+    });
 
     if (searchButton) {
-
-        searchButton.addEventListener(
-            "click",
-            performSearch
-        );
-
+        searchButton.addEventListener("click", performSearch);
     }
 
 }
@@ -578,50 +676,34 @@ function setupHomepageSearch() {
 
 function setupBackToTop() {
 
-    const backToTop =
-        document.getElementById(
-            "backToTop"
-        );
-
+    const backToTop = document.getElementById("backToTop");
 
     if (!backToTop) {
         return;
     }
 
+    window.addEventListener("scroll", function () {
 
-    window.addEventListener(
-        "scroll",
-        function () {
+        if (window.scrollY > 500) {
 
-            if (window.scrollY > 500) {
+            backToTop.classList.add("oc-visible");
 
-                backToTop.classList.add(
-                    "oc-visible"
-                );
+        } else {
 
-            } else {
-
-                backToTop.classList.remove(
-                    "oc-visible"
-                );
-
-            }
+            backToTop.classList.remove("oc-visible");
 
         }
-    );
 
+    });
 
-    backToTop.addEventListener(
-        "click",
-        function () {
+    backToTop.addEventListener("click", function () {
 
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
 
-        }
-    );
+    });
 
 }
 
@@ -632,15 +714,9 @@ function setupBackToTop() {
 
 function escapeHtml(value) {
 
-    const div =
-        document.createElement("div");
+    const div = document.createElement("div");
 
-
-    div.textContent =
-        value == null
-            ? ""
-            : String(value);
-
+    div.textContent = value == null ? "" : String(value);
 
     return div.innerHTML;
 

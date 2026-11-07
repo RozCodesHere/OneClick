@@ -1,3 +1,5 @@
+from math import radians, sin, cos, asin, sqrt
+
 from django.db.models import Q
 
 from rest_framework import generics, status
@@ -7,51 +9,117 @@ from rest_framework.views import APIView
 
 from bookings.models import Booking
 
-from .models import ProviderProfile, SavedProvider
+from .models import ProviderProfile, SavedProvider, ProviderWorkPhoto# =========================================================
+# PROVIDER WORK PHOTO UPLOAD
+# =========================================================
+
+class ProviderWorkPhotoUploadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != "provider":
+            return Response(
+                {"error": "Only providers can upload work photos."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            profile = ProviderProfile.objects.get(user=request.user)
+        except ProviderProfile.DoesNotExist:
+            return Response(
+                {"error": "Provider profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        image = request.FILES.get("image")
+
+        if not image:
+            return Response(
+                {"error": "Please select an image."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        photo = ProviderWorkPhoto.objects.create(
+            provider=profile,
+            image=image,
+            caption=request.data.get("caption", ""),
+        )
+
+        from .serializers import ProviderWorkPhotoSerializer
+
+        serializer = ProviderWorkPhotoSerializer(
+            photo,
+            context={"request": request},
+        )
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+        )
 from .serializers import (
     ProviderSerializer,
     SavedProviderSerializer,
     ProviderOnboardingSerializer,
 )
 
+# =========================================================
+# PROVIDER WORK PHOTO DELETE
+# =========================================================
 
+class ProviderWorkPhotoDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, photo_id):
+        if request.user.role != "provider":
+            return Response(
+                {"error": "Only providers can delete work photos."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            photo = ProviderWorkPhoto.objects.get(
+                id=photo_id,
+                provider__user=request.user,
+            )
+        except ProviderWorkPhoto.DoesNotExist:
+            return Response(
+                {"error": "Work photo not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        photo.delete()
+
+        return Response(
+            {"message": "Work photo deleted successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+    
 # =========================================================
 # PROVIDER ONBOARDING
 # =========================================================
 
 class ProviderOnboardingView(generics.CreateAPIView):
-
     serializer_class = ProviderOnboardingSerializer
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-
         if request.user.role != "customer":
             return Response(
-                {
-                    "error": "Only customers can become providers."
-                },
+                {"error": "Only customers can become providers."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         serializer = self.get_serializer(
             data=request.data,
-            context={
-                "request": request
-            }
+            context={"request": request},
         )
-
-        serializer.is_valid(
-            raise_exception=True
-        )
-
+        serializer.is_valid(raise_exception=True)
         provider = serializer.save()
 
         response_serializer = ProviderSerializer(
             provider,
-            context={
-                "request": request
-            }
+            context={"request": request},
         )
 
         return Response(
@@ -67,33 +135,149 @@ class ProviderOnboardingView(generics.CreateAPIView):
 
 
 # =========================================================
+# NEARBY PROVIDERS
+# =========================================================
+
+class NearbyProviderListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Validate customer coordinates and search radius.
+        try:
+            latitude = float(request.query_params.get("latitude"))
+            longitude = float(request.query_params.get("longitude"))
+            radius = float(request.query_params.get("radius", 10))
+        except (TypeError, ValueError):
+            return Response(
+                {
+                    "error": (
+                        "Valid latitude and longitude are required. "
+                        "Radius must be a number."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not (-90 <= latitude <= 90):
+            return Response(
+                {"error": "Latitude must be between -90 and 90."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not (-180 <= longitude <= 180):
+            return Response(
+                {"error": "Longitude must be between -180 and 180."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not (0 < radius <= 100):
+            return Response(
+                {
+                    "error": (
+                        "Radius must be greater than 0 "
+                        "and at most 100 km."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Rough geographic boundaries for database filtering.
+        latitude_range = radius / 111.0
+        longitude_range = radius / (
+            111.0 * max(abs(cos(radians(latitude))), 0.01)
+        )
+
+        providers = ProviderProfile.objects.select_related(
+            "user",
+            "category",
+                ).filter(
+            verification_status=ProviderProfile.APPROVED,
+            availability_status="available",
+            latitude__isnull=False,
+            longitude__isnull=False,
+            latitude__gte=max(-90, latitude - latitude_range),
+            latitude__lte=min(90, latitude + latitude_range),
+            longitude__gte=max(-180, longitude - longitude_range),
+            longitude__lte=min(180, longitude + longitude_range),
+        )
+
+        # Optional service filter.
+        service_id = request.query_params.get("service_id")
+
+        if service_id:
+            try:
+                service_id = int(service_id)
+                if service_id <= 0:
+                    raise ValueError
+            except (TypeError, ValueError):
+                return Response(
+                    {"error": "service_id must be a positive integer."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            providers = providers.filter(
+                provider_services__service_id=service_id,
+                provider_services__is_active=True,
+            ).distinct()
+
+        results = []
+
+        # Calculate exact distance for each candidate provider.
+        for provider in providers:
+            provider_latitude = float(provider.latitude)
+            provider_longitude = float(provider.longitude)
+
+            lat1 = radians(latitude)
+            lat2 = radians(provider_latitude)
+            delta_lat = radians(provider_latitude - latitude)
+            delta_lon = radians(provider_longitude - longitude)
+
+            a = (
+                sin(delta_lat / 2) ** 2
+                + cos(lat1)
+                * cos(lat2)
+                * sin(delta_lon / 2) ** 2
+            )
+
+            distance = 6371.0 * 2 * asin(sqrt(min(1.0, max(0.0, a))))
+
+            if distance <= radius:
+                provider_data = ProviderSerializer(
+    provider,
+    context={
+        "request": request,
+        "service_id": service_id,
+    },
+).data
+
+                provider_data["distance_km"] = round(distance, 2)
+                results.append(provider_data)
+
+        results.sort(key=lambda item: item["distance_km"])
+
+        return Response(results, status=status.HTTP_200_OK)
+
+
+# =========================================================
 # PROVIDER LIST
 # =========================================================
 
 class ProviderListView(generics.ListAPIView):
-
     serializer_class = ProviderSerializer
 
     def get_queryset(self):
-
         queryset = ProviderProfile.objects.select_related(
             "user",
-            "category"
-        ).filter(
-            available=True,
-            verified=True,
+            "category",
+                ).filter(
+            availability_status="available",
+            verification_status=ProviderProfile.APPROVED,
         )
 
-        # -------------------------------------------------
-        # SEARCH
-        # -------------------------------------------------
-
-        search = self.request.query_params.get(
-            "search"
-        )
+        # Search
+        search = self.request.query_params.get("search")
 
         if search:
-
             queryset = queryset.filter(
                 Q(user__first_name__icontains=search)
                 | Q(user__last_name__icontains=search)
@@ -101,47 +285,44 @@ class ProviderListView(generics.ListAPIView):
                 | Q(category__name__icontains=search)
             )
 
-        # -------------------------------------------------
-        # CATEGORY FILTER
-        # -------------------------------------------------
-
-        category = self.request.query_params.get(
-            "category"
-        )
+        # Category filter
+        category = self.request.query_params.get("category")
 
         if category:
+            queryset = queryset.filter(category_id=category)
 
+       
+        # Structured location filters
+        country = self.request.query_params.get("country")
+        province = self.request.query_params.get("province")
+        district = self.request.query_params.get("district")
+        city = self.request.query_params.get("city")
+
+        if country:
             queryset = queryset.filter(
-                category_id=category
+                country__iexact=country.strip()
             )
 
-        # -------------------------------------------------
-        # CITY FILTER
-        # -------------------------------------------------
+        if province:
+            queryset = queryset.filter(
+                province__iexact=province.strip()
+            )
 
-        city = self.request.query_params.get(
-            "city"
-        )
+        if district:
+            queryset = queryset.filter(
+                district__iexact=district.strip()
+            )
 
         if city:
-
             queryset = queryset.filter(
-                address__icontains=city
+   
+                city__iexact=city.strip()
             )
-
-        # -------------------------------------------------
-        # SERVICE FILTER
-        #
-        # Only return providers who actually offer the
-        # selected service through ProviderService.
-        # -------------------------------------------------
-
-        service_id = self.request.query_params.get(
-            "service_id"
-        )
+            
+        # Service filter
+        service_id = self.request.query_params.get("service_id")
 
         if service_id:
-
             queryset = queryset.filter(
                 provider_services__service_id=service_id,
                 provider_services__is_active=True,
@@ -149,28 +330,14 @@ class ProviderListView(generics.ListAPIView):
 
         return queryset
 
-    # -----------------------------------------------------
-    # SERIALIZER CONTEXT
-    # -----------------------------------------------------
-
     def get_serializer_context(self):
-
         context = super().get_serializer_context()
-
-        service_id = self.request.query_params.get(
-            "service_id"
-        )
+        service_id = self.request.query_params.get("service_id")
 
         if service_id:
-
             try:
-
-                context["service_id"] = int(
-                    service_id
-                )
-
+                context["service_id"] = int(service_id)
             except (TypeError, ValueError):
-
                 context["service_id"] = None
 
         return context
@@ -180,38 +347,25 @@ class ProviderListView(generics.ListAPIView):
 # PROVIDER DETAIL
 # =========================================================
 
-class ProviderDetailView(
-    generics.RetrieveAPIView
-):
-
+class ProviderDetailView(generics.RetrieveAPIView):
     queryset = ProviderProfile.objects.select_related(
         "user",
-        "category"
+        "category",
     ).filter(
-        available=True,
-        verified=True,
-    )
+    availability_status="available",
+    verification_status=ProviderProfile.APPROVED,
+)
 
     serializer_class = ProviderSerializer
 
     def get_serializer_context(self):
-
         context = super().get_serializer_context()
-
-        service_id = self.request.query_params.get(
-            "service_id"
-        )
+        service_id = self.request.query_params.get("service_id")
 
         if service_id:
-
             try:
-
-                context["service_id"] = int(
-                    service_id
-                )
-
+                context["service_id"] = int(service_id)
             except (TypeError, ValueError):
-
                 context["service_id"] = None
 
         return context
@@ -222,204 +376,247 @@ class ProviderDetailView(
 # =========================================================
 
 class ProviderDashboardView(APIView):
-
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-
         if request.user.role != "provider":
-
             return Response(
-                {
-                    "error": (
-                        "Only providers can access "
-                        "this dashboard."
-                    )
-                },
+                {"error": "Only providers can access this dashboard."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         try:
-
             profile = ProviderProfile.objects.select_related(
                 "user",
-                "category"
-            ).get(
-                user=request.user
-            )
-
+                "category",
+            ).get(user=request.user)
         except ProviderProfile.DoesNotExist:
-
             return Response(
-                {
-                    "error": "Provider profile not found."
-                },
+                {"error": "Provider profile not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        bookings = Booking.objects.filter(
-            provider=profile
-        )
+        bookings = Booking.objects.filter(provider=profile)
 
         serializer = ProviderSerializer(
             profile,
-            context={
-                "request": request
-            }
+            context={"request": request},
         )
 
         return Response(
             {
                 "provider": serializer.data,
-
                 "statistics": {
-
-                    "total_bookings":
-                        bookings.count(),
-
-                    "pending_bookings":
-                        bookings.filter(
-                            status="pending"
-                        ).count(),
-
-                    "accepted_bookings":
-                        bookings.filter(
-                            status="accepted"
-                        ).count(),
-
-                    "completed_bookings":
-                        bookings.filter(
-                            status="completed"
-                        ).count(),
-
-                    "cancelled_bookings":
-                        bookings.filter(
-                            status="cancelled"
-                        ).count(),
+                    "total_bookings": bookings.count(),
+                    "pending_bookings": bookings.filter(
+                        status="pending"
+                    ).count(),
+                    "accepted_bookings": bookings.filter(
+                        status="accepted"
+                    ).count(),
+                    "completed_bookings": bookings.filter(
+                        status="completed"
+                    ).count(),
+                    "cancelled_bookings": bookings.filter(
+                        status="cancelled"
+                    ).count(),
                 },
-            }
+            },
+            status=status.HTTP_200_OK,
         )
+
 
 
 # =========================================================
 # PROVIDER AVAILABILITY
 # =========================================================
 
-class ProviderAvailabilityView(APIView):
 
+class ProviderAvailabilityView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request):
-
         if request.user.role != "provider":
-
             return Response(
-                {
-                    "error": (
-                        "Only providers can change "
-                        "availability."
-                    )
-                },
+                {"error": "Only providers can change availability."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         try:
-
-            profile = ProviderProfile.objects.get(
-                user=request.user
-            )
-
+            profile = ProviderProfile.objects.get(user=request.user)
         except ProviderProfile.DoesNotExist:
-
             return Response(
-                {
-                    "error": "Provider profile not found."
-                },
+                {"error": "Provider profile not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        available = request.data.get(
-            "available"
-        )
+        availability = request.data.get("availability")
 
-        if not isinstance(
-            available,
-            bool
-        ):
+        allowed_states = [
+            "available",
+            "unavailable",
+            "vacation",
+        ]
 
+        if availability not in allowed_states:
             return Response(
-                {
-                    "error": (
-                        "Available must be "
-                        "true or false."
-                    )
-                },
+                {"error": "Invalid availability status."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        profile.available = available
+        profile.availability_status = availability
+        profile.available = availability == "available"
 
         profile.save(
             update_fields=[
-                "available"
+                "availability_status",
+                "available",
             ]
         )
 
         return Response(
             {
-                "message":
-                    "Availability updated successfully.",
-
-                "available":
-                    profile.available,
+                "message": "Availability updated successfully.",
+                "availability": profile.availability_status,
+                "available": profile.available,
             },
             status=status.HTTP_200_OK,
         )
 
 
 # =========================================================
+# PROVIDER SERVICE LOCATION UPDATE
+# =========================================================
+
+
+class ProviderLocationUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        if request.user.role != "provider":
+            return Response(
+                {"error": "Only providers can update their service location."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            profile = ProviderProfile.objects.get(user=request.user)
+        except ProviderProfile.DoesNotExist:
+            return Response(
+                {"error": "Provider profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        country = request.data.get("country")
+        province = request.data.get("province")
+        district = request.data.get("district")
+        city = request.data.get("city", "")
+
+        latitude = request.data.get("latitude")
+        longitude = request.data.get("longitude")
+
+        if not country or not province or not district:
+            return Response(
+                {"error": "Country, province and district are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Coordinates must be provided together.
+        if (latitude is None) != (longitude is None):
+            return Response(
+                {"error": "Both latitude and longitude are required together."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate coordinates when provided.
+        if latitude is not None:
+            try:
+                latitude = float(latitude)
+                longitude = float(longitude)
+            except (TypeError, ValueError):
+                return Response(
+                    {"error": "Invalid latitude or longitude."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if not (-90 <= latitude <= 90):
+                return Response(
+                    {"error": "Latitude must be between -90 and 90."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if not (-180 <= longitude <= 180):
+                return Response(
+                    {"error": "Longitude must be between -180 and 180."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        profile.country = str(country).strip()
+        profile.province = str(province).strip()
+        profile.district = str(district).strip()
+        profile.city = str(city).strip()
+
+        update_fields = [
+            "country",
+            "province",
+            "district",
+            "city",
+        ]
+
+        if latitude is not None:
+            profile.latitude = latitude
+            profile.longitude = longitude
+
+            update_fields.extend([
+                "latitude",
+                "longitude",
+            ])
+
+        profile.save(update_fields=update_fields)
+
+        return Response(
+            {
+                "message": "Service location updated successfully.",
+                "location": {
+                    "country": profile.country,
+                    "province": profile.province,
+                    "district": profile.district,
+                    "city": profile.city,
+                    "latitude": profile.latitude,
+                    "longitude": profile.longitude,
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+    
+# =========================================================
 # ADMIN PROVIDER LIST
 # =========================================================
 
-class AdminProviderListView(
-    generics.ListAPIView
-):
-
+class AdminProviderListView(generics.ListAPIView):
     serializer_class = ProviderSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-
         if self.request.user.role != "admin":
-
             return ProviderProfile.objects.none()
 
         return ProviderProfile.objects.select_related(
             "user",
-            "category"
-        ).all().order_by(
-            "-id"
-        )
+            "category",
+        ).all().order_by("-id")
 
     def list(self, request, *args, **kwargs):
-
         if request.user.role != "admin":
-
             return Response(
-                {
-                    "error": (
-                        "Only administrators can "
-                        "access providers."
-                    )
-                },
+                {"error": "Only administrators can access providers."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        return super().list(
-            request,
-            *args,
-            **kwargs
-        )
+        return super().list(request, *args, **kwargs)
+
 
 
 # =========================================================
@@ -427,48 +624,35 @@ class AdminProviderListView(
 # =========================================================
 
 class SavedProviderListCreateView(APIView):
-
     permission_classes = [IsAuthenticated]
 
-    # -----------------------------------------------------
-    # GET SAVED PROVIDERS
-    # -----------------------------------------------------
-
+    # Get saved providers
     def get(self, request):
-
         if request.user.role != "customer":
-
             return Response(
-                {
-                    "error": (
-                        "Only customers can access "
-                        "saved providers."
-                    )
-                },
+                {"error": "Only customers can access saved providers."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         saved_providers = (
             SavedProvider.objects
             .filter(
-                customer=request.user
+                customer=request.user,
+                provider__availability_status="available",
+                provider__verification_status=ProviderProfile.APPROVED,
             )
             .select_related(
                 "provider",
                 "provider__user",
                 "provider__category",
             )
-            .order_by(
-                "-created_at"
-            )
+            .order_by("-created_at")
         )
 
         serializer = SavedProviderSerializer(
             saved_providers,
             many=True,
-            context={
-                "request": request
-            },
+            context={"request": request},
         )
 
         return Response(
@@ -476,95 +660,64 @@ class SavedProviderListCreateView(APIView):
             status=status.HTTP_200_OK,
         )
 
-    # -----------------------------------------------------
-    # SAVE PROVIDER
-    # -----------------------------------------------------
-
+    # Save provider
     def post(self, request):
-
         if request.user.role != "customer":
-
             return Response(
-                {
-                    "error": (
-                        "Only customers can save "
-                        "providers."
-                    )
-                },
+                {"error": "Only customers can save providers."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        provider_id = request.data.get(
-            "provider"
-        )
+        provider_id = request.data.get("provider")
 
         if not provider_id:
-
             return Response(
-                {
-                    "error": "provider is required."
-                },
+                {"error": "provider is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
-
             provider = ProviderProfile.objects.get(
-                id=provider_id
+                id=provider_id,
+                verification_status=ProviderProfile.APPROVED,
+                availability_status="available",
             )
-
         except ProviderProfile.DoesNotExist:
-
             return Response(
-                {
-                    "error": "Provider not found."
-                },
+                {"error": "Approved provider not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        saved_provider, created = (
-            SavedProvider.objects.get_or_create(
-                customer=request.user,
-                provider=provider,
-            )
+        saved_provider, created = SavedProvider.objects.get_or_create(
+            customer=request.user,
+            provider=provider,
         )
 
         serializer = SavedProviderSerializer(
             saved_provider,
-            context={
-                "request": request
-            },
+            context={"request": request},
         )
 
         if created:
-
             return Response(
                 {
-                    "message":
-                        "Provider saved successfully.",
-
-                    "saved":
-                        True,
-
-                    "data":
-                        serializer.data,
+                    "message": "Provider saved successfully.",
+                    "saved": True,
+                    "data": serializer.data,
                 },
                 status=status.HTTP_201_CREATED,
             )
 
         return Response(
             {
-                "message":
-                    "Provider is already saved.",
-
-                "saved":
-                    True,
-
-                "data":
-                    serializer.data,
+                "message": "Provider is already saved.",
+                "saved": True,
+                "data": serializer.data,
             },
             status=status.HTTP_200_OK,
         )
+
+
 
 
 # =========================================================
@@ -572,45 +725,23 @@ class SavedProviderListCreateView(APIView):
 # =========================================================
 
 class SavedProviderDeleteView(APIView):
-
     permission_classes = [IsAuthenticated]
 
-    def delete(
-        self,
-        request,
-        provider_id
-    ):
-
+    def delete(self, request, provider_id):
         if request.user.role != "customer":
-
             return Response(
-                {
-                    "error": (
-                        "Only customers can remove "
-                        "saved providers."
-                    )
-                },
+                {"error": "Only customers can remove saved providers."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         try:
-
-            saved_provider = (
-                SavedProvider.objects.get(
-                    customer=request.user,
-                    provider_id=provider_id,
-                )
+            saved_provider = SavedProvider.objects.get(
+                customer=request.user,
+                provider_id=provider_id,
             )
-
         except SavedProvider.DoesNotExist:
-
             return Response(
-                {
-                    "error": (
-                        "Provider is not in "
-                        "your saved list."
-                    )
-                },
+                {"error": "Provider is not in your saved list."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -618,11 +749,8 @@ class SavedProviderDeleteView(APIView):
 
         return Response(
             {
-                "message":
-                    "Provider removed successfully.",
-
-                "saved":
-                    False,
+                "message": "Provider removed successfully.",
+                "saved": False,
             },
             status=status.HTTP_200_OK,
         )

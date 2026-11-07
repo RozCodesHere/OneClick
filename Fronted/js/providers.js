@@ -1,18 +1,24 @@
+
 /* =========================================================
 ONECLICK — PROVIDERS PAGE
 Dynamic provider discovery from Django REST API
 Service-aware provider filtering
 ========================================================= */
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE =
+    "http://127.0.0.1:8000/api";
 
-const PROVIDERS_API = `${API_BASE}/providers/`;
+const PROVIDERS_API =
+    `${API_BASE}/providers/`;
 
 const SAVED_PROVIDERS_API =
     `${API_BASE}/providers/saved-providers/`;
 
 const SERVICES_API =
     `${API_BASE}/services/`;
+
+    const CURRENT_USER_API =
+    `${API_BASE}/users/me/`;
 
 
 /* =========================================================
@@ -24,9 +30,17 @@ let allProviders = [];
 let savedProviderIds =
     new Set();
 
-let selectedServiceId = null;
 
-let selectedService = null;
+    let customerLocation = {
+    country: "",
+    province: "",
+    district: "",
+    city: ""
+};
+
+
+let providerRefreshTimer = null;
+let isRefreshingProviders = false;
 
 
 /* =========================================================
@@ -59,9 +73,36 @@ async function initProviderPage() {
 
     await loadSelectedService();
 
+    await loadCustomerLocation();
+
     await loadProviders();
 
     await loadSavedProviders();
+
+    startProviderAutoRefresh();
+
+}
+
+
+/* =========================================================
+   AUTOMATIC PROVIDER UPDATES
+   ========================================================= */
+
+function startProviderAutoRefresh() {
+
+    if (providerRefreshTimer) {
+        clearInterval(providerRefreshTimer);
+    }
+
+    providerRefreshTimer = setInterval(function () {
+
+        if (document.hidden || isRefreshingProviders) {
+            return;
+        }
+
+        loadProviders({ silent: true });
+
+    }, 5000);
 
 }
 
@@ -226,14 +267,79 @@ function getToken() {
 
 }
 
+/* =========================================================
+LOAD CUSTOMER'S SAVED LOCATION
+========================================================= */
+
+async function loadCustomerLocation() {
+
+    const token = getToken();
+
+    if (!token) {
+        console.log("User is not logged in.");
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            CURRENT_USER_API,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                `User API returned ${response.status}`
+            );
+        }
+
+        const user = await response.json();
+
+        customerLocation = {
+            country: user.country || "",
+            province: user.province || "",
+            district: user.district || "",
+            city: user.city || ""
+        };
+
+        console.log(
+            "Customer saved location:",
+            customerLocation
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load customer location:",
+            error
+        );
+
+    }
+}
 
 /* =========================================================
 LOAD PROVIDERS FROM DJANGO
 ========================================================= */
 
-async function loadProviders() {
+async function loadProviders(options = {}) {
 
-    showLoading();
+    const silent = options.silent === true;
+
+    if (isRefreshingProviders) {
+        return;
+    }
+
+    isRefreshingProviders = true;
+
+    if (!silent) {
+        showLoading();
+    }
 
     try {
 
@@ -253,17 +359,64 @@ async function loadProviders() {
          *
          * Example:
          *
-         * /api/providers/?service_id=2
+         * /api/providers/?service_id=4
          */
 
-        if (selectedServiceId) {
+       if (selectedServiceId) {
 
-            providerUrl.searchParams.set(
-                "service_id",
-                selectedServiceId
-            );
+    providerUrl.searchParams.set(
+        "service_id",
+        selectedServiceId
+    );
 
-        }
+}
+
+
+/*
+ * CUSTOMER LOCATION FILTER
+ */
+
+if (customerLocation.country) {
+
+    providerUrl.searchParams.set(
+        "country",
+        customerLocation.country
+    );
+
+}
+
+if (customerLocation.province) {
+
+    providerUrl.searchParams.set(
+        "province",
+        customerLocation.province
+    );
+
+}
+
+if (customerLocation.district) {
+
+    providerUrl.searchParams.set(
+        "district",
+        customerLocation.district
+    );
+
+}
+
+if (customerLocation.city) {
+
+    providerUrl.searchParams.set(
+        "city",
+        customerLocation.city
+    );
+
+}
+
+
+        console.log(
+            "Loading providers from:",
+            providerUrl.toString()
+        );
 
 
         const response =
@@ -286,54 +439,122 @@ async function loadProviders() {
 
 
         console.log(
-            "Providers API data:",
+            "Providers API response:",
             data
         );
 
 
         /*
-         * DRF can return either:
+         * =====================================================
+         * HANDLE DJANGO REST FRAMEWORK RESPONSE
+         * =====================================================
          *
-         * [
-         *     {...},
-         *     {...}
-         * ]
-         *
-         * OR:
+         * DRF pagination normally returns:
          *
          * {
-         *     count: 10,
-         *     results: [...]
+         *     "count": 1,
+         *     "next": null,
+         *     "previous": null,
+         *     "results": [...]
          * }
+         *
+         * Some APIs may return a plain array.
          */
 
         const providerResults =
             Array.isArray(data)
                 ? data
-                : data.results || [];
+                : Array.isArray(data.results)
+                    ? data.results
+                    : [];
 
 
         /*
-         * Only verified providers are displayed.
+         * =====================================================
+         * IMPORTANT
+         * =====================================================
          *
-         * Service filtering itself is already
-         * handled by Django.
+         * Django ProviderListView already filters:
+         *
+         * available=True
+         * verification_status=APPROVED
+         *
+         * Therefore DO NOT use:
+         *
+         * provider.verified === true
+         *
+         * because "verified" does not exist in the
+         * ProviderSerializer response.
+         *
+         * The actual backend field is:
+         *
+         * verification_status
+         *
+         * Example:
+         *
+         * "verification_status": "approved"
+         *
+         * Django is the source of truth.
          */
 
-        allProviders =
-            providerResults.filter(
+      
+allProviders = providerResults.filter(function (provider) {
+    return (
+        provider.verification_status === "approved" &&
+        provider.availability_status === "available"
+    );
+});
+
+
+        console.log(
+            "Providers available for display:",
+            allProviders
+        );
+
+
+        /*
+         * =====================================================
+         * DEBUG INFORMATION
+         * =====================================================
+         */
+
+        console.log(
+            `Provider count from API: ${providerResults.length}`
+        );
+
+
+        if (providerResults.length > 0) {
+
+            providerResults.forEach(
                 function (provider) {
 
-                    return provider.verified === true;
+                    console.log(
+                        `Provider ${provider.id}:`,
+                        {
+                            name:
+                                provider.full_name,
+
+                            verification_status:
+                                provider.verification_status,
+
+                            available:
+                                provider.available,
+
+                            category:
+                                provider.category_name,
+
+                            service:
+                                provider.service_name,
+
+                            service_price:
+                                provider.service_price
+                        }
+                    );
 
                 }
             );
 
-
-        console.log(
-            "Verified providers:",
-            allProviders
-        );
+        }
 
 
         /*
@@ -354,16 +575,26 @@ async function loadProviders() {
         );
 
 
-    } catch (error) {
+        } catch (error) {
 
         console.error(
             "Error loading providers:",
             error
         );
 
-        showError(
-            "Unable to connect to the provider server. Make sure your Django backend is running."
-        );
+        if (!silent) {
+
+            allProviders = [];
+
+            showError(
+                "Unable to connect to the provider server. Make sure your Django backend is running."
+            );
+
+        }
+
+    } finally {
+
+        isRefreshingProviders = false;
 
     }
 
@@ -812,18 +1043,18 @@ function getFilteredProviders() {
 
 
     /*
-     * IMPORTANT:
+     * =====================================================
+     * SERVICE FILTERING
+     * =====================================================
      *
-     * Service filtering is NOT performed here.
+     * Service filtering is handled by Django.
      *
-     * Django already received:
+     * Example:
      *
-     * /api/providers/?service_id=2
+     * /api/providers/?service_id=4
      *
-     * and returned only providers who offer
+     * Django returns only providers who offer
      * that service.
-     *
-     * Therefore Django is the source of truth.
      */
 
 
@@ -867,11 +1098,35 @@ function getFilteredProviders() {
                 ).toLowerCase();
 
 
+            /*
+             * Also search inside the services array.
+             *
+             * This makes searching work even when
+             * service_name is null.
+             */
+
+            const servicesText =
+                Array.isArray(provider.services)
+                    ? provider.services
+                        .map(
+                            function (service) {
+
+                                return String(
+                                    service.name || ""
+                                ).toLowerCase();
+
+                            }
+                        )
+                        .join(" ")
+                    : "";
+
+
             const matchesSearch =
                 !search ||
                 name.includes(search) ||
                 categoryName.includes(search) ||
                 serviceName.includes(search) ||
+                servicesText.includes(search) ||
                 bio.includes(search) ||
                 address.includes(search);
 
@@ -989,6 +1244,10 @@ function renderProviders(
         );
 
     if (!grid) {
+
+        console.warn(
+            "providersGrid element was not found."
+        );
 
         return;
 
@@ -1157,13 +1416,41 @@ function renderProviderCard(
             );
 
 
-    const verified =
-        provider.verified === true;
+    /*
+     * =====================================================
+     * VERIFICATION
+     * =====================================================
+     *
+     * IMPORTANT:
+     *
+     * Backend returns:
+     *
+     * verification_status: "approved"
+     *
+     * NOT:
+     *
+     * verified: true
+     */
 
+    const verified =
+        provider.verification_status === "approved";
+
+
+    /*
+     * =====================================================
+     * AVAILABILITY
+     * =====================================================
+     */
 
     const available =
         provider.available === true;
 
+
+    /*
+     * =====================================================
+     * SAVED STATE
+     * =====================================================
+     */
 
     const isSaved =
         savedProviderIds.has(
@@ -1606,6 +1893,7 @@ function generateStars(
 
     let html = "";
 
+
     for (
         let i = 1;
         i <= 5;
@@ -1647,6 +1935,7 @@ function generateStars(
         }
 
     }
+
 
     return html;
 
@@ -1916,6 +2205,8 @@ async function toggleSaveProvider(
     }
 
 }
+
+
 /* =========================================================
 UPDATE SAVE BUTTON
 ========================================================= */
@@ -1952,10 +2243,12 @@ function updateSaveButton(
             "saved"
         );
 
+
         button.setAttribute(
             "aria-label",
             "Remove from saved providers"
         );
+
 
         button.setAttribute(
             "title",
@@ -1968,6 +2261,7 @@ function updateSaveButton(
             icon.classList.remove(
                 "fa-regular"
             );
+
 
             icon.classList.add(
                 "fa-solid"
@@ -1983,10 +2277,12 @@ function updateSaveButton(
             "saved"
         );
 
+
         button.setAttribute(
             "aria-label",
             "Save provider"
         );
+
 
         button.setAttribute(
             "title",
@@ -1999,6 +2295,7 @@ function updateSaveButton(
             icon.classList.remove(
                 "fa-solid"
             );
+
 
             icon.classList.add(
                 "fa-regular"

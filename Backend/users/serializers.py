@@ -27,7 +27,23 @@ class RegisterSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "phone",
+                        
+            "country",
+            "province",
+            "district",
+            "city",
+            "profile_picture",
+            
             "role",
+            "is_active",
+            "date_joined",
+        )
+
+        read_only_fields = (
+            "id",
+            "role",
+            "is_active",
+            "date_joined",
         )
 
     def create(self, validated_data):
@@ -61,7 +77,17 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "first_name",
             "last_name",
-            "phone",
+                        "phone",
+            "country",
+            "province",
+            "district",
+            "city",
+                        "notification_preferences",
+            "privacy_preferences",
+            "appearance_preferences",
+            "preferred_payment_method",
+            "profile_picture",
+            
             "role",
             "is_active",
             "date_joined",

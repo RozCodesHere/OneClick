@@ -1,3 +1,4 @@
+
 from django.contrib import admin
 
 from .models import (
@@ -5,12 +6,12 @@ from .models import (
     Service,
     ServiceRequest,
     Quotation,
+    ProviderService,
 )
 
 
 @admin.register(ServiceCategory)
 class ServiceCategoryAdmin(admin.ModelAdmin):
-
     list_display = (
         "id",
         "name",
@@ -25,7 +26,6 @@ class ServiceCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
-
     list_display = (
         "id",
         "name",
@@ -48,7 +48,6 @@ class ServiceAdmin(admin.ModelAdmin):
 
 @admin.register(ServiceRequest)
 class ServiceRequestAdmin(admin.ModelAdmin):
-
     list_display = (
         "id",
         "customer",
@@ -79,7 +78,6 @@ class ServiceRequestAdmin(admin.ModelAdmin):
 
 @admin.register(Quotation)
 class QuotationAdmin(admin.ModelAdmin):
-
     list_display = (
         "id",
         "request",
@@ -98,6 +96,32 @@ class QuotationAdmin(admin.ModelAdmin):
         "request__customer__email",
         "request__service__name",
         "provider__user__email",
+    )
+
+    readonly_fields = (
+        "created_at",
+    )
+
+
+@admin.register(ProviderService)
+class ProviderServiceAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "provider",
+        "service",
+        "price",
+        "is_active",
+        "created_at",
+    )
+
+    list_filter = (
+        "service",
+        "is_active",
+    )
+
+    search_fields = (
+        "provider__user__email",
+        "service__name",
     )
 
     readonly_fields = (

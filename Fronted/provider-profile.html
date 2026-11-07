@@ -49,12 +49,10 @@
 <div class="container">
 
     <a class="navbar-brand oc-brand" href="index.html">
-        <span class="brand-icon">
-            <i class="fa-solid fa-bolt"></i>
-        </span>
-
-        <span>OneClick</span>
-    </a>
+    <img src="assests/images/logo.png"
+         alt="OneClick"
+         class="oneclick-logo">
+</a>
 
 
     <button
@@ -76,8 +74,8 @@
         <ul class="navbar-nav mx-auto oc-nav-links">
 
             <li class="nav-item">
-                <a class="nav-link" href="index.html">Home</a>
-            </li>
+    <a class="nav-link" href="index.html">Home</a>
+</li>
 
             <li class="nav-item">
                 <a class="nav-link" href="services.html">Services</a>
@@ -88,7 +86,7 @@
             </li>
 
             <li class="nav-item">
-                <<a class="nav-link" href="customer-bookings.html">My Bookings</a>
+                <a class="nav-link" href="booking-history.html">My Bookings</a>
             </li>
 
         </ul>
@@ -96,32 +94,32 @@
 
         <div class="oc-nav-actions">
 
-            <button
-                class="icon-btn"
-                aria-label="Notifications"
-            >
-                <i class="fa-regular fa-bell"></i>
-                <span class="icon-dot">2</span>
-            </button>
+            <a
+    href="notifications.html"
+    class="icon-btn"
+    aria-label="Notifications"
+>
+    <i class="fa-regular fa-bell"></i>
+    <span class="icon-dot">2</span>
+</a>
 
-
-          <div class="nav-user">
-
+         
+<a href="profile.html" class="nav-user text-decoration-none">
     <img
-        src="https://i.pravatar.cc/60?img=47"
+        src=""
         alt="User avatar"
         class="nav-avatar"
         id="navUserAvatar"
     >
-
     <span
         class="d-none d-md-inline"
         id="navUserName"
     >
         User
     </span>
+</a>
 
-</div>
+
 
         </div>
 
@@ -141,7 +139,7 @@
 
 <div class="container">
 
-    <a href="index.html">Home</a>
+    <a href="customer-dashboard.html">Home</a>
 
     <i class="fa-solid fa-chevron-right"></i>
 
@@ -232,18 +230,29 @@
             </div>
 
 
+<!-- CATEGORY -->
 
-            <!-- CATEGORY -->
+<p class="profile-profession">
 
-            <p class="profile-profession">
+    <i class="fa-solid fa-bolt"></i>
 
-                <i class="fa-solid fa-bolt"></i>
+    <span id="providerCategory">
+        Service Provider
+    </span>
 
-                <span id="providerCategory">
-                    Service Provider
-                </span>
+</p>
 
-            </p>
+<!-- SELECTED SERVICE -->
+
+<p class="profile-profession">
+
+    <i class="fa-solid fa-screwdriver-wrench"></i>
+
+    <span id="providerService">
+        Service
+    </span>
+
+</p>
 
 
 
@@ -322,7 +331,21 @@
 
             </div>
 
+<!-- EMAIL -->
+<span class="meta-divider"></span>
 
+<div class="profile-meta-item">
+
+    <i class="fa-solid fa-envelope meta-icon"></i>
+
+    <span
+        class="meta-sub"
+        id="providerEmail"
+    >
+        Email not available
+    </span>
+
+</div>
 
             <!-- ACTION BUTTONS -->
 
@@ -811,125 +834,47 @@
 
 
 
-            <!-- =================================================
-                 REVIEWS
-                 ================================================= -->
+            <section class="panel-card fade-up" id="reviews">
 
-            <section
-                class="panel-card fade-up"
-                id="reviews"
-            >
+    <div class="reviews-header">
+        <h2 class="panel-title mb-0">
+            <i class="fa-solid fa-star"></i>
+            Customer Reviews
+        </h2>
 
-                <div class="reviews-header">
+        <div class="reviews-summary">
+            <span class="reviews-score" id="reviewsScore">0.0</span>
 
-                    <h2 class="panel-title mb-0">
+            <div>
+                <span class="meta-stars">
+                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                </span>
 
-                        <i class="fa-solid fa-star"></i>
-
-                        Customer Reviews
-
-                    </h2>
-
-
-                    <div class="reviews-summary">
-
-                        <span
-                            class="reviews-score"
-                            id="reviewsScore"
-                        >
-                            0.0
-                        </span>
-
-
-                        <div>
-
-                            <span class="meta-stars">
-
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-
-                            </span>
-
-
-                            <p id="reviewsSummaryText">
-                                Based on 0 reviews
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div
-                    class="review-list"
-                    id="reviewsContainer"
-                >
-
-                    <div class="review-item">
-
-                        <img
-                            src="https://i.pravatar.cc/50?img=32"
-                            alt="Customer"
-                            class="review-avatar"
-                        >
-
-                        <div class="review-body">
-
-                            <div class="review-top">
-
-                                <h5>
-                                    Customer Review
-                                </h5>
-
-                                <div class="review-stars">
-
-                                    <i class="fa-regular fa-star"></i>
-                                    <i class="fa-regular fa-star"></i>
-                                    <i class="fa-regular fa-star"></i>
-                                    <i class="fa-regular fa-star"></i>
-                                    <i class="fa-regular fa-star"></i>
-
-                                </div>
-
-                            </div>
-
-
-                            <p class="review-text">
-                                No customer reviews are available yet.
-                            </p>
-
-
-                            <span class="review-date">
-                                —
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <button
-                    class="btn btn-outline-more ripple w-100"
-                    id="loadMoreReviews"
-                >
-
-                    <i class="fa-solid fa-chevron-down"></i>
-
-                    Load More Reviews
-
-                </button>
-
-            </section>
-
-
+                <p id="reviewsSummaryText">Based on 0 reviews</p>
+            </div>
         </div>
+    </div>
+
+   
+
+    <!-- REVIEWS LOAD HERE -->
+    <div class="review-list" id="reviewsContainer"></div>
+
+    <button
+        class="btn btn-outline-more ripple w-100"
+        id="loadMoreReviews"
+    >
+        <i class="fa-solid fa-chevron-down"></i>
+        Load More Reviews
+    </button>
+
+</section>
+
+        
 
 
 
@@ -979,9 +924,7 @@
 
                             <i class="fa-solid fa-bolt"></i>
 
-                            <span id="floatingCategory">
-                                Service Provider
-                            </span>
+                            <span id="floatingService"></span>
 
                         </p>
 
@@ -1179,48 +1122,134 @@
 
 <footer class="oc-footer">
 
-```
-<div class="container">
+    <div class="container">
 
-    <div class="footer-grid">
-
-
-        <div class="footer-brand">
-
-            <a class="oc-brand" href="#">
-
-                <span class="brand-icon">
-                    <i class="fa-solid fa-bolt"></i>
-                </span>
-
-                <span>OneClick</span>
-
-            </a>
+        <div class="footer-grid">
 
 
-            <p>
-                Home services, one click away.
-                Trusted professionals for every job,
-                big or small.
-            </p>
+            <!-- =================================================
+                 BRAND
+                 ================================================= -->
 
+            <div class="footer-brand">
 
-            <div class="footer-social">
+                <a class="oc-brand" href="index.html">
 
-                <a href="#" aria-label="Facebook">
-                    <i class="fa-brands fa-facebook-f"></i>
+                    <span class="brand-icon">
+                        <i class="fa-solid fa-bolt"></i>
+                    </span>
+
+                    <span>OneClick</span>
+
                 </a>
 
-                <a href="#" aria-label="Instagram">
-                    <i class="fa-brands fa-instagram"></i>
+
+                <p>
+                    Home services, one click away.
+                    Trusted professionals for every job,
+                    big or small.
+                </p>
+
+
+                <div class="footer-social">
+
+                    <a href="#" aria-label="Facebook">
+                        <i class="fa-brands fa-facebook-f"></i>
+                    </a>
+
+                    <a href="#" aria-label="Instagram">
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
+
+                    <a href="#" aria-label="Twitter">
+                        <i class="fa-brands fa-x-twitter"></i>
+                    </a>
+
+                    <a href="#" aria-label="LinkedIn">
+                        <i class="fa-brands fa-linkedin-in"></i>
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 COMPANY
+                 ================================================= -->
+
+            <div class="footer-col">
+
+                <h5>Company</h5>
+
+                <a href="about.html">
+                    About Us
                 </a>
 
-                <a href="#" aria-label="Twitter">
-                    <i class="fa-brands fa-x-twitter"></i>
+                <a href="careers.html">
+                    Careers
                 </a>
 
-                <a href="#" aria-label="LinkedIn">
-                    <i class="fa-brands fa-linkedin-in"></i>
+                <a href="blog.html">
+                    Blog
+                </a>
+
+                <a href="contact.html">
+                    Contact
+                </a>
+
+            </div>
+
+
+            <!-- =================================================
+                 SERVICES
+                 ================================================= -->
+
+            <div class="footer-col">
+
+                <h5>Services</h5>
+
+                <a href="services.html?service=5">
+                    Electrician
+                </a>
+
+                <a href="services.html?service=1">
+                    Plumber
+                </a>
+
+                <a href="services.html">
+                    Cleaning
+                </a>
+
+                <a href="services.html">
+                    All Services
+                </a>
+
+            </div>
+
+
+            <!-- =================================================
+                 SUPPORT
+                 ================================================= -->
+
+            <div class="footer-col">
+
+                <h5>Support</h5>
+
+                <a href="support.html">
+    Help Center
+</a>
+
+                <a href="privacy.html">
+                    Privacy Policy
+                </a>
+
+                <a href="term.html">
+                    Terms of Service
+                </a>
+
+                <a href="cancellation.html">
+                    Cancellation Policy
                 </a>
 
             </div>
@@ -1228,71 +1257,37 @@
         </div>
 
 
+        <!-- =====================================================
+             FOOTER BOTTOM
+             ===================================================== -->
 
-        <div class="footer-col">
+        <div class="footer-bottom">
 
-            <h5>Company</h5>
-
-            <a href="#">About Us</a>
-            <a href="#">Careers</a>
-            <a href="#">Blog</a>
-            <a href="#">Contact</a>
-
-        </div>
-
+            <p>
+                &copy; 2026 OneClick.
+                All rights reserved.
+            </p>
 
 
-        <div class="footer-col">
+            <div class="footer-bottom-links">
 
-            <h5>Services</h5>
+                <a href="privacy.html">
+                    Privacy
+                </a>
 
-            <a href="#">Electrician</a>
-            <a href="#">Plumber</a>
-            <a href="#">Cleaning</a>
-            <a href="#">All Services</a>
+                <a href="term.html">
+                    Terms
+                </a>
 
-        </div>
+                <span class="footer-version">
+                    v2.4.1
+                </span>
 
-
-
-        <div class="footer-col">
-
-            <h5>Support</h5>
-
-            <a href="#">Help Center</a>
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
-            <a href="#">Cancellation Policy</a>
+            </div>
 
         </div>
 
     </div>
-
-
-
-    <div class="footer-bottom">
-
-        <p>
-            &copy; 2026 OneClick.
-            All rights reserved.
-        </p>
-
-
-        <div class="footer-bottom-links">
-
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-
-            <span class="footer-version">
-                v2.4.1
-            </span>
-
-        </div>
-
-    </div>
-
-</div>
-```
 
 </footer>
 

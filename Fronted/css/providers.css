@@ -1287,3 +1287,235 @@
     }
 
 }
+
+
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    margin-left: 10px;
+}
+
+
+
+
+/* =========================================================
+   PROVIDERS PAGE — RESPONSIVE POLISH
+   Add at the bottom of providers.css
+   ========================================================= */
+
+/* Consistent provider card heights */
+.providers-grid {
+    align-items: stretch;
+}
+
+.provider-discovery-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+}
+
+.provider-card-image {
+    flex-shrink: 0;
+}
+
+.provider-card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.provider-card-footer {
+    margin-top: auto;
+    flex-wrap: wrap;
+}
+
+/* Prevent long provider names from breaking the card */
+.provider-card-name {
+    overflow-wrap: anywhere;
+}
+
+.provider-card-name-wrap {
+    flex: 1;
+}
+
+/* Keep search fields consistent */
+.providers-filter-card {
+    box-sizing: border-box;
+}
+
+.filter-field .form-control,
+.filter-field .form-select {
+    width: 100%;
+    min-width: 0;
+}
+
+/* Responsive logo */
+.oneclick-logo {
+    display: block;
+    width: min(220px, 100%);
+    height: 65px;
+    object-fit: contain;
+    margin-left: 0;
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1100px) {
+    .providers-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .providers-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    .provider-card-footer {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .view-provider-btn {
+        width: auto;
+    }
+
+    .providers-filter-section {
+        margin-top: -18px;
+    }
+}
+
+/* Very small phones */
+@media (max-width: 420px) {
+    .provider-card-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .view-provider-btn {
+        width: 100%;
+    }
+
+    .oneclick-logo {
+        width: 160px;
+        height: 52px;
+    }
+}
+
+
+/* =========================================================
+   ONECLICK — NAVBAR LINKS FIX
+   ========================================================= */
+
+.oc-navbar .oc-navbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.oc-navbar .oc-brand {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+}
+
+.oc-navbar .oc-nav-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    flex: 1;
+    min-width: 0;
+}
+
+.oc-navbar .oc-nav-links a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 0;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+.oc-navbar .oc-nav-links a:hover,
+.oc-navbar .oc-nav-links a.active {
+    color: #2563eb;
+}
+
+.oc-navbar .oc-nav-links a::after {
+    position: absolute;
+    right: 0;
+    bottom: 3px;
+    left: 0;
+    height: 2px;
+    background: #2563eb;
+    border-radius: 2px;
+    content: "";
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.2s ease;
+}
+
+.oc-navbar .oc-nav-links a:hover::after,
+.oc-navbar .oc-nav-links a.active::after {
+    transform: scaleX(1);
+}
+
+.oc-navbar .oc-nav-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+/* Tablet and smaller desktop */
+@media (max-width: 1100px) and (min-width: 992px) {
+    .oc-navbar .oc-navbar-inner {
+        gap: 16px;
+    }
+
+    .oc-navbar .oc-nav-links {
+        gap: 16px;
+    }
+
+    .oc-navbar .oc-nav-links a {
+        font-size: 13px;
+    }
+
+    .oc-navbar .oneclick-logo {
+        width: 170px;
+        height: 55px;
+    }
+}
+
+/* Mobile: keep the existing hidden-links behavior */
+@media (max-width: 991px) {
+    .oc-navbar .oc-navbar-inner {
+        gap: 12px;
+    }
+
+    .oc-navbar .oc-nav-actions {
+        margin-left: auto;
+    }
+
+    .oc-navbar .oneclick-logo {
+        width: 160px;
+        height: 52px;
+    }
+}

@@ -1,6 +1,7 @@
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.utils import timezone
 
 
 class UserManager(BaseUserManager):
@@ -56,6 +57,7 @@ class User(AbstractUser):
     email = models.EmailField(
         unique=True,
     )
+    email_verified = models.BooleanField(default=False)
 
     role = models.CharField(
         max_length=20,
@@ -68,6 +70,53 @@ class User(AbstractUser):
         blank=True,
     )
 
+    # Customer service location
+    country = models.CharField(
+        max_length=100,
+        default="Nepal",
+    )
+
+    province = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    district = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    city = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+        # User Settings
+
+    notification_preferences = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    privacy_preferences = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    appearance_preferences = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    preferred_payment_method = models.CharField(
+        max_length=20,
+        default="cash",
+        choices=[
+            ("cash", "Cash on Service"),
+            ("khalti", "Khalti"),
+            ("esewa", "eSewa"),
+            ("card", "Credit Card"),
+        ],
+    )
     profile_picture = models.ImageField(
         upload_to="profiles/",
         blank=True,
@@ -87,3 +136,16 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+class EmailOTP(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="email_otp"
+    )
+    otp_hash = models.CharField(max_length=128)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"OTP for {self.user.email}"

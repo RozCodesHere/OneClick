@@ -1,3 +1,4 @@
+
 from django.urls import path
 
 from .views import (
@@ -5,6 +6,8 @@ from .views import (
     ServiceDetailView,
     ServiceListView,
     ServiceRequestListCreateView,
+    ServiceRequestDeleteView,
+    ServiceRequestCancelView,
     ProviderServiceRequestListView,
     QuotationListCreateView,
     QuotationAcceptView,
@@ -12,73 +15,65 @@ from .views import (
     QuotationCounterOfferView,
     QuotationFinalOfferView,
     ProviderServiceListCreateView,
-ProviderServiceDetailView,
+    ProviderServiceDetailView,
+        ProviderQuotationAcceptView,
+    MessageListCreateView,
 )
 
 
 urlpatterns = [
-
-    # =====================================================
     # SERVICE CATEGORIES
-    # =====================================================
-
     path(
         "categories/",
         ServiceCategoryListView.as_view(),
         name="service-category-list",
     ),
 
-
-    # =====================================================
     # SERVICES
-    # =====================================================
-
     path(
         "",
         ServiceListView.as_view(),
         name="service-list",
     ),
-
-path(
-    "provider/",
-    ProviderServiceListCreateView.as_view(),
-    name="provider-service-list-create",
-),
-
-path(
-    "provider/<int:pk>/",
-    ProviderServiceDetailView.as_view(),
-    name="provider-service-detail",
-),
-
+    path(
+        "provider/",
+        ProviderServiceListCreateView.as_view(),
+        name="provider-service-list-create",
+    ),
+    path(
+        "provider/<int:pk>/",
+        ProviderServiceDetailView.as_view(),
+        name="provider-service-detail",
+    ),
     path(
         "<int:pk>/",
         ServiceDetailView.as_view(),
         name="service-detail",
     ),
 
-
-    # =====================================================
-    # SERVICE REQUESTS
-    # =====================================================
-
+    # CUSTOMER SERVICE REQUESTS
     path(
         "requests/",
         ServiceRequestListCreateView.as_view(),
         name="service-request-list-create",
     ),
-
+    path(
+        "requests/<int:pk>/cancel/",
+        ServiceRequestCancelView.as_view(),
+        name="service-request-cancel",
+    ),
+    path(
+        "requests/<int:pk>/",
+        ServiceRequestDeleteView.as_view(),
+        name="service-request-delete",
+    ),
     path(
         "requests/provider/",
         ProviderServiceRequestListView.as_view(),
         name="provider-service-requests",
     ),
 
-
-    # =====================================================
     # QUOTATIONS
-    # =====================================================
-
     path(
         "quotations/",
         QuotationListCreateView.as_view(),
@@ -86,27 +81,37 @@ path(
     ),
 
     path(
+    "quotations/<int:pk>/provider-accept/",
+    ProviderQuotationAcceptView.as_view(),
+    name="provider-quotation-accept",
+),
+
+
+    path(
         "quotations/<int:pk>/accept/",
         QuotationAcceptView.as_view(),
         name="quotation-accept",
     ),
-
     path(
         "quotations/<int:pk>/reject/",
         QuotationRejectView.as_view(),
         name="quotation-reject",
     ),
-
     path(
-    "quotations/<int:pk>/counter/",
-    QuotationCounterOfferView.as_view(),
-    name="quotation-counter",
-),
+        "quotations/<int:pk>/counter/",
+        QuotationCounterOfferView.as_view(),
+        name="quotation-counter",
+    ),
+    path(
+        "quotations/<int:pk>/final/",
+        QuotationFinalOfferView.as_view(),
+        name="quotation-final",
+    ),
 
-path(
-    "quotations/<int:pk>/final/",
-    QuotationFinalOfferView.as_view(),
-    name="quotation-final",
-),
+    # PROVIDER MESSAGES
+    path(
+        "messages/",
+        MessageListCreateView.as_view(),
+        name="message-list-create",
+    ),
 ]
-

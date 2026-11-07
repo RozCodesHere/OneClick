@@ -1,0 +1,267 @@
+/* ============================================================
+   ONECLICK — PROVIDER COMPLETED JOBS
+   ============================================================ */
+
+body {
+    font-family: "Poppins", sans-serif;
+    margin: 0;
+    background: #f6f7fb;
+}
+
+
+/* ===============================
+   MAIN
+   =============================== */
+
+/* Main layout is handled by provider-dashboard.css */
+
+
+/* ===============================
+   TOPBAR
+   =============================== */
+
+/* Topbar layout is handled by provider-dashboard.css */
+
+.topbar-title h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.provider-top-info {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+
+/* ===============================
+   PAGE
+   =============================== */
+
+/* Page body layout is handled by provider-dashboard.css */
+.page-header {
+    margin-bottom: 25px;
+}
+
+.page-header h2 {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.page-header p {
+    color: #777;
+    margin-bottom: 18px;
+}
+
+
+/* ===============================
+   SUMMARY
+   =============================== */
+
+.completed-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    background: #ffffff;
+    border: 1px solid #eeeeee;
+    border-radius: 10px;
+}
+
+.summary-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.completed-summary span {
+    display: block;
+    color: #777;
+    font-size: 12px;
+}
+
+.completed-summary strong {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+
+/* ===============================
+   JOBS CARD
+   =============================== */
+
+.completed-jobs-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 25px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
+}
+
+
+/* ===============================
+   JOB ITEM
+   =============================== */
+
+.completed-job-item {
+    display: flex;
+    gap: 18px;
+    padding: 22px 0;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.completed-job-item:first-child {
+    padding-top: 5px;
+}
+
+.completed-job-item:last-child {
+    border-bottom: none;
+    padding-bottom: 5px;
+}
+
+
+/* ===============================
+   ICON
+   =============================== */
+
+.completed-job-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 50%;
+    background: #e8f5e9;
+    color: #2e7d32;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* ===============================
+   DETAILS
+   =============================== */
+
+.completed-job-details {
+    flex: 1;
+}
+
+.completed-job-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 14px;
+}
+
+.completed-job-header h5 {
+    margin: 0 0 6px;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.completed-status {
+    font-size: 12px;
+    color: #2e7d32;
+    font-weight: 500;
+}
+
+.job-price {
+    font-size: 16px;
+    white-space: nowrap;
+}
+
+
+/* ===============================
+   JOB INFO
+   =============================== */
+
+.job-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 25px;
+}
+
+.job-info-grid div {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: #666;
+    font-size: 13px;
+}
+
+.job-info-grid i {
+    width: 18px;
+    margin-top: 3px;
+}
+
+
+/* ===============================
+   EMPTY STATE
+   =============================== */
+
+.empty-state {
+    text-align: center;
+    padding: 70px 20px;
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: #bbb;
+    margin-bottom: 18px;
+}
+
+.empty-state h4 {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: #777;
+    margin-bottom: 0;
+}
+
+
+/* ===============================
+   MOBILE
+   =============================== */
+
+@media (max-width: 991px) {
+
+    .oc-body {
+        padding: 25px 20px;
+    }
+}
+
+
+@media (max-width: 768px) {
+
+    .oc-topbar {
+        padding: 0 18px;
+    }
+
+    .oc-body {
+        padding: 20px 15px;
+    }
+
+    .completed-job-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .job-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .completed-job-item {
+        gap: 12px;
+    }
+}
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    margin-left: 10px;
+}

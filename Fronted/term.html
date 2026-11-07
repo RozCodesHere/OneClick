@@ -25,9 +25,11 @@
 <!-- ========================================================= -->
 <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top oc-navbar">
   <div class="container">
-    <a class="navbar-brand oc-brand" href="index.html">
-      <i class="fa-solid fa-house-chimney-window"></i> OneClick
-    </a>
+     <a class="navbar-brand oc-brand" href="index.html"></a>
+    <img src="assests/images/logo.png"
+         alt="OneClick"
+         class="oneclick-logo">
+</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ocNavbar" aria-controls="ocNavbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -41,10 +43,7 @@
         <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
         <li class="nav-item"><a class="nav-link" href="faq.html">FAQ</a></li>
       </ul>
-      <div class="d-flex gap-2 oc-nav-buttons">
-        <a href="login.html" class="btn oc-btn-outline">Login</a>
-        <a href="register.html" class="btn oc-btn-primary">Register</a>
-      </div>
+      
     </div>
   </div>
 </nav>
@@ -253,67 +252,71 @@
   </div>
 </main>
 
-<!-- ========================================================= -->
-<!-- FOOTER                                                     -->
-<!-- ========================================================= -->
-<footer class="oc-footer">
-  <div class="container">
-    <div class="row gy-4">
-      <div class="col-lg-4 col-md-6">
-        <a class="oc-footer-brand" href="index.html">
-          <i class="fa-solid fa-house-chimney-window"></i> OneClick
-        </a>
-        <p class="oc-footer-text">Connecting customers with trusted local home service providers, one click at a time.</p>
-        <div class="oc-social">
-          <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
-          <a href="#"><i class="fa-brands fa-instagram"></i></a>
-          <a href="#"><i class="fa-brands fa-twitter"></i></a>
-          <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+<!-- =========================================================
+       FOOTER
+  ========================================================== -->
+  <footer id="contact" class="oc-footer">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4">
+         <a class="oc-brand oc-footer-brand" href="index.html">
+    <img src="assests/images/logo.png"
+         alt="OneClick"
+         class="oneclick-logo">
+</a>
+          </a>
+          <p class="oc-footer-about">Nepal's trusted marketplace for verified home and personal service professionals — booked in one click.</p>
+          <div class="oc-social-icons">
+            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+          </div>
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <h6 class="oc-footer-title">Company</h6>
+          <ul class="oc-footer-links">
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="become-provider.html">Become a Provider</a></li>
+            <li><a href="careers.html">Careers</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="blog.html">Blog</a></li>
+          </ul>
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <h6 class="oc-footer-title">Services</h6>
+          <ul class="oc-footer-links">
+    <li><a href="services.html">Plumbing</a></li>
+    <li><a href="services.html">Electrical Repair</a></li>
+    <li><a href="services.html">Deep Home Cleaning</a></li>
+    <li><a href="services.html">Car Wash</a></li>
+</ul>
+        </div>
+
+        <div class="col-lg-4">
+          <h6 class="oc-footer-title">Get In Touch</h6>
+          <ul class="oc-footer-contact">
+            <li><i class="fa-solid fa-location-dot"></i> Kathmandu, Nepal</li>
+            <li><i class="fa-solid fa-phone"></i> +977 1-4000000</li>
+            <li><i class="fa-solid fa-envelope"></i> hello@oneclick.com.np</li>
+          </ul>
         </div>
       </div>
 
-      <div class="col-lg-2 col-md-6">
-        <h6 class="oc-footer-heading">Company</h6>
-        <ul class="oc-footer-links">
-          <li><a href="about.html">About Us</a></li>
-          <li><a href="how-it-works.html">How It Works</a></li>
-          <li><a href="become-provider.html">Become a Provider</a></li>
-          <li><a href="contact.html">Contact</a></li>
-        </ul>
-      </div>
+      <hr class="oc-footer-divider">
 
-      <div class="col-lg-2 col-md-6">
-        <h6 class="oc-footer-heading">Support</h6>
-        <ul class="oc-footer-links">
-          <li><a href="faq.html">FAQ</a></li>
-          <li><a href="contact.html">Help Center</a></li>
-          <li><a href="services.html">Services</a></li>
-        </ul>
-      </div>
-
-      <div class="col-lg-2 col-md-6">
-        <h6 class="oc-footer-heading">Legal</h6>
-        <ul class="oc-footer-links">
-          <li><a href="privacy.html">Privacy Policy</a></li>
-          <li><a href="term.html" class="active">Terms &Conditions</a></li>
-        </ul>
-      </div>
-
-      <div class="col-lg-2 col-md-6">
-        <h6 class="oc-footer-heading">Contact</h6>
-        <ul class="oc-footer-links">
-          <li><i class="fa-solid fa-envelope me-2"></i>support@oneclick.com</li>
-          <li><i class="fa-solid fa-phone me-2"></i>+977-1-4XXXXXX</li>
-        </ul>
+      <div class="oc-footer-bottom">
+        <p class="mb-0">&copy; <span id="year"></span> OneClick. All rights reserved.</p>
+        <div class="oc-footer-legal">
+         <a href="privacy.html">Privacy Policy</a>
+         <a href="term.html">Terms & Conditions</a>
+        </div>
       </div>
     </div>
+  </footer>
 
-    <hr class="oc-footer-divider">
-    <div class="text-center oc-footer-bottom">
-      <p>&copy; 2026 OneClick. All rights reserved. This is an academic project — not a live commercial service.</p>
-    </div>
-  </div>
-</footer>
 
 <!-- Scroll to top button -->
 <button id="scrollTopBtn" class="oc-scroll-top" aria-label="Scroll to top">

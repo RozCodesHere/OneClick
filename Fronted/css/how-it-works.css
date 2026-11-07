@@ -3,14 +3,14 @@
 ========================================================= */
 
 :root {
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
+  --primary: #d86334;
+  --primary-dark: #E09A65;
   --accent: #f59e0b;
   --accent-dark: #d97706;
-  --dark: #0f172a;
+  --dark: #1c468a;
   --text: #334155;
   --muted: #64748b;
-  --light: #f8fafc;
+  --light: #edf2f7;
   --white: #ffffff;
   --border: #e2e8f0;
   --success: #22c55e;
@@ -529,17 +529,51 @@ a {
   border-color: var(--white);
 }
 
-/* =========================================================
-   FOOTER
-========================================================= */
-
-.site-footer {
-  background: var(--dark);
-  color: #94a3b8;
-  text-align: center;
-  padding: 25px 15px;
-  font-size: 0.9rem;
+/* ---------- Footer ---------- */
+.oc-footer {
+  background: #1c468a;
+  color: #94A3B8;
+  padding: 4.5rem 0 2rem;
 }
+.oc-footer-brand { color: #fff; margin-bottom: 1rem; display: inline-flex; }
+.oc-footer-about { color: white; font-size: 0.88rem; margin-bottom: 1.25rem; max-width: 320px; }
+.oc-social-icons { display: flex; gap: 0.75rem; }
+.oc-social-icons a {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--oc-transition);
+}
+.oc-social-icons a:hover { background: var(--oc-primary); color: #fff; transform: translateY(-3px); }
+
+.oc-footer-title { color: #fff; font-size: 0.95rem; margin-bottom: 1.1rem; }
+.oc-footer-links, .oc-footer-contact {
+  list-style: none;
+  padding: 0; margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  font-size: 0.88rem;
+}
+.oc-footer-links a { transition: var(--oc-transition); }
+.oc-footer-links a:hover { color: #fff; }
+.oc-footer-contact li { display: flex; align-items: flex-start; gap: 0.6rem; }
+.oc-footer-contact i { margin-top: 0.2rem; color: var(--oc-primary); }
+
+.oc-footer-divider { border-color: rgba(255,255,255,0.08); margin: 2.5rem 0 1.5rem; }
+.oc-footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+.oc-footer-legal { display: flex; gap: 1.5rem; }
+.oc-footer-legal a:hover { color: #fff; }
 
 /* =========================================================
    RESPONSIVE
@@ -719,4 +753,11 @@ a {
   .step-card::before {
     height: 40px;
   }
+}
+
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    margin-left: 10px;
 }

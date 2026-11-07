@@ -22,3 +22,13 @@ env/
 # OS files
 .DS_Store
 Thumbs.db
+
+
+# Django generated files
+staticfiles/
+
+# Database
+*.sqlite3
+
+# Uploaded media and personal files
+Backend/media/

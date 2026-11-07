@@ -1,0 +1,315 @@
+
+/* =========================================================
+   ONECLICK — PAYMENT PAGE
+   Blue / White / Orange | Glassmorphism | Dark Mode
+   ========================================================= */
+
+:root {
+    --payment-primary: #2563EB;
+    --payment-primary-dark: #1D4ED8;
+    --payment-accent: #F59E0B;
+    --payment-success: #22C55E;
+    --payment-text: #1E293B;
+    --payment-muted: #64748B;
+    --payment-border: rgba(100, 116, 139, 0.16);
+}
+
+/* ==================== PAGE ==================== */
+
+.payment-page {
+    padding-bottom: 3rem;
+}
+
+.payment-page .page-title {
+    font-weight: 700;
+}
+
+.payment-page .page-subtitle {
+    color: var(--payment-muted);
+}
+
+/* ==================== CARDS ==================== */
+
+.payment-card {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 18px;
+    box-shadow: 0 8px 30px rgba(37, 99, 235, 0.08);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.payment-card-title {
+    font-size: 1.08rem;
+    font-weight: 600;
+    color: var(--payment-text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.25rem;
+}
+
+.payment-card-title i {
+    color: var(--payment-primary);
+}
+
+/* ==================== BOOKING DETAILS ==================== */
+
+.payment-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--payment-border);
+}
+
+.payment-info-row:last-child {
+    border-bottom: none;
+}
+
+.payment-info-label {
+    color: var(--payment-muted);
+    font-size: 0.88rem;
+}
+
+.payment-info-value {
+    color: var(--payment-text);
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-align: right;
+}
+
+/* ==================== INVOICE ==================== */
+
+.invoice-number {
+    display: inline-block;
+    background: rgba(245, 158, 11, 0.12);
+    color: #B45309;
+    border-radius: 30px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.invoice-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 0;
+    color: var(--payment-muted);
+    border-bottom: 1px dashed var(--payment-border);
+    font-size: 0.92rem;
+}
+
+.invoice-row strong {
+    color: var(--payment-text);
+}
+
+.invoice-total {
+    margin-top: 0.5rem;
+    padding-top: 1.1rem;
+    border-top: 2px solid rgba(37, 99, 235, 0.16);
+    border-bottom: none;
+    color: var(--payment-primary-dark);
+    font-size: 1.12rem;
+    font-weight: 700;
+}
+
+.invoice-total strong {
+    color: var(--payment-primary-dark);
+    font-size: 1.25rem;
+}
+
+/* ==================== PAYMENT OPTIONS ==================== */
+
+.payment-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 0.85rem;
+    border: 1.5px solid var(--payment-border);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.payment-option:hover {
+    border-color: var(--payment-primary);
+    background: rgba(37, 99, 235, 0.04);
+    transform: translateY(-2px);
+}
+
+.payment-option:has(input:checked) {
+    border-color: var(--payment-primary);
+    background: rgba(37, 99, 235, 0.07);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);
+}
+
+.payment-option input[type="radio"] {
+    width: 19px;
+    height: 19px;
+    accent-color: var(--payment-primary);
+    flex-shrink: 0;
+}
+
+.payment-option-content {
+    flex: 1;
+}
+
+.payment-option-title {
+    font-weight: 600;
+    color: var(--payment-text);
+    margin-bottom: 3px;
+}
+
+.payment-option-description {
+    color: var(--payment-muted);
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.payment-option img {
+    max-width: 75px;
+    max-height: 35px;
+    object-fit: contain;
+}
+
+.payment-option-icon {
+    font-size: 1.5rem;
+    color: var(--payment-primary);
+}
+
+/* ==================== PAYMENT BUTTON ==================== */
+
+#continuePaymentBtn {
+    width: 100%;
+    padding: 0.85rem 1.2rem;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(
+        135deg,
+        var(--payment-primary),
+        var(--payment-primary-dark)
+    );
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: 0 5px 16px rgba(37, 99, 235, 0.22);
+    transition: all 0.25s ease;
+}
+
+#continuePaymentBtn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(37, 99, 235, 0.3);
+}
+
+#continuePaymentBtn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* ==================== PAYMENT STATUS ==================== */
+
+.payment-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.4rem 0.85rem;
+    border-radius: 30px;
+    background: rgba(245, 158, 11, 0.12);
+    color: #B45309;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* ==================== MESSAGE ==================== */
+
+#paymentMessage {
+    margin-top: 1rem;
+}
+
+#paymentMessage .alert {
+    border-radius: 12px;
+    font-size: 0.88rem;
+}
+
+/* ==================== FOOTER ==================== */
+
+.payment-page + .footer-custom {
+    margin-top: 1rem;
+}
+
+/* ==================== DARK MODE ==================== */
+
+html[data-theme="dark"] {
+    --payment-text: #E2E8F0;
+    --payment-muted: #94A3B8;
+    --payment-border: rgba(148, 163, 184, 0.16);
+}
+
+html[data-theme="dark"] .payment-card {
+    background: rgba(17, 24, 39, 0.82);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .payment-card-title,
+html[data-theme="dark"] .payment-info-value,
+html[data-theme="dark"] .invoice-row strong,
+html[data-theme="dark"] .payment-option-title {
+    color: var(--payment-text);
+}
+
+html[data-theme="dark"] .payment-option {
+    background: rgba(15, 23, 42, 0.65);
+    border-color: #334155;
+}
+
+html[data-theme="dark"] .payment-option:hover,
+html[data-theme="dark"] .payment-option:has(input:checked) {
+    background: rgba(37, 99, 235, 0.14);
+    border-color: #3B82F6;
+}
+
+html[data-theme="dark"] .invoice-number,
+html[data-theme="dark"] .payment-status {
+    background: rgba(245, 158, 11, 0.14);
+    color: #FBBF24;
+}
+
+html[data-theme="dark"] .invoice-total,
+html[data-theme="dark"] .invoice-total strong {
+    color: #60A5FA;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 575.98px) {
+
+    .payment-card {
+        padding: 1.1rem;
+    }
+
+    .payment-info-row,
+    .invoice-row {
+        font-size: 0.85rem;
+    }
+
+    .payment-option {
+        padding: 0.85rem;
+    }
+
+}
+
+
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    margin-left: 10px;
+}

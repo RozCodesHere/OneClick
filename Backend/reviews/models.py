@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from bookings.models import Booking
 
 from providers.models import ProviderProfile
 
@@ -18,6 +19,14 @@ class Review(models.Model):
         related_name="reviews",
     )
 
+    booking = models.ForeignKey(
+    Booking,
+    on_delete=models.CASCADE,
+    related_name="review",
+    null=True,
+    blank=True,
+)
+
     rating = models.PositiveSmallIntegerField()
 
     comment = models.TextField(blank=True)
@@ -28,9 +37,7 @@ class Review(models.Model):
         ordering = ["-created_at"]
 
         unique_together = (
-            "customer",
-            "provider",
-        )
-
+    "booking",
+)
     def __str__(self):
         return f"{self.customer.email} - {self.rating}"

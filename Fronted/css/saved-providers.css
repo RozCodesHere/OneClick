@@ -707,3 +707,40 @@ body {
     gap: 12px;
   }
 }
+
+
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    margin-left: 10px;
+}
+
+/* FIX: SAVED PROVIDER IMAGE SIZE */
+
+.provider-image-wrapper {
+    width: 100%;
+    height: 190px;
+    position: relative;
+    overflow: hidden;
+    background: #eef2ff;
+}
+
+.provider-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.provider-avatar-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 42px;
+    font-weight: 800;
+}

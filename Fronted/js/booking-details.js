@@ -13,9 +13,26 @@ let currentBookingLongitude = null;
 
 let googleMapsReady = false;
 
+
 /* =========================================================
-   GOOGLE MAPS INITIALIZATION
+   LEAFLET MAP INITIALIZATION
    ========================================================= */
+let bookingMap = null;
+let bookingMarker = null;
+
+// Provider live tracking
+let providerLiveMarker = null;
+let providerLocationPolling = null;
+let providerLocationRequestInProgress = false;
+
+// Provider live route
+let providerRouteLine = null;
+let lastRoutedProviderPosition = null;
+let routeRequestInProgress = false;
+// Booking completion detection
+let bookingCompletionPolling = null;
+let previousBookingStatus = null;
+let completionCheckInProgress = false;
 
 window.initializeBookingMap = function(
     address,
@@ -23,22 +40,16 @@ window.initializeBookingMap = function(
     longitude
 ) {
     if (address !== undefined) {
+        currentBookingAddress = String(address || "");
+    }
 
-    currentBookingAddress = String(address || "");
+    if (latitude !== undefined) {
+        currentBookingLatitude = latitude;
+    }
 
-}
-
-if (latitude !== undefined) {
-
-    currentBookingLatitude = latitude;
-
-}
-
-if (longitude !== undefined) {
-
-    currentBookingLongitude = longitude;
-
-}
+    if (longitude !== undefined) {
+        currentBookingLongitude = longitude;
+    }
 
     const mapContainer = document.querySelector("#bookingMap");
     const openMapsButton = document.querySelector("#openGoogleMapsBtn");
@@ -68,39 +79,356 @@ if (longitude !== undefined) {
 
     setupGoogleMapsButton(bookingAddress);
 
-    if (!googleMapsReady || typeof google === "undefined" || !google.maps) {
+    if (typeof L === "undefined") {
         mapContainer.innerHTML = `
             <div class="map-loading">
-                <i class="fa-solid fa-spinner fa-spin"></i>
-                <span>Loading map...</span>
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Leaflet could not load. Check your internet connection.</span>
             </div>
         `;
         return;
     }
 
-   renderGoogleMap(
-    bookingAddress,
-    currentBookingLatitude,
-    currentBookingLongitude
-);
+    if (
+        currentBookingLatitude === null ||
+        currentBookingLatitude === undefined ||
+        currentBookingLongitude === null ||
+        currentBookingLongitude === undefined
+    ) {
+        mapContainer.innerHTML = `
+            <div class="map-loading">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>Map coordinates are not available.</span>
+            </div>
+        `;
+        return;
+    }
+
+    const latitudeNumber = Number(currentBookingLatitude);
+    const longitudeNumber = Number(currentBookingLongitude);
+
+    if (
+        !Number.isFinite(latitudeNumber) ||
+        !Number.isFinite(longitudeNumber) ||
+        latitudeNumber < -90 ||
+        latitudeNumber > 90 ||
+        longitudeNumber < -180 ||
+        longitudeNumber > 180
+    ) {
+        console.error("Invalid booking coordinates.");
+        return;
+    }
+
+    const location = [
+        latitudeNumber,
+        longitudeNumber
+    ];
+
+    // Create the map only once.
+    if (!bookingMap) {
+        mapContainer.innerHTML = "";
+
+        bookingMap = L.map("bookingMap").setView(location, 15);
+
+        L.tileLayer(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            {
+                maxZoom: 19,
+                attribution:
+                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }
+        ).addTo(bookingMap);
+
+        bookingMarker = L.marker(location)
+            .addTo(bookingMap)
+            .bindPopup("Customer Service Location");
+    } else {
+        bookingMap.setView(location, 15);
+        bookingMarker.setLatLng(location);
+    }
+
+    // Fix map sizing after rendering.
+    setTimeout(function() {
+        bookingMap.invalidateSize();
+    }, 100);
+
+    console.log("Leaflet booking map loaded:", location);
 };
 
 /* =========================================================
-   GOOGLE MAPS CALLBACK
+   PROVIDER LIVE LOCATION TRACKING
    ========================================================= */
 
-window.initBookingMap = function() {
-    googleMapsReady = true;
+function stopProviderLocationTracking() {
 
-    console.log("Google Maps API loaded.");
-
-    if (currentBookingAddress) {
-        window.initializeBookingMap(currentBookingAddress);
+    if (providerLocationPolling) {
+        clearInterval(providerLocationPolling);
+        providerLocationPolling = null;
     }
-};
+
+    providerLocationRequestInProgress = false;
+}
+
+
+async function updateProviderLiveLocation(bookingId) {
+
+    if (
+        !bookingMap ||
+        providerLocationRequestInProgress
+    ) {
+        return;
+    }
+
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        stopProviderLocationTracking();
+        return;
+    }
+
+    providerLocationRequestInProgress = true;
+
+    try {
+
+        const response = await fetch(
+            `${API_BASE}/bookings/${bookingId}/location/`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        if (!response.ok) {
+
+            console.warn(
+                "Provider location unavailable:",
+                response.status
+            );
+
+            if ([400, 404].includes(response.status)) {
+                stopProviderLocationTracking();
+            }
+
+            return;
+        }
+
+        const data = await response.json();
+
+        if (
+            !["on_the_way", "in_progress"].includes(data.status)
+        ) {
+            stopProviderLocationTracking();
+            return;
+        }
+
+        const latitude = Number(data.provider_latitude);
+        const longitude = Number(data.provider_longitude);
+
+        if (
+            !Number.isFinite(latitude) ||
+            !Number.isFinite(longitude) ||
+            latitude < -90 ||
+            latitude > 90 ||
+            longitude < -180 ||
+            longitude > 180
+        ) {
+            console.log("Waiting for provider GPS coordinates.");
+            return;
+        }
+
+        const providerPosition = [latitude, longitude];
+
+        if (!providerLiveMarker) {
+
+            const motorcycleIcon = L.divIcon({
+                className: "provider-live-icon",
+                html: '<i class="fa-solid fa-motorcycle"></i>',
+                iconSize: [42, 42],
+                iconAnchor: [21, 21]
+            });
+
+            providerLiveMarker = L.marker(
+                providerPosition,
+                { icon: motorcycleIcon }
+            )
+            .addTo(bookingMap)
+            .bindPopup("Your provider is here");
+            // Automatically show both markers only once.
+const locations = [
+    bookingMarker.getLatLng(),
+    providerLiveMarker.getLatLng()
+];
+
+const bounds = L.latLngBounds(locations);
+
+bookingMap.fitBounds(bounds, {
+    padding: [50, 50],
+    maxZoom: 14
+});
+
+        } else {
+
+            providerLiveMarker.setLatLng(providerPosition);
+
+        }
+
+                // Update the road route as the provider moves.
+        updateProviderRoute(providerPosition);
+
+        console.log(
+            "Provider location updated:",
+            providerPosition
+        );
+
+             
+
+
+
+
+
+    } catch (error) {
+
+        console.error(
+            "Provider tracking error:",
+            error
+        );
+
+    } finally {
+
+        providerLocationRequestInProgress = false;
+
+    }
+}
 
 /* =========================================================
-   GOOGLE MAPS BUTTON
+   PROVIDER LIVE ROAD ROUTE
+   ========================================================= */
+
+async function updateProviderRoute(providerPosition) {
+
+    if (
+        routeRequestInProgress ||
+        !bookingMarker
+    ) {
+        return;
+    }
+
+    // Avoid requesting a route if the provider has barely moved.
+    if (lastRoutedProviderPosition) {
+
+        const previous = L.latLng(
+            lastRoutedProviderPosition[0],
+            lastRoutedProviderPosition[1]
+        );
+
+        const current = L.latLng(
+            providerPosition[0],
+            providerPosition[1]
+        );
+
+        if (previous.distanceTo(current) < 50) {
+            return;
+        }
+    }
+
+    routeRequestInProgress = true;
+
+    try {
+
+        const customerPosition = bookingMarker.getLatLng();
+
+        const url =
+            `https://router.project-osrm.org/route/v1/driving/` +
+            `${providerPosition[1]},${providerPosition[0]};` +
+            `${customerPosition.lng},${customerPosition.lat}` +
+            `?overview=full&geometries=geojson`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error("Route request failed.");
+        }
+
+        const data = await response.json();
+
+        if (
+            data.code !== "Ok" ||
+            !data.routes ||
+            !data.routes.length
+        ) {
+            console.warn("No road route found.");
+            return;
+        }
+
+        const routeCoordinates =
+            data.routes[0].geometry.coordinates.map(
+                function(point) {
+                    return [point[1], point[0]];
+                }
+            );
+
+        if (providerRouteLine) {
+
+            providerRouteLine.setLatLngs(routeCoordinates);
+
+        } else {
+
+            providerRouteLine = L.polyline(
+                routeCoordinates,
+                {
+                    color: "#2563eb",
+                    weight: 5,
+                    opacity: 0.8
+                }
+            ).addTo(bookingMap);
+
+        }
+
+        lastRoutedProviderPosition = providerPosition;
+
+        console.log("Provider road route updated.");
+
+    } catch (error) {
+
+        console.error("ROUTE UPDATE ERROR:", error);
+
+    } finally {
+
+        routeRequestInProgress = false;
+
+    }
+}
+
+
+function startProviderLocationTracking(bookingId, bookingStatus) {
+
+    stopProviderLocationTracking();
+
+    if (
+        !["on_the_way", "in_progress"].includes(bookingStatus)
+    ) {
+        return;
+    }
+
+    // Get the first location immediately.
+    updateProviderLiveLocation(bookingId);
+
+    // Refresh location every 4 seconds.
+    providerLocationPolling = setInterval(
+        function() {
+            updateProviderLiveLocation(bookingId);
+        },
+        4000
+    );
+
+}
+
+
+/* =========================================================
+   GOOGLE MAPS DIRECTIONS BUTTON
    ========================================================= */
 
 function setupGoogleMapsButton(address) {
@@ -120,95 +448,7 @@ function setupGoogleMapsButton(address) {
     button.rel = "noopener noreferrer";
     button.classList.remove("disabled");
 
-    button.onclick = function(event) {
-        if (button.href && button.href !== "#") {
-            return;
-        }
-
-        event.preventDefault();
-        window.open(mapsUrl, "_blank", "noopener,noreferrer");
-    };
-
-    console.log("Google Maps URL:", mapsUrl);
-}
-
-/* =========================================================
-   RENDER GOOGLE MAP
-   ========================================================= */
-
-function renderGoogleMap(address, latitude, longitude) {
-    const mapContainer = document.querySelector("#bookingMap");
-
-    if (!mapContainer) {
-        return;
-    }
-
-    setupGoogleMapsButton(address);
-
-    /*
-     * ---------------------------------------------------------
-     * USE SAVED BOOKING COORDINATES
-     * ---------------------------------------------------------
-     */
-
-    if (
-        latitude === null ||
-        latitude === undefined ||
-        longitude === null ||
-        longitude === undefined
-    ) {
-        mapContainer.innerHTML = `
-            <div class="map-loading">
-                <i class="fa-solid fa-location-dot"></i>
-                <span>Map location is not available.</span>
-            </div>
-        `;
-
-        console.warn(
-            "Booking does not contain location coordinates."
-        );
-
-        return;
-    }
-
-    const location = {
-        lat: Number(latitude),
-        lng: Number(longitude)
-    };
-
-    /*
-     * ---------------------------------------------------------
-     * CREATE GOOGLE MAP
-     * ---------------------------------------------------------
-     */
-
-    const map = new google.maps.Map(
-        mapContainer,
-        {
-            center: location,
-            zoom: 15,
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: true
-        }
-    );
-
-    /*
-     * ---------------------------------------------------------
-     * ADD BOOKING LOCATION MARKER
-     * ---------------------------------------------------------
-     */
-
-    new google.maps.Marker({
-        map: map,
-        position: location,
-        title: address || "Service Location"
-    });
-
-    console.log(
-        "Google Map loaded using booking coordinates:",
-        location
-    );
+    console.log("Google Maps directions URL prepared.");
 }
 
 /* =========================================================
@@ -255,11 +495,111 @@ document.addEventListener(
             bookingId
         );
 
-        loadBooking(bookingId);
-        setupLogout();
-        setupInvoiceButtons();
+      loadBooking(bookingId);
+setupLogout();
+setupInvoiceButtons();
+setupDashboardLink();
     }
 );
+
+/* =========================================================
+   AUTOMATIC BOOKING COMPLETION CHECK
+   ========================================================= */
+
+function startBookingCompletionPolling(bookingId) {
+
+    if (bookingCompletionPolling) {
+        clearInterval(bookingCompletionPolling);
+    }
+
+    if (previousBookingStatus === "completed") {
+        return;
+    }
+
+    bookingCompletionPolling = setInterval(
+        async function() {
+
+            if (completionCheckInProgress) {
+                return;
+            }
+
+            const token =
+                localStorage.getItem("access_token");
+
+            if (!token) {
+                return;
+            }
+
+            completionCheckInProgress = true;
+
+            try {
+
+                const response = await fetch(
+                    `${API_BASE}/bookings/${bookingId}/`,
+                    {
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const booking = await response.json();
+
+                if (
+                    booking.status === "completed" &&
+                    previousBookingStatus !== "completed"
+                ) {
+
+                    previousBookingStatus = "completed";
+
+                    clearInterval(bookingCompletionPolling);
+                    bookingCompletionPolling = null;
+
+                    console.log(
+                        "Booking completed! Opening invoice."
+                    );
+
+                    // Refresh invoice, status and timeline.
+                    renderBooking(booking);
+
+                    // Scroll customer to the invoice.
+                    setTimeout(function() {
+
+                        const invoice =
+                            document.querySelector("#invoiceSection");
+
+                        if (invoice) {
+                            invoice.scrollIntoView({
+                                behavior: "smooth",
+                                block: "start"
+                            });
+                        }
+
+                    }, 400);
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "COMPLETION CHECK ERROR:",
+                    error
+                );
+
+            } finally {
+
+                completionCheckInProgress = false;
+
+            }
+
+        },
+        4000
+    );
+}
 
 /* =========================================================
    LOAD BOOKING
@@ -320,7 +660,16 @@ async function loadBooking(bookingId) {
             booking
         );
 
+        console.log("BOOKING LOCATION DEBUG:", {
+    address: booking.address,
+    latitude: booking.latitude,
+    longitude: booking.longitude
+});
+
         renderBooking(booking);
+        previousBookingStatus = booking.status;
+
+startBookingCompletionPolling(booking.id);
 
        currentBookingAddress =
     booking.address || "";
@@ -355,6 +704,11 @@ if (
         setupCancelBooking(
             booking
         );
+        // Start or stop provider live tracking based on booking status.
+startProviderLocationTracking(
+    booking.id,
+    booking.status
+);
     }
     catch (error) {
         console.error(
@@ -427,97 +781,74 @@ function renderBooking(booking) {
 
     /* SERVICE DETAILS */
 
-    const serviceCard =
-        document.querySelectorAll(
-            ".glass-card"
-        )[1];
+const serviceCard =
+    document.querySelectorAll(".glass-card")[1];
 
-    if (serviceCard) {
-        const serviceValues =
-            serviceCard.querySelectorAll(
-                ".info-block .info-value"
-            );
+if (serviceCard) {
+    const serviceValues =
+        serviceCard.querySelectorAll(
+            ".info-block .info-value"
+        );
 
-        if (serviceValues[0]) {
-            serviceValues[0].textContent =
-                booking.provider_name ||
-                "—";
-        }
-
-        if (serviceValues[1]) {
-            serviceValues[1].textContent =
-                booking.service_category ||
-                "—";
-        }
-
-        if (serviceValues[2]) {
-            serviceValues[2].textContent =
-                booking.note ||
-                "No additional note provided.";
-        }
-
-        if (serviceValues[3]) {
-            serviceValues[3].textContent =
-                "Not specified";
-        }
-
-        const chargeRows =
-            serviceCard.querySelectorAll(
-                ".charge-row"
-            );
-
-        if (chargeRows[0]) {
-            const value =
-                chargeRows[0].querySelector(
-                    "span:last-child"
-                );
-
-            if (value) {
-                value.textContent =
-                    "—";
-            }
-        }
-
-        if (chargeRows[1]) {
-            const value =
-                chargeRows[1].querySelector(
-                    "span:last-child"
-                );
-
-            if (value) {
-                value.textContent =
-                    formatCurrency(
-                        booking.service_price
-                    );
-            }
-        }
-
-        if (chargeRows[2]) {
-            const value =
-                chargeRows[2].querySelector(
-                    "span:last-child"
-                );
-
-            if (value) {
-                value.textContent =
-                    "—";
-            }
-        }
-
-        if (chargeRows[3]) {
-            const value =
-                chargeRows[3].querySelector(
-                    "span:last-child"
-                );
-
-            if (value) {
-                value.textContent =
-                    formatCurrency(
-                        booking.total_price
-                    );
-            }
-        }
+    if (serviceValues[0]) {
+        serviceValues[0].textContent =
+            booking.provider_name || "—";
     }
+
+    if (serviceValues[1]) {
+        serviceValues[1].textContent =
+            booking.service_category || "—";
+    }
+
+    if (serviceValues[2]) {
+        serviceValues[2].textContent =
+            booking.note || "No additional note provided.";
+    }
+
+    if (serviceValues[3]) {
+        serviceValues[3].textContent =
+            "Not specified";
+    }
+
+    // Original provider-listed price
+    const originalPrice =
+        Number(booking.service_price) || 0;
+
+    // Final agreed price, including VAT
+    const agreedPrice =
+        Number(booking.total_price) || 0;
+
+    const chargeRows =
+        serviceCard.querySelectorAll(".charge-row");
+
+    if (chargeRows[0]) {
+        setChargeValue(
+            chargeRows[0],
+            formatCurrency(0)
+        );
+    }
+
+    if (chargeRows[1]) {
+        setChargeValue(
+            chargeRows[1],
+            formatCurrency(agreedPrice)
+        );
+    }
+
+    if (chargeRows[2]) {
+        setChargeValue(
+            chargeRows[2],
+            "Included"
+        );
+    }
+
+    if (chargeRows[3]) {
+        setChargeValue(
+            chargeRows[3],
+            formatCurrency(agreedPrice)
+        );
+    }
+}
 
     /* LOCATION */
 
@@ -564,6 +895,28 @@ function renderBooking(booking) {
     renderInvoice(
         booking
     );
+
+    // PROCEED TO PAYMENT BUTTON
+const paymentButton = document.getElementById(
+    "proceedToPaymentBtn"
+);
+
+if (paymentButton) {
+
+    const canPay =
+        booking.status === "completed" &&
+        booking.payment_status !== "paid";
+
+    paymentButton.style.display =
+        canPay ? "block" : "none";
+
+    paymentButton.onclick = function() {
+
+        window.location.href =
+            `payment.html?booking_id=${encodeURIComponent(booking.id)}`;
+
+    };
+}
 
     renderReviewSection(
         booking
@@ -892,135 +1245,165 @@ function getStatusHTML(status) {
     `;
 }
 
-/* =========================================================
-   TIMELINE
-   ========================================================= */
-
 function renderTimeline(booking) {
-    const timelineItems =
-        document.querySelectorAll(
-            ".timeline-item"
-        );
+    const timelineItems = document.querySelectorAll(
+        ".timeline-item"
+    );
 
     if (!timelineItems.length) {
         return;
     }
 
-    timelineItems.forEach(
-        function(item) {
-            item.classList.remove(
-                "done",
-                "active",
-                "cancelled"
-            );
+    const status = booking.status;
 
-            item.style.opacity =
-                "1";
-        }
-    );
-
-    const status =
-        booking.status;
-
-    if (timelineItems[0]) {
-        timelineItems[0].classList.add(
-            "done"
+    // Reset timeline.
+    timelineItems.forEach(function(item) {
+        item.classList.remove(
+            "done",
+            "active",
+            "cancelled"
         );
 
-        const small =
-            timelineItems[0].querySelector(
-                "small"
-            );
+        item.style.opacity = "1";
+    });
+
+    // Display actual timestamp or fallback text.
+    function setTimelineTime(index, timestamp, fallback) {
+        const item = timelineItems[index];
+
+        if (!item) return;
+
+        const small = item.querySelector("small");
 
         if (small) {
-            small.textContent =
-                formatCreatedAt(
-                    booking.created_at
-                );
+            small.textContent = timestamp
+                ? formatCreatedAt(timestamp)
+                : fallback;
         }
     }
 
+    // Step 1: Booking Requested
+    if (timelineItems[0]) {
+        timelineItems[0].classList.add("done");
+        setTimelineTime(
+            0,
+            booking.created_at,
+            "Time unavailable"
+        );
+    }
+
+    // Step 2: Provider Accepted
+    if (
+        status === "accepted" ||
+        status === "on_the_way" ||
+        status === "in_progress" ||
+        status === "completed"
+    ) {
+        timelineItems[1]?.classList.add("done");
+
+        setTimelineTime(
+            1,
+            booking.accepted_at,
+            "Acceptance time unavailable"
+        );
+    }
+
+    // Pending
     if (status === "pending") {
-        if (timelineItems[1]) {
-            timelineItems[1].classList.add(
-                "active"
-            );
+        timelineItems[1]?.classList.add("active");
 
-            const small =
-                timelineItems[1].querySelector(
-                    "small"
-                );
-
-            if (small) {
-                small.textContent =
-                    "Waiting for provider";
-            }
-        }
-
-        hideFutureTimelineItems(
-            timelineItems,
-            2
+        setTimelineTime(
+            1,
+            null,
+            "Waiting for provider"
         );
 
+        hideFutureTimelineItems(timelineItems, 2);
         return;
     }
 
+    // Accepted
     if (status === "accepted") {
-        if (timelineItems[1]) {
-            timelineItems[1].classList.add(
-                "done"
-            );
-
-            const small =
-                timelineItems[1].querySelector(
-                    "small"
-                );
-
-            if (small) {
-                small.textContent =
-                    "Provider accepted";
-            }
-        }
-
-        if (timelineItems[2]) {
-            timelineItems[2].classList.add(
-                "active"
-            );
-        }
-
-        hideFutureTimelineItems(
-            timelineItems,
-            3
-        );
-
+        hideFutureTimelineItems(timelineItems, 2);
         return;
     }
 
+    // Provider travelling to customer
+    if (status === "on_the_way") {
+        timelineItems[2]?.classList.add("active");
+
+        setTimelineTime(
+            2,
+            booking.provider_on_way_at,
+            "Journey started"
+        );
+
+        hideFutureTimelineItems(timelineItems, 3);
+        return;
+    }
+
+    // Service started
+    if (status === "in_progress") {
+        timelineItems[2]?.classList.add("done");
+
+        setTimelineTime(
+            2,
+            booking.provider_on_way_at,
+            "Time unavailable"
+        );
+
+        timelineItems[3]?.classList.add("done");
+
+        setTimelineTime(
+            3,
+            booking.started_at,
+            "Service started"
+        );
+setTimelineTime(
+    4,
+    null,
+    "Waiting for service completion"
+);
+        hideFutureTimelineItems(timelineItems, 4);
+        return;
+    }
+
+    // Service completed
     if (status === "completed") {
-        timelineItems.forEach(
-            function(item) {
-                item.classList.add(
-                    "done"
-                );
-            }
+        timelineItems.forEach(function(item) {
+            item.classList.add("done");
+        });
+
+        setTimelineTime(
+            2,
+            booking.provider_on_way_at,
+            "Time unavailable"
+        );
+
+        setTimelineTime(
+            3,
+            booking.started_at,
+            "Time unavailable"
+        );
+
+        setTimelineTime(
+            4,
+            booking.completed_at,
+            "Time unavailable"
         );
 
         return;
     }
 
+    // Cancelled or rejected
     if (
         status === "cancelled" ||
         status === "rejected"
     ) {
         if (timelineItems[1]) {
-            timelineItems[1].classList.add(
-                "cancelled"
-            );
+            timelineItems[1].classList.add("cancelled");
 
-            const title =
-                timelineItems[1].querySelector(
-                    "h6"
-                );
+            const title = timelineItems[1].querySelector("h6");
 
             if (title) {
                 title.textContent =
@@ -1029,21 +1412,14 @@ function renderTimeline(booking) {
                         : "Booking Rejected";
             }
 
-            const small =
-                timelineItems[1].querySelector(
-                    "small"
-                );
-
-            if (small) {
-                small.textContent =
-                    capitalize(status);
-            }
+            setTimelineTime(
+                1,
+                null,
+                capitalize(status)
+            );
         }
 
-        hideFutureTimelineItems(
-            timelineItems,
-            2
-        );
+        hideFutureTimelineItems(timelineItems, 2);
     }
 }
 
@@ -1071,69 +1447,83 @@ function hideFutureTimelineItems(
 
 function renderInvoice(booking) {
     const invoiceCard =
-        findCardByTitle(
-            "Invoice Summary"
-        );
+        findCardByTitle("Invoice Summary");
 
     if (!invoiceCard) {
         return;
     }
 
     const invoiceId =
-        invoiceCard.querySelector(
-            ".invoice-id"
-        );
+        invoiceCard.querySelector(".invoice-id");
 
     if (invoiceId) {
         invoiceId.textContent =
-            `Invoice #INV-${String(
-                booking.id
-            ).padStart(5, "0")}`;
+            `Invoice #INV-${String(booking.id).padStart(5, "0")}`;
     }
+
+    // Original provider-listed price
+    const originalPrice =
+        Number(booking.service_price) || 0;
+
+    // Final negotiated price, including VAT
+    const agreedPrice =
+        Number(booking.total_price) || 0;
 
     const chargeRows =
-        invoiceCard.querySelectorAll(
-            ".charge-row"
-        );
+        invoiceCard.querySelectorAll(".charge-row");
 
+    // Service amount
     if (chargeRows[0]) {
+        setChargeLabel(chargeRows[0], "Service amount");
         setChargeValue(
             chargeRows[0],
-            "—"
+            formatCurrency(originalPrice)
         );
     }
 
+    // Agreed service price
     if (chargeRows[1]) {
+        setChargeLabel(chargeRows[1], "Agreed service price");
         setChargeValue(
             chargeRows[1],
-            formatCurrency(
-                booking.service_price
-            )
+            formatCurrency(agreedPrice)
         );
     }
 
+    // Visit charge
     if (chargeRows[2]) {
+        setChargeLabel(chargeRows[2], "Visit charge");
         setChargeValue(
             chargeRows[2],
-            "—"
+            formatCurrency(0)
         );
     }
 
+    // VAT
     if (chargeRows[3]) {
+        setChargeLabel(chargeRows[3], "VAT");
         setChargeValue(
             chargeRows[3],
-            "—"
+            "Included"
         );
     }
 
+    // Final payable amount
     if (chargeRows[4]) {
+        setChargeLabel(chargeRows[4], "Customer pays");
         setChargeValue(
             chargeRows[4],
-            formatCurrency(
-                booking.total_price
-            )
+            formatCurrency(agreedPrice)
         );
     }
+
+    console.log("ONECLICK FINAL INVOICE:", {
+        originalPrice,
+        agreedPrice,
+        visitCharge: 0,
+        vat: "Included",
+        customerPays: agreedPrice
+    });
 }
 
 /* =========================================================
@@ -1152,6 +1542,14 @@ function setChargeValue(
     if (spans.length >= 2) {
         spans[1].textContent =
             value;
+    }
+}
+
+function setChargeLabel(row, label) {
+    const spans = row.querySelectorAll("span");
+
+    if (spans.length >= 2) {
+        spans[0].textContent = label;
     }
 }
 
@@ -1321,15 +1719,15 @@ async function loadReviewForBooking(
             reviews
         );
 
-        const existingCustomerReview =
-            reviews.find(
-                function(review) {
-                    return (
-                        review.customer_name ===
-                        currentUser.email
-                    );
-                }
+       const existingCustomerReview =
+    reviews.find(
+        function(review) {
+            return (
+                review.customer_name === currentUser.email &&
+                Number(review.booking) === Number(booking.id)
             );
+        }
+    );
 
         if (existingCustomerReview) {
             console.log(
@@ -1729,15 +2127,12 @@ function setupReviewForm(
                                 "Content-Type":
                                     "application/json"
                             },
-                            body:
-                                JSON.stringify({
-                                    provider:
-                                        booking.provider,
-                                    rating:
-                                        selectedRating,
-                                    comment:
-                                        comment
-                                })
+                         body:
+    JSON.stringify({
+        booking: booking.id,
+        rating: selectedRating,
+        comment: comment
+    })
                         }
                     );
 
@@ -2148,6 +2543,31 @@ function setupInvoiceButtons() {
     }
 }
 
+
+/* =========================================================
+   ROLE-AWARE DASHBOARD LINK
+   ========================================================= */
+
+function setupDashboardLink() {
+    const dashboardLink = document.querySelector(
+        '.navbar a[href="customer-dashboard.html"]'
+    );
+
+    if (!dashboardLink) return;
+
+    const user = JSON.parse(
+    localStorage.getItem("user") || "{}"
+);
+
+const userRole = user.role;
+
+    dashboardLink.href =
+        userRole === "provider"
+            ? "provider-dashboard.html"
+            : "customer-dashboard.html";
+}
+
+
 /* =========================================================
    LOGOUT
    ========================================================= */
@@ -2215,6 +2635,8 @@ function findCardByTitle(
 
     return null;
 }
+
+
 
 /* =========================================================
    FORMAT BOOKING ID

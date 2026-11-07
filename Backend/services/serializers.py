@@ -6,8 +6,13 @@ from .models import (
     ServiceRequest,
     Quotation,
     ProviderService,
+    Message,
 )
 
+
+# =========================================================
+# SERVICE CATEGORY
+# =========================================================
 
 class ServiceCategorySerializer(serializers.ModelSerializer):
 
@@ -22,6 +27,10 @@ class ServiceCategorySerializer(serializers.ModelSerializer):
             "is_active",
         ]
 
+
+# =========================================================
+# SERVICE
+# =========================================================
 
 class ServiceSerializer(serializers.ModelSerializer):
 
@@ -46,6 +55,10 @@ class ServiceSerializer(serializers.ModelSerializer):
         ]
 
 
+# =========================================================
+# SERVICE REQUEST
+# =========================================================
+
 class ServiceRequestSerializer(serializers.ModelSerializer):
 
     customer_name = serializers.SerializerMethodField()
@@ -67,6 +80,10 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
             "description",
             "image",
             "address",
+             "preferred_date",
+            "preferred_time",
+            "latitude",
+            "longitude",
             "status",
             "created_at",
         ]
@@ -89,6 +106,10 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
         return full_name or obj.customer.email
 
 
+# =========================================================
+# QUOTATION
+# =========================================================
+
 class QuotationSerializer(serializers.ModelSerializer):
 
     provider_name = serializers.SerializerMethodField()
@@ -103,6 +124,33 @@ class QuotationSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    request_service_id = serializers.IntegerField(
+        source="request.service.id",
+        read_only=True,
+    )
+
+    request_address = serializers.CharField(
+        source="request.address",
+        read_only=True,
+    )
+
+    request_preferred_date = serializers.DateField(
+        source="request.preferred_date",
+        read_only=True,
+        allow_null=True,
+    )
+
+    request_preferred_time = serializers.TimeField(
+        source="request.preferred_time",
+        read_only=True,
+        allow_null=True,
+    )
+
+    request_description = serializers.CharField(
+        source="request.description",
+        read_only=True,
+    )
+
     class Meta:
         model = Quotation
 
@@ -113,6 +161,12 @@ class QuotationSerializer(serializers.ModelSerializer):
             "provider_name",
             "service_name",
             "request_customer",
+            "request_service_id",
+            "request_address",
+            "request_preferred_date",
+            "request_preferred_time",
+            "request_description",
+           
             "price",
             "message",
             "counter_price",
@@ -146,7 +200,8 @@ class QuotationSerializer(serializers.ModelSerializer):
 
         return full_name or user.email
 
-    # =========================================================
+
+# =========================================================
 # PROVIDER SERVICE
 # =========================================================
 
@@ -170,7 +225,6 @@ class ProviderServiceSerializer(
     )
 
     class Meta:
-
         model = ProviderService
 
         fields = [
@@ -180,7 +234,8 @@ class ProviderServiceSerializer(
             "service_name",
             "category_name",
             "service_description",
-            "price",
+              "price_type",
+              "price",
             "is_active",
             "created_at",
         ]
@@ -193,3 +248,64 @@ class ProviderServiceSerializer(
             "service_description",
             "created_at",
         ]
+
+
+# =========================================================
+# PROVIDER MESSAGES
+# =========================================================
+
+class MessageSerializer(serializers.ModelSerializer):
+
+    sender_name = serializers.SerializerMethodField()
+
+    receiver_name = serializers.SerializerMethodField()
+
+    content = serializers.CharField(
+        required=False,
+        allow_blank=True,
+    )
+
+    class Meta:
+        model = Message
+
+        fields = [
+            "id",
+            "sender",
+            "sender_name",
+            "receiver",
+            "receiver_name",
+            "provider",
+            "content",
+            "image",
+            "file",
+            "is_read",
+            "created_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "sender",
+            "sender_name",
+            "receiver",
+            "receiver_name",
+            "is_read",
+            "created_at",
+        ]
+
+    def get_sender_name(self, obj):
+
+        full_name = (
+            f"{obj.sender.first_name} "
+            f"{obj.sender.last_name}"
+        ).strip()
+
+        return full_name or obj.sender.email
+
+    def get_receiver_name(self, obj):
+
+        full_name = (
+            f"{obj.receiver.first_name} "
+            f"{obj.receiver.last_name}"
+        ).strip()
+
+        return full_name or obj.receiver.email

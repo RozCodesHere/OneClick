@@ -1,3 +1,4 @@
+
 from django.contrib import admin
 
 from .models import ProviderProfile
@@ -11,17 +12,29 @@ class ProviderProfileAdmin(admin.ModelAdmin):
         "category",
         "hourly_rate",
         "available",
-        "verified",
+        "verification_status",
+        "created_at",
+        "country",
+        "province",
+        "district",
+        "city",
     )
 
     list_filter = (
         "category",
         "available",
-        "verified",
+        "verification_status",
+        "country",
+        "province",
+       "district",
     )
 
     search_fields = (
         "user__email",
         "user__first_name",
         "user__last_name",
+    )
+
+    ordering = (
+        "-created_at",
     )

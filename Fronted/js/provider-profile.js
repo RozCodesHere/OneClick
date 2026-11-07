@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initActionButtons();
     initGalleryLightbox();
     initLoadMoreReviews();
+   
     initMobileActionBar();
     initRippleButtons();
     initScrollAnimations();
@@ -329,32 +330,115 @@ async function loadLoggedInUser() {
             user
         );
 
-        const userName =
-            user.full_name ||
-            user.name ||
-            user.username ||
-            user.email ||
-            "User";
+        const firstName =
+    String(
+        user.first_name ||
+        ""
+    ).trim();
+
+const fullName =
+    `${user.first_name || ""} ${user.last_name || ""}`.trim();
+
+const userName =
+    fullName ||
+    user.full_name ||
+    user.name ||
+    user.username ||
+    user.email ||
+    "User";
 
         setText(
             "#navUserName",
             userName
         );
 
-        const avatar =
-            document.querySelector(
-                "#navUserAvatar"
-            );
+        const homeLink =
+    document.querySelector(
+        '.oc-nav-links a[href="index.html"]'
+    );
 
-        if (
-            avatar &&
-            user.profile_image
-        ) {
+if (homeLink && user.role) {
 
-            avatar.src =
-                user.profile_image;
+    if (user.role === "customer") {
 
-        }
+        homeLink.href =
+            "customer-dashboard.html";
+
+    } else if (user.role === "provider") {
+
+        homeLink.href =
+            "provider-dashboard.html";
+
+    } else if (user.role === "admin") {
+
+        homeLink.href =
+            "admin-dashboard.html";
+
+    }
+
+}
+
+    const avatar =
+    document.querySelector(
+        "#navUserAvatar"
+    );
+
+if (avatar) {
+
+    if (user.profile_picture) {
+
+        const imageUrl =
+            user.profile_picture.startsWith("http")
+                ? user.profile_picture
+                : `http://127.0.0.1:8000${user.profile_picture}`;
+
+        avatar.src =
+            imageUrl;
+
+        avatar.alt =
+            userName;
+
+    } else {
+
+        const firstLetter =
+            userName
+                .charAt(0)
+                .toUpperCase() ||
+            "U";
+
+        avatar.src =
+            `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     width="60"
+                     height="60">
+
+                    <rect
+                        width="100%"
+                        height="100%"
+                        fill="#e9ecef"
+                    />
+
+                    <text
+                        x="50%"
+                        y="50%"
+                        dominant-baseline="middle"
+                        text-anchor="middle"
+                        font-size="28"
+                        font-family="Arial"
+                        fill="#333"
+                    >
+                        ${firstLetter}
+                    </text>
+
+                </svg>
+            `)}`;
+
+        avatar.alt =
+            `${userName} profile picture`;
+
+    }
+
+}
 
     } catch (error) {
 
@@ -430,6 +514,27 @@ function renderProviderProfile(provider) {
             0
         );
 
+            const reviews = provider.reviews || [];
+
+    renderProviderReviews(reviews);
+
+
+    /* =====================================================
+       PROVIDER STATISTICS
+       ===================================================== */
+
+    const stats = document.querySelectorAll(".mini-stat-value");
+
+    const statValues = [
+        provider.completed_jobs ?? 0,
+        provider.happy_customers ?? 0,
+        provider.repeat_customers ?? 0,
+        provider.average_response_time || "—"
+    ];
+
+    stats.forEach((element, index) => {
+        element.textContent = statValues[index] ?? "—";
+    });
     /* =====================================================
        BASIC PROFILE INFORMATION
        ===================================================== */
@@ -444,22 +549,11 @@ function renderProviderProfile(provider) {
         providerName
     );
 
-    setText(
-        "#providerCategory",
-        category
-    );
+ setText("#providerCategory", category);
+setText("#floatingService", serviceName || category);
+setText("#providerService", serviceName || category);
 
-    setText(
-        "#floatingCategory",
-        category
-    );
-
-    setText(
-        "#providerService",
-        serviceName ||
-        category
-    );
-
+   
     setText(
         "#providerExperience",
         `${experience}+`
@@ -474,6 +568,10 @@ function renderProviderProfile(provider) {
         "#floatingLocation",
         address
     );
+    setText(
+    "#providerEmail",
+    provider.email || "Email not available"
+);
 
     setText(
         "#breadcrumbCategory",
@@ -676,7 +774,7 @@ function renderProviderProfile(provider) {
        COMPLETED WORK
        ===================================================== */
 
-    cleanCompletedWorkGallery();
+    renderCompletedWorkGallery(provider.work_photos || []);
 
 }
 
@@ -684,36 +782,60 @@ function renderProviderProfile(provider) {
    COMPLETED WORK
    ========================================================= */
 
-function cleanCompletedWorkGallery() {
+function renderCompletedWorkGallery(photos) {
 
-    const gallery =
-        document.querySelector(
-            ".gallery-grid"
-        );
+    const gallery = document.querySelector(".gallery-grid");
 
-    if (!gallery) {
+    if (!gallery) return;
+
+    if (!photos.length) {
+        gallery.innerHTML = `
+            <div class="empty-gallery-state">
+                <i class="fa-regular fa-images"></i>
+                <h4>No work photos yet</h4>
+                <p>This provider has not uploaded any work photos.</p>
+            </div>
+        `;
         return;
     }
 
-    gallery.innerHTML = `
-        <div class="empty-gallery-state">
+    gallery.innerHTML = photos.map(photo => {
 
-            <i class="fa-regular fa-images"></i>
+        const imageUrl = photo.image.startsWith("http")
+            ? photo.image
+            : `http://127.0.0.1:8000${photo.image}`;
 
-            <h4>
-                No completed work photos yet
-            </h4>
+        return `
+            <div class="gallery-item">
+                <img src="${escapeHtml(imageUrl)}"
+                     alt="${escapeHtml(photo.caption || "Provider work")}"
+                     loading="lazy">
+            </div>
+        `;
 
-            <p>
-                This provider has not uploaded
-                any work photos yet.
-            </p>
-
-        </div>
-    `;
+    }).join("");
 
 }
 
+
+    /* =====================================================
+       PROVIDER STATISTICS
+       ===================================================== */
+
+    const statValues = document.querySelectorAll(".mini-stat-value");
+
+    const statistics = [
+        provider.completed_jobs ?? 0,
+        provider.happy_customers ?? 0,
+        provider.repeat_customers ?? 0,
+        provider.average_response_time || "—"
+    ];
+
+    statValues.forEach((element, index) => {
+        element.textContent = statistics[index] ?? "—";
+    });
+
+    
 /* =========================================================
    UPDATE AVAILABILITY
    ========================================================= */
@@ -1299,103 +1421,105 @@ function initAnimatedCounters() {
 
 function initSaveProvider() {
 
-    const saveButton =
-        document.querySelector(
-            "#saveProviderBtn"
-        );
+    const saveButton = document.querySelector("#saveProviderBtn");
 
-    if (!saveButton) {
+    if (!saveButton) return;
+
+    const providerId = getProviderId();
+    const token = localStorage.getItem("access_token");
+
+    if (!providerId || !token) {
+        saveButton.style.display = "none";
         return;
     }
 
-    saveButton.addEventListener(
-        "click",
-        function () {
+    async function checkSavedStatus() {
 
-            const isSaved =
-                saveButton.getAttribute(
-                    "aria-pressed"
-                ) === "true";
-
-            const icon =
-                saveButton.querySelector(
-                    "i"
-                );
-
-            const text =
-                saveButton.querySelector(
-                    "span"
-                );
-
-            if (isSaved) {
-
-                saveButton.setAttribute(
-                    "aria-pressed",
-                    "false"
-                );
-
-                if (icon) {
-
-                    icon.classList.remove(
-                        "fa-solid"
-                    );
-
-                    icon.classList.add(
-                        "fa-regular"
-                    );
-
+        try {
+            const response = await fetch(
+                `${API_BASE}/providers/saved-providers/`,
+                {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
                 }
+            );
 
-                if (text) {
+            if (!response.ok) return;
 
-                    text.textContent =
-                        "Save";
+            const savedProviders = await response.json();
 
+            const isSaved = savedProviders.some(item =>
+                String(item.provider?.id || item.provider) === String(providerId)
+            );
+
+            updateSaveButton(isSaved);
+
+        } catch (error) {
+            console.error("Saved provider check failed:", error);
+        }
+    }
+
+    function updateSaveButton(isSaved) {
+
+        saveButton.setAttribute("aria-pressed", String(isSaved));
+
+        const icon = saveButton.querySelector("i");
+        const text = saveButton.querySelector("span");
+
+        if (icon) {
+            icon.classList.toggle("fa-solid", isSaved);
+            icon.classList.toggle("fa-regular", !isSaved);
+        }
+
+        if (text) {
+            text.textContent = isSaved ? "Saved" : "Save";
+        }
+    }
+
+    saveButton.addEventListener("click", async function () {
+
+        const isSaved = saveButton.getAttribute("aria-pressed") === "true";
+
+        try {
+
+            const response = await fetch(
+                isSaved
+                    ? `${API_BASE}/providers/saved-providers/${providerId}/`
+                    : `${API_BASE}/providers/saved-providers/`,
+                {
+                    method: isSaved ? "DELETE" : "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    ...(isSaved ? {} : {
+                        body: JSON.stringify({ provider: providerId })
+                    })
                 }
+            );
 
-                showToast(
-                    "Provider Removed",
-                    "Provider removed from your saved list."
-                );
+            const data = await response.json();
 
-            } else {
-
-                saveButton.setAttribute(
-                    "aria-pressed",
-                    "true"
-                );
-
-                if (icon) {
-
-                    icon.classList.remove(
-                        "fa-regular"
-                    );
-
-                    icon.classList.add(
-                        "fa-solid"
-                    );
-
-                }
-
-                if (text) {
-
-                    text.textContent =
-                        "Saved";
-
-                }
-
-                showToast(
-                    "Provider Saved",
-                    "Provider has been saved successfully."
-                );
-
+            if (!response.ok) {
+                throw new Error(data.error || "Request failed");
             }
 
+            updateSaveButton(!isSaved);
+
+            showToast(
+                isSaved ? "Provider Removed" : "Provider Saved",
+                data.message
+            );
+
+        } catch (error) {
+            console.error("Save provider error:", error);
+            showToast("Error", error.message);
         }
-    );
+    });
 
+    checkSavedStatus();
 }
-
 /* =========================================================
    ACTION BUTTONS
    ========================================================= */
@@ -1438,27 +1562,38 @@ function initActionButtons() {
             }
         );
 
-    document
-        .querySelectorAll(
-            ".btn-message"
-        )
-        .forEach(
-            function (button) {
+  document
+    .querySelectorAll(
+        ".btn-message"
+    )
+    .forEach(
+        function (button) {
 
-                button.addEventListener(
-                    "click",
-                    function () {
+            button.addEventListener(
+                "click",
+                function () {
+
+                    const providerId =
+                        getProviderId();
+
+                    if (!providerId) {
 
                         showToast(
-                            "Message",
-                            "Messaging feature will be connected next."
+                            "Error",
+                            "Provider information is missing."
                         );
 
+                        return;
                     }
-                );
 
-            }
-        );
+                    window.location.href =
+                        `chat.html?provider_id=${encodeURIComponent(providerId)}`;
+
+                }
+            );
+
+        }
+    );
 
     document
         .querySelectorAll(
@@ -1564,21 +1699,32 @@ function initMobileActionBar() {
 
     }
 
-    if (mobileMessage) {
+   if (mobileMessage) {
 
-        mobileMessage.addEventListener(
-            "click",
-            function () {
+    mobileMessage.addEventListener(
+        "click",
+        function () {
+
+            const providerId =
+                getProviderId();
+
+            if (!providerId) {
 
                 showToast(
-                    "Message",
-                    "Messaging feature will be connected next."
+                    "Error",
+                    "Provider information is missing."
                 );
 
+                return;
             }
-        );
 
-    }
+            window.location.href =
+                `chat.html?provider_id=${encodeURIComponent(providerId)}`;
+
+        }
+    );
+
+}
 
     if (mobileCall) {
 
@@ -1724,44 +1870,21 @@ function initGalleryLightbox() {
 
     }
 
-    document
-        .querySelectorAll(
-            ".gallery-item"
-        )
-        .forEach(
-            function (item) {
+   document.querySelector(".gallery-grid").addEventListener("click", function (event) {
 
-                item.addEventListener(
-                    "click",
-                    function () {
+    const item = event.target.closest(".gallery-item");
+    if (!item) return;
 
-                        const image =
-                            item.querySelector(
-                                "img"
-                            );
+    const image = item.querySelector("img");
+    if (!image) return;
 
-                        if (!image) {
-                            return;
-                        }
+    lightboxImage.src = image.src;
+    lightboxImage.alt = image.alt;
 
-                        lightboxImage.src =
-                            image.src;
+    lightbox.classList.add("active");
+    document.body.style.overflow = "hidden";
 
-                        lightboxImage.alt =
-                            image.alt;
-
-                        lightbox.classList.add(
-                            "active"
-                        );
-
-                        document.body.style.overflow =
-                            "hidden";
-
-                    }
-                );
-
-            }
-        );
+});
 
     function closeLightbox() {
 
@@ -1957,4 +2080,53 @@ function initScrollAnimations() {
         }
     );
 
+}
+
+
+
+/* =========================================================
+   RENDER PROVIDER REVIEWS
+   ========================================================= */
+
+function renderProviderReviews(reviews) {
+
+    const container = document.getElementById("reviewsContainer");
+
+    if (!container) return;
+
+    if (!reviews || reviews.length === 0) {
+        container.innerHTML = `
+            <p class="text-center py-4">
+                No customer reviews are available yet.
+            </p>
+        `;
+        return;
+    }
+
+    container.innerHTML = reviews.map(review => {
+
+        const stars = Array.from({ length: 5 }, (_, i) =>
+            `<i class="fa-${i < review.rating ? "solid" : "regular"} fa-star"></i>`
+        ).join("");
+
+        const date = new Date(review.created_at).toLocaleDateString();
+
+        return `
+            <div class="review-item">
+                <div class="review-body">
+                    <div class="review-top">
+                        <h5>${review.customer_name || "Customer"}</h5>
+                        <div class="review-stars">${stars}</div>
+                    </div>
+
+                    <p class="review-text">
+                        ${review.comment || "No comment provided."}
+                    </p>
+
+                    <span class="review-date">${date}</span>
+                </div>
+            </div>
+        `;
+
+    }).join("");
 }

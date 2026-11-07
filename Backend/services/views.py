@@ -1,4 +1,5 @@
 from django.db.models import Q
+from providers.models import ProviderProfile
 
 from rest_framework import generics, serializers, status
 from rest_framework.response import Response
@@ -11,6 +12,7 @@ from .models import (
     ServiceRequest,
     Quotation,
     ProviderService,
+    Message,
 )
 
 from .serializers import (
@@ -19,6 +21,7 @@ from .serializers import (
     ServiceRequestSerializer,
     QuotationSerializer,
     ProviderServiceSerializer,
+    MessageSerializer,
 )
 
 
@@ -109,6 +112,78 @@ class ServiceRequestListCreateView(
         serializer.save(
             customer=self.request.user
         )
+
+
+class ServiceRequestDeleteView(generics.RetrieveDestroyAPIView):
+
+    serializer_class = ServiceRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return ServiceRequest.objects.filter(
+            customer=self.request.user
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        service_request = self.get_object()
+
+        if str(service_request.status).lower() != "cancelled":
+            return Response(
+                {
+                    "detail": "Only cancelled service requests can be deleted."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        service_request.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# =========================================================
+# CANCEL CUSTOMER SERVICE REQUEST
+# =========================================================
+
+class ServiceRequestCancelView(generics.UpdateAPIView):
+
+    serializer_class = ServiceRequestSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["patch", "options", "head"]
+
+    def get_queryset(self):
+        return ServiceRequest.objects.filter(
+            customer=self.request.user
+        )
+
+    def patch(self, request, *args, **kwargs):
+        service_request = self.get_object()
+
+        if service_request.status not in [
+            ServiceRequest.STATUS_PENDING,
+            ServiceRequest.STATUS_QUOTED,
+        ]:
+            return Response(
+                {
+                    "detail": (
+                        "Only pending or quoted requests "
+                        "can be cancelled."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        service_request.status = ServiceRequest.STATUS_CANCELLED
+        service_request.save(update_fields=["status"])
+
+        return Response(
+            {
+                "detail": "Service request cancelled successfully.",
+                "id": service_request.id,
+                "status": service_request.status,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 # =========================================================
 # PROVIDER SERVICE MANAGEMENT
@@ -257,9 +332,8 @@ class ProviderServiceRequestListView(
             return ServiceRequest.objects.none()
 
         # Provider must be verified
-        if not provider.verified:
-
-            return ServiceRequest.objects.none()
+        if provider.verification_status != provider.APPROVED:
+           return ServiceRequest.objects.none()
 
         # Provider must be available
         if not provider.available:
@@ -269,12 +343,14 @@ class ProviderServiceRequestListView(
         # Provider sees requests matching
         # their service category
         return ServiceRequest.objects.filter(
-            service__category=provider.category,
-            status__in=[
-                ServiceRequest.STATUS_PENDING,
-                ServiceRequest.STATUS_QUOTED,
-            ],
-        )
+    service__provider_services__provider=provider,
+    service__provider_services__is_active=True,
+    service__provider_services__service__is_active=True,
+    status__in=[
+        ServiceRequest.STATUS_PENDING,
+        ServiceRequest.STATUS_QUOTED,
+    ],
+).distinct()
 
 
 # =========================================================
@@ -365,7 +441,7 @@ class QuotationListCreateView(
         # PROVIDER MUST BE VERIFIED
         # -------------------------------------------------
 
-        if not provider.verified:
+        if provider.verification_status != provider.APPROVED:
 
             raise serializers.ValidationError(
                 "Only verified providers can send quotations."
@@ -453,276 +529,86 @@ class QuotationListCreateView(
 # ACCEPT QUOTATION
 # =========================================================
 
-class QuotationAcceptView(
-    generics.UpdateAPIView
-):
+class QuotationAcceptView(generics.UpdateAPIView):
 
     serializer_class = QuotationSerializer
-
-    permission_classes = [
-        IsAuthenticated
-    ]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-
         user = self.request.user
 
-        # Only customers can accept quotations
         if user.role != "customer":
-
             return Quotation.objects.none()
 
-        # Customer can only access quotations
-        # belonging to their own service requests
         return Quotation.objects.filter(
             request__customer=user
         )
 
-    def update(
-        self,
-        request,
-        *args,
-        **kwargs
-    ):
-
+    def update(self, request, *args, **kwargs):
         quotation = self.get_object()
 
-        # -------------------------------------------------
-        # CHECK REJECTED
-        # -------------------------------------------------
-
         if quotation.status == Quotation.STATUS_REJECTED:
-
             return Response(
-                {
-                    "detail": (
-                        "This quotation has already been rejected."
-                    )
-                },
+                {"detail": "This quotation has already been rejected."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-        # -------------------------------------------------
-        # CHECK ALREADY ACCEPTED
-        # -------------------------------------------------
 
         if quotation.status == Quotation.STATUS_ACCEPTED:
-
             return Response(
-                {
-                    "detail": (
-                        "This quotation is already accepted."
-                    )
-                },
+                {"detail": "This quotation is already accepted."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-        # -------------------------------------------------
-        # ONLY PENDING OR FINAL CAN BE ACCEPTED
-        # -------------------------------------------------
 
         if quotation.status not in [
             Quotation.STATUS_PENDING,
-            Quotation.STATUS_FINAL,
+           Quotation.STATUS_COUNTERED,
+         Quotation.STATUS_FINAL,
         ]:
-
             return Response(
-                {
-                    "detail": (
-                        "Only pending or final quotations "
-                        "can be accepted."
-                    )
-                },
+                {"detail": "Only pending or final quotations can be accepted."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # -------------------------------------------------
-        # GET BOOKING DATA
-        # -------------------------------------------------
+        service_request = quotation.request
 
-        booking_date = request.data.get(
-            "booking_date"
-        )
-
-        booking_time = request.data.get(
-            "booking_time"
-        )
-
-        note = request.data.get(
-            "note",
-            ""
-        )
-
-        # -------------------------------------------------
-        # VALIDATE BOOKING DATE
-        # -------------------------------------------------
-
-        if not booking_date:
-
-            return Response(
-                {
-                    "detail": (
-                        "Booking date is required."
-                    )
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # -------------------------------------------------
-        # VALIDATE BOOKING TIME
-        # -------------------------------------------------
-
-        if not booking_time:
-
-            return Response(
-                {
-                    "detail": (
-                        "Booking time is required."
-                    )
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # -------------------------------------------------
-        # CREATE BOOKING
-        # -------------------------------------------------
-
-        from bookings.models import Booking
-
-        booking = Booking.objects.create(
-            customer=request.user,
-            provider=quotation.provider,
-            service=quotation.request.service,
-            booking_date=booking_date,
-            booking_time=booking_time,
-            address=quotation.request.address,
-            note=note,
-            total_price=quotation.price,
-        )
-
-        # -------------------------------------------------
-        # ACCEPT SELECTED QUOTATION
-        # -------------------------------------------------
-
-        quotation.status = (
-            Quotation.STATUS_ACCEPTED
-        )
+        
+        
+        # Accept the customer's counter-price when available.
+        if (
+            quotation.status == Quotation.STATUS_COUNTERED
+            and quotation.counter_price is not None
+        ):
+          quotation.price = quotation.counter_price
+ 
+        quotation.status = Quotation.STATUS_ACCEPTED
 
         quotation.save(
-            update_fields=["status"]
-        )
+             update_fields=["price", "status"]
+         )
 
-        # -------------------------------------------------
-        # REJECT OTHER QUOTATIONS
-        # -------------------------------------------------
 
+
+        # Reject competing quotations.
         Quotation.objects.filter(
-            request=quotation.request
+            request=service_request
         ).exclude(
             id=quotation.id
         ).update(
             status=Quotation.STATUS_REJECTED
         )
 
-        # -------------------------------------------------
-        # ACCEPT SERVICE REQUEST
-        # -------------------------------------------------
+        # Update the service request status.
+        service_request.status = ServiceRequest.STATUS_ACCEPTED
+        service_request.save(update_fields=["status"])
 
-        service_request = quotation.request
-
-        service_request.status = (
-            ServiceRequest.STATUS_ACCEPTED
-        )
-
-        service_request.save(
-            update_fields=["status"]
-        )
-
-        # -------------------------------------------------
-        # RETURN RESPONSE
-        # -------------------------------------------------
-
-        serializer = self.get_serializer(
-            quotation
-        )
-
-        response_data = serializer.data
-
-        response_data["booking_id"] = (
-            booking.id
-        )
+        # Return quotation details to the frontend.
+        serializer = self.get_serializer(quotation)
 
         return Response(
-            response_data,
+            serializer.data,
             status=status.HTTP_200_OK
         )
 
-
-# =========================================================
-# REJECT QUOTATION
-# =========================================================
-
-class QuotationRejectView(
-    generics.UpdateAPIView
-):
-
-    serializer_class = QuotationSerializer
-
-    permission_classes = [
-        IsAuthenticated
-    ]
-
-    def get_queryset(self):
-
-        user = self.request.user
-
-        # Only customers can reject quotations
-        if user.role != "customer":
-
-            return Quotation.objects.none()
-
-        return Quotation.objects.filter(
-            request__customer=user
-        )
-
-    def update(
-        self,
-        request,
-        *args,
-        **kwargs
-    ):
-
-        quotation = self.get_object()
-
-        # -------------------------------------------------
-        # ACCEPTED QUOTATION CANNOT BE REJECTED
-        # -------------------------------------------------
-
-        if quotation.status == Quotation.STATUS_ACCEPTED:
-
-            return Response(
-                {
-                    "detail": (
-                        "An accepted quotation cannot be rejected."
-                    )
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # -------------------------------------------------
-        # ALREADY REJECTED
-        # -------------------------------------------------
-
-        if quotation.status == Quotation.STATUS_REJECTED:
-
-            return Response(
-                {
-                    "detail": (
-                        "This quotation is already rejected."
-                    )
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
 
         # -------------------------------------------------
         # REJECT QUOTATION
@@ -743,6 +629,111 @@ class QuotationRejectView(
         serializer = self.get_serializer(
             quotation
         )
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
+
+
+# =========================================================
+# PROVIDER ACCEPT CUSTOMER COUNTER-OFFER
+# =========================================================
+
+class ProviderQuotationAcceptView(generics.UpdateAPIView):
+
+    serializer_class = QuotationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.role != "provider":
+            return Quotation.objects.none()
+
+        return Quotation.objects.filter(
+            provider__user=user
+        )
+
+    def update(self, request, *args, **kwargs):
+        quotation = self.get_object()
+
+        if quotation.status != Quotation.STATUS_COUNTERED:
+            return Response(
+                {"detail": "This quotation is not awaiting provider acceptance."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if quotation.counter_price is None:
+            return Response(
+                {"detail": "Customer counter-price is missing."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        service_request = quotation.request
+
+        # Accept the customer's counter-price.
+        quotation.price = quotation.counter_price
+        quotation.status = Quotation.STATUS_ACCEPTED
+        quotation.save(update_fields=["price", "status"])
+
+        # Reject competing quotations.
+        Quotation.objects.filter(
+            request=service_request
+        ).exclude(
+            id=quotation.id
+        ).update(
+            status=Quotation.STATUS_REJECTED
+        )
+
+        # Update the service request.
+        service_request.status = ServiceRequest.STATUS_ACCEPTED
+        service_request.save(update_fields=["status"])
+
+        serializer = self.get_serializer(quotation)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+# =========================================================
+# REJECT QUOTATION
+# =========================================================
+
+class QuotationRejectView(generics.UpdateAPIView):
+
+    serializer_class = QuotationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.role != "customer":
+            return Quotation.objects.none()
+
+        return Quotation.objects.filter(
+            request__customer=user
+        )
+
+    def update(self, request, *args, **kwargs):
+        quotation = self.get_object()
+
+        if quotation.status == Quotation.STATUS_ACCEPTED:
+            return Response(
+                {"detail": "An accepted quotation cannot be rejected."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if quotation.status == Quotation.STATUS_REJECTED:
+            return Response(
+                {"detail": "This quotation is already rejected."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        quotation.status = Quotation.STATUS_REJECTED
+        quotation.save(update_fields=["status"])
+
+        serializer = self.get_serializer(quotation)
 
         return Response(
             serializer.data,
@@ -1079,4 +1070,214 @@ class QuotationFinalOfferView(
         return Response(
             serializer.data,
             status=status.HTTP_200_OK
+        )
+
+    # =========================================================
+# PROVIDER MESSAGES
+# =========================================================
+
+class MessageListCreateView(
+    generics.ListCreateAPIView
+):
+
+    serializer_class = MessageSerializer
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get_queryset(self):
+
+        user = self.request.user
+
+        provider_id = self.request.query_params.get(
+            "provider_id"
+        )
+
+        # -------------------------------------------------
+        # PROVIDER
+        # -------------------------------------------------
+
+        if user.role == "provider":
+
+            provider = getattr(
+                user,
+                "provider_profile",
+                None
+            )
+
+            if not provider:
+                return Message.objects.none()
+
+            queryset = Message.objects.filter(
+                provider=provider
+            )
+
+        # -------------------------------------------------
+        # CUSTOMER
+        # -------------------------------------------------
+
+        elif user.role == "customer":
+
+            queryset = Message.objects.filter(
+                sender=user
+            ) | Message.objects.filter(
+                receiver=user
+            )
+
+            if provider_id:
+                queryset = queryset.filter(
+                    provider_id=provider_id
+                )
+
+        # -------------------------------------------------
+        # OTHER ROLES
+        # -------------------------------------------------
+
+        else:
+
+            return Message.objects.none()
+
+        return queryset.select_related(
+            "sender",
+            "receiver",
+            "provider",
+            "provider__user",
+        ).order_by(
+            "created_at"
+        )
+
+    def perform_create(self, serializer):
+
+        user = self.request.user
+
+        # -------------------------------------------------
+        # ONLY CUSTOMER OR PROVIDER
+        # -------------------------------------------------
+
+        if user.role not in [
+            "customer",
+            "provider",
+        ]:
+
+            raise serializers.ValidationError(
+                "Only customers and providers can send messages."
+            )
+
+        provider_id = self.request.data.get(
+            "provider"
+        )
+
+        if not provider_id:
+
+            raise serializers.ValidationError(
+                "Provider is required."
+            )
+
+        # -------------------------------------------------
+        # GET PROVIDER
+        # -------------------------------------------------
+
+        from providers.models import ProviderProfile
+
+        try:
+
+            provider = ProviderProfile.objects.select_related(
+                "user"
+            ).get(
+                id=provider_id
+            )
+
+        except ProviderProfile.DoesNotExist:
+
+            raise serializers.ValidationError(
+                "Provider not found."
+            )
+
+        # -------------------------------------------------
+        # CUSTOMER → PROVIDER
+        # -------------------------------------------------
+
+        if user.role == "customer":
+
+            receiver = provider.user
+
+        # -------------------------------------------------
+        # PROVIDER → CUSTOMER
+        # -------------------------------------------------
+
+        else:
+
+            receiver_id = self.request.data.get(
+                "receiver"
+            )
+
+            if not receiver_id:
+
+                raise serializers.ValidationError(
+                    "Receiver is required."
+                )
+
+            try:
+
+                from users.models import User
+
+                receiver = User.objects.get(
+                    id=receiver_id,
+                    role="customer",
+                )
+
+            except User.DoesNotExist:
+
+                raise serializers.ValidationError(
+                    "Customer not found."
+                )
+
+            # Provider can only send through
+            # their own provider profile.
+
+            if provider.user != user:
+
+                raise serializers.ValidationError(
+                    "You can only send messages as your own provider profile."
+                )
+
+                # -------------------------------------------------
+        # MESSAGE CONTENT / ATTACHMENT
+        # -------------------------------------------------
+
+        content = self.request.data.get(
+            "content",
+            ""
+        )
+
+        image = self.request.FILES.get(
+            "image"
+        )
+
+        file = self.request.FILES.get(
+            "file"
+        )
+
+        # At least one of these must be provided.
+        if (
+            not str(content).strip()
+            and not image
+            and not file
+        ):
+
+            raise serializers.ValidationError(
+                "Message cannot be empty."
+            )
+
+        # -------------------------------------------------
+        # SAVE MESSAGE
+        # -------------------------------------------------
+
+        serializer.save(
+            sender=user,
+            receiver=receiver,
+            provider=provider,
+            image=image,
+            file=file,
         )

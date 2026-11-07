@@ -3,11 +3,11 @@
    ========================================================= */
 
 :root {
-  --oc-primary: #2563EB;
-  --oc-primary-dark: #1D4ED8;
+  --oc-primary: #d86334;
+  --oc-primary-dark: #E09A65;
   --oc-accent: #F59E0B;
-  --oc-bg: #F8FAFC;
-  --oc-dark: #1E293B;
+  --oc-bg: #edf2f7;
+  --oc-dark: #1c468a;
   --oc-text-muted: #64748B;
   --oc-border: #E2E8F0;
   --oc-radius: 16px;
@@ -574,4 +574,10 @@ a {
     width: 42px;
     height: 42px;
   }
+}
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    margin-left: 10px;
 }

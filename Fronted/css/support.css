@@ -625,3 +625,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .oc-popular-searches { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 0.3rem; }
   .oc-emergency { padding: 1.4rem; }
 }
+
+.oneclick-logo {
+    width: 280px;
+    height: 88px;
+    object-fit: contain;
+    margin-left: 10px;
+}
