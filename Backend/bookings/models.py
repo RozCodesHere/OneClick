@@ -14,6 +14,7 @@ class Booking(models.Model):
     REJECTED = "rejected"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+    EXPIRED = "expired"
 
     STATUS_CHOICES = [
         (PENDING, "Pending"),
@@ -23,6 +24,7 @@ class Booking(models.Model):
         (REJECTED, "Rejected"),
         (COMPLETED, "Completed"),
         (CANCELLED, "Cancelled"),
+        (EXPIRED, "Expired"),
     ]
 
     customer = models.ForeignKey(
@@ -86,6 +88,45 @@ class Booking(models.Model):
         choices=STATUS_CHOICES,
         default=PENDING,
     )
+
+    PRICE_FIXED = "fixed"
+    PRICE_NEGOTIABLE = "negotiable"
+
+    PRICE_TYPE_CHOICES = [
+        (PRICE_FIXED, "Fixed Price"),
+        (PRICE_NEGOTIABLE, "Negotiable"),
+    ]
+
+    PRICE_APPROVAL_CHOICES = [
+        ("not_required", "Not Required"),
+        ("pending", "Pending Customer Approval"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    price_type = models.CharField(
+        max_length=20,
+        choices=PRICE_TYPE_CHOICES,
+        default=PRICE_FIXED,
+    )
+
+    negotiated_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    negotiated_work_description = models.TextField(
+        blank=True,
+        default="",
+    )
+
+    price_approval_status = models.CharField(
+        max_length=20,
+        choices=PRICE_APPROVAL_CHOICES,
+        default="not_required",
+    )
         # Booking workflow timestamps
     accepted_at = models.DateTimeField(
         null=True,
@@ -111,6 +152,18 @@ class Booking(models.Model):
         max_digits=10,
         decimal_places=2,
     )
+    PAYMENT_METHOD_CHOICES = [
+        ("khalti", "Khalti"),
+        ("cash", "Cash"),
+    ]
+
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PAYMENT_METHOD_CHOICES,
+        blank=True,
+        default="",
+    )
+
     payment_status = models.CharField(
         max_length=20,
         default="unpaid",
@@ -152,10 +205,11 @@ class PaymentTransaction(models.Model):
     ]
 
     STATUS_CHOICES = [
-        ("pending", "Pending"),
-        ("completed", "Completed"),
-        ("failed", "Failed"),
-    ]
+    ("pending", "Pending"),
+    ("completed", "Completed"),
+    ("failed", "Failed"),
+    ("conflict", "Payment Conflict"),
+]
 
     booking = models.ForeignKey(
         Booking,

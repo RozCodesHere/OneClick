@@ -75,10 +75,78 @@ document.addEventListener("DOMContentLoaded", function () {
        DO NOT put fake bookings, payments or messages here.
        ====================================================== */
 
-    const NOTIFICATIONS = [];
+    let NOTIFICATIONS = [];
+
+const API_BASE = "http://127.0.0.1:8000/api";
+
+function getAuthHeaders() {
+    return {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+    };
+}
 
 
     let currentFilter = "all";
+
+
+    async function loadNotifications() {
+
+    try {
+
+        const response = await fetch(
+            `${API_BASE}/notifications/`,
+            {
+                method: "GET",
+                headers: getAuthHeaders()
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Failed to load notifications.");
+        }
+
+        const data = await response.json();
+       console.log("NOTIFICATION API DATA:", data);
+        const notifications = Array.isArray(data)
+            ? data
+            : (data.results || []);
+
+        NOTIFICATIONS = notifications.map(function (item) {
+        
+            return {
+    id: item.id,
+    title: item.title,
+    description: item.message,
+    type: item.notification_type,
+    unread: !item.is_read,
+    priority: item.priority,
+    relatedBooking: item.related_booking,
+eventKey: item.event_key || "",
+    time: new Date(item.created_at).toLocaleString()
+};
+
+        });
+
+        console.log("MAPPED NOTIFICATIONS:", NOTIFICATIONS);
+
+        renderNotifications();
+
+    } catch (error) {
+
+        console.error("Notification loading error:", error);
+
+        if (listEl && emptyStateEl) {
+            listEl.classList.add("d-none");
+            emptyStateEl.classList.remove("d-none");
+            emptyStateEl.textContent =
+                "Unable to load notifications. Please try again.";
+        }
+
+    }
+
+}
+
 
 
     /* ======================================================
@@ -319,124 +387,182 @@ document.addEventListener("DOMContentLoaded", function () {
         );
 
 
-        /* ==================================================
-           VIEW BUTTON
-           ================================================== */
+       
 
-        const viewButton =
-            card.querySelector(
-                '[data-action="view"]'
-            );
+/* ==================================================
+   VIEW BUTTON
+   ================================================== */
 
+const viewButton = card.querySelector(
+    '[data-action="view"]'
+);
 
-        if (viewButton) {
+if (viewButton) {
 
-            viewButton.addEventListener(
-                "click",
-                function (event) {
+    viewButton.addEventListener("click", async function (event) {
 
-                    event.stopPropagation();
+        event.stopPropagation();
 
-                    markAsRead(
-                        notification.id
-                    );
+        const loggedInUser = JSON.parse(
+            localStorage.getItem("user") || "{}"
+        );
 
-                }
-            );
+        const userRole = loggedInUser.role;
 
-        }
+        await markAsRead(notification.id);
 
+        // Booking notification.
+        if (notification.type === "booking" && notification.relatedBooking) {
 
-        /* ==================================================
-           DELETE BUTTON
-           ================================================== */
+            if (userRole === "provider") {
+                window.location.href =
+                    `booking-details.html?id=${encodeURIComponent(notification.relatedBooking)}`;
 
-        const deleteButton =
-            card.querySelector(
-                '[data-action="delete"]'
-            );
+            } else if (userRole === "admin") {
+                window.location.href =
+                    `admin-dashboard.html?booking=${encodeURIComponent(notification.relatedBooking)}`;
 
-
-        if (deleteButton) {
-
-            deleteButton.addEventListener(
-                "click",
-                function (event) {
-
-                    event.stopPropagation();
-
-                    deleteNotification(
-                        notification.id
-                    );
-
-                }
-            );
+            } else {
+                window.location.href =
+                    `customer-dashboard.html?booking=${encodeURIComponent(notification.relatedBooking)}`;
+            }
 
         }
 
+        // Payment notification.
+        else if (notification.type === "payment") {
 
-        return card;
-    }
+            if (notification.relatedBooking) {
+                window.location.href =
+                    `booking-details.html?id=${encodeURIComponent(notification.relatedBooking)}`;
+            } else {
+                alert("Booking information is unavailable.");
+            }
+
+        }
+
+        // Provider approval/rejection notification.
+        else if (
+            notification.type === "system" &&
+            (
+                notification.title === "Provider Application Approved" ||
+                notification.title === "Provider Application Rejected"
+            )
+        ) {
+
+            window.location.href = "provider-dashboard.html";
+
+        }
+
+        else {
+            console.log(
+                "No related page available for this notification."
+            );
+        }
+
+    });
+
+}
 
 
+/* ==================================================
+   DELETE BUTTON
+   ================================================== */
+
+const deleteButton = card.querySelector(
+    '[data-action="delete"]'
+);
+
+if (deleteButton) {
+
+    deleteButton.addEventListener("click", function (event) {
+
+        event.stopPropagation();
+
+        deleteNotification(notification.id);
+
+    });
+
+}
+return card;
+
+}
     /* ======================================================
        GET NOTIFICATION ICON
        ====================================================== */
 
     function getNotificationIcon(type) {
 
-        switch (type) {
+    switch (type) {
 
-            case "booking":
-                return "fa-solid fa-calendar-check";
+        case "booking":
+            return "fa-solid fa-calendar-check";
 
-            case "payment":
-                return "fa-solid fa-credit-card";
+        case "quotation":
+            return "fa-solid fa-file-invoice";
 
-            case "message":
-                return "fa-solid fa-message";
+        case "payment":
+            return "fa-solid fa-credit-card";
 
-            case "alert":
-                return "fa-solid fa-triangle-exclamation";
+        case "chat":
+            return "fa-solid fa-message";
 
-            case "offer":
-                return "fa-solid fa-tag";
+        case "service":
+            return "fa-solid fa-screwdriver-wrench";
 
-            case "system":
-            default:
-                return "fa-solid fa-bell";
-        }
+        case "account":
+            return "fa-solid fa-user";
 
+        case "support":
+            return "fa-solid fa-headset";
+
+        case "system":
+        default:
+            return "fa-solid fa-bell";
     }
+
+}
 
 
     /* ======================================================
        MARK ONE NOTIFICATION AS READ
        ====================================================== */
 
-    function markAsRead(id) {
+    async function markAsRead(id) {
 
-        const notification =
-            NOTIFICATIONS.find(
-                function (item) {
-                    return item.id === id;
-                }
-            );
+    const notification = NOTIFICATIONS.find(
+        item => item.id === id
+    );
 
+    if (!notification || !notification.unread) {
+        return;
+    }
 
-        if (
-            notification &&
-            notification.unread
-        ) {
+    try {
 
-            notification.unread = false;
+        const response = await fetch(
+            `${API_BASE}/notifications/${id}/read/`,
+            {
+                method: "PATCH",
+                headers: getAuthHeaders()
+            }
+        );
 
-            renderNotifications();
-
+        if (!response.ok) {
+            throw new Error("Could not mark notification as read.");
         }
+
+        notification.unread = false;
+
+        renderNotifications();
+
+    } catch (error) {
+
+        console.error("Mark as read error:", error);
 
     }
 
+}
 
     /* ======================================================
        DELETE NOTIFICATION
@@ -467,20 +593,35 @@ document.addEventListener("DOMContentLoaded", function () {
        MARK ALL READ
        ====================================================== */
 
-    function markAllAsRead() {
+    async function markAllAsRead() {
 
-        NOTIFICATIONS.forEach(
-            function (notification) {
+    try {
 
-                notification.unread = false;
-
+        const response = await fetch(
+            `${API_BASE}/notifications/mark-all-read/`,
+            {
+                method: "POST",
+                headers: getAuthHeaders()
             }
         );
 
+        if (!response.ok) {
+            throw new Error("Could not mark all as read.");
+        }
+
+        NOTIFICATIONS.forEach(function (notification) {
+            notification.unread = false;
+        });
 
         renderNotifications();
 
+    } catch (error) {
+
+        console.error("Mark all as read error:", error);
+
     }
+
+}
 
 
     /* ======================================================
@@ -613,7 +754,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             "all";
 
 
-                        renderNotifications();
+                        loadNotifications();
 
                     }
                 );
@@ -819,6 +960,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     setupProfileNavigation();
 
-    renderNotifications();
-
+    loadNotifications();
+    
 });

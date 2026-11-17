@@ -60,8 +60,16 @@ class BookingSerializer(serializers.ModelSerializer):
             "provider_longitude",
             "note",
 
-           "status",
+          "status",
 "total_price",
+
+# Negotiated pricing
+"price_type",
+"negotiated_price",
+"negotiated_work_description",
+"price_approval_status",
+
+"payment_method",
 "payment_status",
 "created_at",
 
@@ -89,8 +97,16 @@ class BookingSerializer(serializers.ModelSerializer):
             "service_category",
             "service_price",
 
-           "status",
+          "status",
 "total_price",
+
+# Negotiated pricing
+"price_type",
+"negotiated_price",
+"negotiated_work_description",
+"price_approval_status",
+
+"payment_method",
 "payment_status",
 "created_at",
             "accepted_at",

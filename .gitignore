@@ -32,3 +32,14 @@ staticfiles/
 
 # Uploaded media and personal files
 Backend/media/
+
+# Backend private and local files
+Backend/private_media/
+Backend/kyc_test_images/
+Backend/venv/
+Backend/.venv/
+Backend/.vscode/
+
+# Keys and certificates
+*.pem
+*.key

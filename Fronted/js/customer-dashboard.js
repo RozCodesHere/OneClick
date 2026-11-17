@@ -1729,7 +1729,9 @@ function createBookingRow(booking) {
     
 
     const price =
-        formatBookingPrice(booking.total_price);
+    booking.price_type === "negotiable"
+        ? "Negotiable"
+        : formatBookingPrice(booking.total_price);
 
     const status =
         booking.status || "pending";
@@ -1744,11 +1746,82 @@ function createBookingRow(booking) {
         String(status).trim().toLowerCase();
 
     let cancelButton = "";
+    // Negotiated price proposal controls.
+let negotiatedPriceSection = "";
+
+if (
+    booking.price_type === "negotiable" &&
+    booking.price_approval_status === "pending"
+) {
+
+    negotiatedPriceSection = `
+        <div class="alert alert-warning mt-3 mb-3">
+
+            <h6>
+                <i class="fa-solid fa-handshake me-2"></i>
+                Provider's Price Proposal
+            </h6>
+
+            <h4 class="mb-2">
+                ${escapeHtml(
+                    formatBookingPrice(booking.negotiated_price)
+                )}
+            </h4>
+
+            <p class="mb-3">
+                <strong>Work description:</strong><br>
+                ${escapeHtml(
+                    booking.negotiated_work_description || "Not provided"
+                )}
+            </p>
+
+            <div class="d-flex gap-2 flex-wrap">
+
+                <button
+                    type="button"
+                    class="btn btn-success btn-sm accept-negotiated-price"
+                    data-booking-id="${escapeHtml(bookingId)}"
+                >
+                    <i class="fa-solid fa-check me-1"></i>
+                    Accept Price
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-outline-danger btn-sm reject-negotiated-price"
+                    data-booking-id="${escapeHtml(bookingId)}"
+                >
+                    <i class="fa-solid fa-xmark me-1"></i>
+                    Reject Price
+                </button>
+
+            </div>
+
+        </div>
+    `;
+
+} else if (
+    booking.price_type === "negotiable" &&
+    booking.price_approval_status === "rejected"
+) {
+
+    negotiatedPriceSection = `
+        <div class="alert alert-secondary mt-3 mb-3">
+            <i class="fa-solid fa-clock me-2"></i>
+            You rejected the previous proposal.
+            Waiting for the provider to submit a revised price.
+        </div>
+    `;
+
+}
     let deleteButton = "";
     let trackButton = "";
 
-// Show tracking only while the provider is on the way.
-if (normalizedStatus === "in_progress") {
+// Show tracking while the provider is travelling or working.
+if (
+    normalizedStatus === "on_the_way" ||
+    normalizedStatus === "in_progress"
+) {
     trackButton = `
         <button
             type="button"
@@ -1883,7 +1956,7 @@ if (normalizedStatus === "in_progress") {
             </div>
 
             <div class="oc-booking-card-footer">
-
+              ${negotiatedPriceSection}
                 <div class="oc-booking-card-price">
                     <small>Total Price</small>
 
@@ -1914,6 +1987,122 @@ if (normalizedStatus === "in_progress") {
         </article>
     `;
 }
+
+
+/* =========================================================
+   CUSTOMER — NEGOTIATED PRICE APPROVAL
+   ========================================================= */
+
+(function initNegotiatedPriceDecisionHandler() {
+
+    if (
+        document.documentElement.dataset.negotiatedPriceHandlerAttached === "true"
+    ) {
+        return;
+    }
+
+    document.documentElement.dataset.negotiatedPriceHandlerAttached = "true";
+
+    document.addEventListener("click", async function (event) {
+
+        const acceptButton = event.target.closest(
+            ".accept-negotiated-price"
+        );
+
+        const rejectButton = event.target.closest(
+            ".reject-negotiated-price"
+        );
+
+        const clickedButton = acceptButton || rejectButton;
+
+        if (!clickedButton) {
+            return;
+        }
+
+        const bookingId = clickedButton.dataset.bookingId;
+
+        const decision = acceptButton ? "approved" : "rejected";
+
+        if (!bookingId) {
+            alert("Booking ID not found.");
+            return;
+        }
+
+        if (decision === "rejected") {
+            const confirmed = confirm(
+                "Are you sure you want to reject this price proposal?"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+        }
+
+        const actionButtons = clickedButton
+            .closest(".alert")
+            ?.querySelectorAll("button");
+
+        if (actionButtons) {
+            actionButtons.forEach(button => {
+                button.disabled = true;
+            });
+        }
+
+        try {
+
+            const response = await fetch(
+                `${API_BASE}/bookings/${bookingId}/price-decision/`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        ...getHeaders(),
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        decision: decision
+                    })
+                }
+            );
+
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error ||
+                    result.detail ||
+                    "Unable to submit your decision."
+                );
+            }
+
+            alert(
+                decision === "approved"
+                    ? "Price approved successfully!"
+                    : "Price proposal rejected."
+            );
+
+            await loadRecentBookings();
+
+        } catch (error) {
+
+            console.error(
+                "Negotiated price decision failed:",
+                error
+            );
+
+            alert(error.message);
+
+            if (actionButtons) {
+                actionButtons.forEach(button => {
+                    button.disabled = false;
+                });
+            }
+
+        }
+
+    });
+
+})();
+
 
 
 /* =========================================================
@@ -6664,3 +6853,156 @@ function setRequestMinimumDate() {
 document.addEventListener("DOMContentLoaded", function () {
     setRequestMinimumDate();
 });
+
+
+
+/* =========================================================
+   CUSTOMER DASHBOARD — NOTIFICATION DROPDOWN
+========================================================= */
+
+async function loadCustomerNotificationDropdown() {
+
+    const dropdown = document.getElementById(
+        "customerNotificationDropdown"
+    );
+
+    const badge = document.getElementById(
+        "customerUnreadBadge"
+    );
+
+    if (!dropdown) return;
+
+    const token = localStorage.getItem("access_token");
+
+    if (!token) return;
+
+    try {
+
+        const response = await fetch(
+            `${API_BASE}/notifications/`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                `Notification API error: ${response.status}`
+            );
+        }
+
+        const data = await response.json();
+
+        const notifications = Array.isArray(data)
+            ? data
+            : (data.results || []);
+
+        const unreadCount = notifications.filter(
+            item => !item.is_read
+        ).length;
+
+        // Update unread badge
+        if (badge) {
+
+            badge.textContent = unreadCount;
+
+            badge.classList.toggle(
+                "d-none",
+                unreadCount === 0
+            );
+
+        }
+
+        // Show latest five notifications
+        const latestNotifications = notifications.slice(0, 5);
+
+        let notificationHTML = `
+            <li class="oc-dropdown-header">
+                Notifications (${unreadCount} unread)
+            </li>
+        `;
+
+        if (latestNotifications.length === 0) {
+
+            notificationHTML += `
+                <li>
+                    <div class="dropdown-item text-muted justify-content-center py-4">
+                        <i class="fa-regular fa-bell-slash me-2"></i>
+                        No notifications yet
+                    </div>
+                </li>
+            `;
+
+        } else {
+
+            latestNotifications.forEach(function (item) {
+
+                notificationHTML += `
+                    <li>
+                        <a
+                            href="notifications.html"
+                            class="dropdown-item py-2 ${item.is_read ? "" : "fw-bold"}"
+                        >
+                            <div class="d-flex align-items-start gap-2">
+
+                                <i class="fa-regular fa-bell mt-1"></i>
+
+                                <div>
+                                    <div>
+                                        ${escapeHtml(item.title)}
+                                    </div>
+
+                                    <small class="text-muted">
+                                        ${escapeHtml(item.message)}
+                                    </small>
+                                </div>
+
+                            </div>
+                        </a>
+                    </li>
+                `;
+
+            });
+
+        }
+
+        notificationHTML += `
+            <li>
+                <hr class="dropdown-divider">
+            </li>
+
+            <li>
+                <a
+                    href="notifications.html"
+                    class="dropdown-item text-center text-primary"
+                >
+                    View all notifications
+                </a>
+            </li>
+        `;
+
+        dropdown.innerHTML = notificationHTML;
+
+    } catch (error) {
+
+        console.error(
+            "Customer notification dropdown error:",
+            error
+        );
+
+    }
+
+}
+
+
+// Load notifications when customer dashboard opens
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+        loadCustomerNotificationDropdown();
+    }
+);

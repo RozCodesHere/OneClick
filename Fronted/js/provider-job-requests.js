@@ -285,8 +285,16 @@ async function loadJobRequests() {
 
         const bookings = await bookingResponse.json();
 
-        jobRequests = (Array.isArray(bookings) ? bookings : bookings.results || [])
-            .filter(booking => booking.status === "pending");
+        
+jobRequests = (
+    Array.isArray(bookings)
+        ? bookings
+        : bookings.results || []
+).filter(booking =>
+    booking.status === "pending" &&
+    !isBookingExpired(booking)
+);
+
 
         // NEW: Load customer service requests separately.
 console.log("Loading new service requests...");
@@ -348,6 +356,44 @@ let serviceResponse = await fetch(
         }
     }
 }
+
+
+
+
+// ============================================================
+// CHECK WHETHER A BOOKING HAS EXPIRED
+// ============================================================
+
+function isBookingExpired(booking) {
+
+    const bookingDate =
+        booking.booking_date || booking.date;
+
+    const bookingTime =
+        booking.booking_time || booking.time;
+
+    if (!bookingDate || !bookingTime) {
+        return true;
+    }
+
+    const scheduledDateTime = new Date(
+        `${bookingDate}T${bookingTime}`
+    );
+
+    if (Number.isNaN(scheduledDateTime.getTime())) {
+        console.error(
+            "Invalid booking date/time:",
+            booking.id,
+            bookingDate,
+            bookingTime
+        );
+
+        return true;
+    }
+
+    return scheduledDateTime <= new Date();
+}
+
 
 
 

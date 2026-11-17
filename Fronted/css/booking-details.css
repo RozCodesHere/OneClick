@@ -835,7 +835,39 @@ html[data-theme="dark"] .bg-white {
 }
 }
 
+/* =========================================================
+   ONECLICK — INVOICE PRINT LAYOUT
+   ========================================================= */
 
+@media print {
+
+    @page {
+        size: A4;
+        margin: 12mm;
+    }
+
+    body * {
+        visibility: hidden !important;
+    }
+
+   @media print {
+    #invoiceSection,
+    #invoiceSection * {
+        animation: none !important;
+        transition: none !important;
+        opacity: 1 !important;
+        filter: none !important;
+        transform: none !important;
+        color: #222222 !important;
+    }
+
+    #invoiceSection {
+        background: #ffffff !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+}
+}
 
 .oneclick-logo {
     width: 280px;

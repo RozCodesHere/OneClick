@@ -7,12 +7,16 @@ from .views import (
     ProviderBookingActionView,
     ProviderBookingLocationView,
     CustomerBookingLocationView,
+    ProviderNegotiatedPriceView,
+    CustomerNegotiatedPriceDecisionView,
 )
 from .payment_views import (
     KhaltiInitiateView,
     KhaltiReturnView,
     CashPaymentConfirmView,
+    CashPaymentSelectView,
     ProviderTransactionHistoryView,
+    AdminTransactionHistoryView,
 )
 
 
@@ -54,6 +58,18 @@ path(
     name="customer-booking-location",
 ),
 
+    path(
+        "<int:pk>/negotiated-price/",
+        ProviderNegotiatedPriceView.as_view(),
+        name="provider-negotiated-price",
+    ),
+
+    path(
+        "<int:pk>/price-decision/",
+        CustomerNegotiatedPriceDecisionView.as_view(),
+        name="customer-price-decision",
+    ),
+
 path("payment/khalti/initiate/", 
      KhaltiInitiateView.as_view(), 
      name="khalti-initiate"),
@@ -67,9 +83,21 @@ path("payment/cash/confirm/",
         name="cash-payment-confirm"),
 
         path(
+    "payment/cash/select/",
+    CashPaymentSelectView.as_view(),
+    name="cash-payment-select",
+),
+
+        path(
     "payment/transactions/",
     ProviderTransactionHistoryView.as_view(),
     name="provider-transaction-history",
+),
+
+path(
+    "payment/admin/transactions/",
+    AdminTransactionHistoryView.as_view(),
+    name="admin-transaction-history",
 ),
 
 

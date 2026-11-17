@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-
+from .storage import PrivateKYCStorage
 from services.models import ServiceCategory
 
 
@@ -79,6 +79,12 @@ class ProviderProfile(models.Model):
         blank=True,
         null=True,
     )
+
+
+
+
+
+
 
     hourly_rate = models.DecimalField(
         max_digits=10,
@@ -162,3 +168,61 @@ class SavedProvider(models.Model):
 
     def __str__(self):
         return f"{self.customer.email} saved {self.provider.user.email}"
+
+
+
+class ProviderKYC(models.Model):
+
+    NOT_SUBMITTED = "not_submitted"
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+    STATUS_CHOICES = [
+        (NOT_SUBMITTED, "Not Submitted"),
+        (PENDING, "Pending Review"),
+        (APPROVED, "Approved"),
+        (REJECTED, "Rejected"),
+    ]
+
+    provider = models.OneToOneField(
+        ProviderProfile,
+        on_delete=models.CASCADE,
+        related_name="kyc",
+    )
+
+    citizenship_front = models.ImageField(
+    storage=PrivateKYCStorage(),
+    upload_to="provider_verification/citizenship/",
+)
+
+    citizenship_back = models.ImageField(
+    storage=PrivateKYCStorage(),
+    upload_to="provider_verification/citizenship/",
+)
+
+    verification_selfie = models.ImageField(
+    storage=PrivateKYCStorage(),
+    upload_to="provider_verification/selfies/",
+)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=NOT_SUBMITTED,
+    )
+
+    rejection_reason = models.TextField(blank=True)
+
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviewed_provider_kycs",
+    )
+
+    def __str__(self):
+        return f"KYC - {self.provider.user.email} ({self.status})"

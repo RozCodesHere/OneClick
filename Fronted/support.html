@@ -476,59 +476,66 @@
     <div class="col-lg-4">
       <div class="oc-sticky">
 
-        <!-- Live Chat Card -->
-        <div class="oc-card glass-card oc-chat-card p-4 mb-4 fade-in-up">
-          <div class="oc-chat-agent">
-            <div class="oc-agent-avatar">
-              <img src="https://ui-avatars.com/api/?name=Rojit+Pokharel&background=2563EB&color=fff&bold=true" alt="Support agent">
-              <span class="oc-online-dot" title="Online"></span>
-            </div>
-            <div>
-              <strong>Rojit Pokharel</strong>
-              <small class="d-block oc-hint">Support / Administrator</small>
-            </div>
-          </div>
-          <p class="oc-chat-response"><i class="fa-solid fa-bolt me-1"></i>Avg. response time: <b>under 2 minutes</b></p>
-          <button class="btn oc-btn-primary oc-ripple w-100" id="startChatBtn">
-            <i class="fa-solid fa-comments me-2"></i>Start Live Chat
-          </button>
+        <!-- Support Request Card -->
+<div class="oc-card glass-card oc-chat-card p-4 mb-4 fade-in-up">
+    <div class="oc-section-head">
+        <div class="oc-section-icon">
+            <i class="fa-solid fa-headset"></i>
         </div>
-
-        <!-- Support Information -->
-        <div class="oc-card glass-card p-4 mb-4 fade-in-up">
-          <h6 class="oc-sidebar-heading">Support Information</h6>
-          <ul class="oc-info-list">
-            <li>
-              <span class="oc-info-icon"><i class="fa-solid fa-headset"></i></span>
-              <div><strong>Customer Care</strong><small>Mon - Sun, always active</small></div>
-            </li>
-            <li>
-              <span class="oc-info-icon"><i class="fa-solid fa-phone"></i></span>
-              <div><strong>+977 1-4XXXXXX</strong><small>Phone support</small></div>
-            </li>
-            <li>
-              <span class="oc-info-icon"><i class="fa-solid fa-envelope"></i></span>
-              <div><strong>support@oneclick.com.np</strong><small>Email support</small></div>
-            </li>
-            <li>
-              <span class="oc-info-icon"><i class="fa-solid fa-location-dot"></i></span>
-              <div><strong>Putalisadak, Kathmandu</strong><small>Office address</small></div>
-            </li>
-            <li>
-              <span class="oc-info-icon"><i class="fa-solid fa-clock"></i></span>
-              <div><strong>8:00 AM - 10:00 PM</strong><small>Working hours</small></div>
-            </li>
-            <li>
-              <span class="oc-info-icon oc-info-icon-danger"><i class="fa-solid fa-triangle-exclamation"></i></span>
-              <div><strong>24/7 Emergency Line</strong><small>For urgent safety issues</small></div>
-            </li>
-          </ul>
+        <div>
+            <h6 class="mb-0">Need Assistance?</h6>
+            <p class="oc-section-sub mb-0">
+                Our support request system is available here.
+            </p>
         </div>
-
-      </div>
     </div>
-  </div>
 
+    <p class="oc-chat-response mt-3">
+        Submit a support ticket and check its status in Ticket History.
+    </p>
+
+    <button class="btn oc-btn-primary oc-ripple w-100" id="startChatBtn">
+        <i class="fa-solid fa-paper-plane me-2"></i>
+        Contact Support
+    </button>
+</div>
+
+        <!-- Support Information Card -->
+<div class="oc-card glass-card p-4 mb-4 fade-in-up">
+    <h6 class="oc-sidebar-heading">Support Information</h6>
+
+    <ul class="oc-info-list">
+        <li>
+            <span class="oc-info-icon">
+                <i class="fa-solid fa-ticket"></i>
+            </span>
+            <div>
+                <strong>Support Tickets</strong>
+                <small>Submit and track your support requests.</small>
+            </div>
+        </li>
+
+        <li>
+            <span class="oc-info-icon">
+                <i class="fa-solid fa-clock"></i>
+            </span>
+            <div>
+                <strong>Ticket Status</strong>
+                <small>Check updates from Ticket History.</small>
+            </div>
+        </li>
+
+        <li>
+            <span class="oc-info-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </span>
+            <div>
+                <strong>Account Safety</strong>
+                <small>Never share your password, OTP, or PIN.</small>
+            </div>
+        </li>
+    </ul>
+</div>
   <!-- ============ EMERGENCY HELP ============ -->
   <section class="oc-emergency fade-in-up" id="emergency">
     <div class="oc-emergency-inner">
@@ -543,16 +550,14 @@
         </ul>
       </div>
       <div class="oc-emergency-actions">
-        <a href="tel:+9779800000000" class="oc-emergency-number">
-          <i class="fa-solid fa-phone-volume"></i>
-          <span>+977 98XXXXXXXX</span>
-        </a>
+        
         <button class="btn oc-btn-danger oc-ripple" id="reportFraudBtn">
           <i class="fa-solid fa-flag me-2"></i>Report Fraud
         </button>
+        </section>
       </div>
     </div>
-  </section>
+  
 
 </main>
 
@@ -564,31 +569,7 @@
   </div>
 </div>
 
-<!-- ============ LIVE CHAT POPUP (DUMMY) ============ -->
-<div class="oc-chat-popup" id="chatPopup">
-  <div class="oc-chat-popup-header">
-    <div class="oc-chat-agent">
-      <div class="oc-agent-avatar oc-agent-avatar-sm">
-        <img src="https://ui-avatars.com/api/?name=Rojit+Pokharel&background=2563EB&color=fff&bold=true" alt="Support agent">
-        <span class="oc-online-dot"></span>
-      </div>
-      <div>
-        <strong>Rojit Pokharel</strong>
-        <small>Support / Administrator</small>
-      </div>
-    </div>
-    <button class="oc-chat-close" id="closeChatBtn" aria-label="Close chat"><i class="fa-solid fa-xmark"></i></button>
-  </div>
-  <div class="oc-chat-body" id="chatBody">
-    <div class="oc-chat-msg oc-chat-msg-agent">
-      Hi! 👋 I'm Rojit from OneClick support. How can I help you today?
-    </div>
-  </div>
-  <div class="oc-chat-input-row">
-    <input type="text" id="chatInput" placeholder="Type your message...">
-    <button id="chatSendBtn" aria-label="Send message"><i class="fa-solid fa-paper-plane"></i></button>
-  </div>
-</div>
+
 
 <!-- ============ TICKET DETAILS MODAL ============ -->
 <div class="modal fade" id="ticketModal" tabindex="-1" aria-hidden="true">

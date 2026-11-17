@@ -1,15 +1,31 @@
 from math import radians, sin, cos, asin, sqrt
+import mimetypes
 
+from django.http import FileResponse
 from django.db.models import Q
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+from django.core.files.images import get_image_dimensions
+from django.contrib.auth import get_user_model
 
+from notifications.models import Notification
+from notifications.services import create_notification
+
+User = get_user_model()
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from bookings.models import Booking
 
-from .models import ProviderProfile, SavedProvider, ProviderWorkPhoto# =========================================================
+from .models import (
+    ProviderProfile,
+    SavedProvider,
+    ProviderWorkPhoto,
+    ProviderKYC,
+)# =========================================================
 # PROVIDER WORK PHOTO UPLOAD
 # =========================================================
 
@@ -95,6 +111,7 @@ class ProviderWorkPhotoDeleteView(APIView):
         )
 
     
+
 # =========================================================
 # PROVIDER ONBOARDING
 # =========================================================
@@ -117,6 +134,26 @@ class ProviderOnboardingView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         provider = serializer.save()
 
+        # Notify all active administrators.
+        admin_users = User.objects.filter(
+            role=User.ADMIN,
+            is_active=True
+        )
+
+        for admin_user in admin_users:
+            create_notification(
+                recipient=admin_user,
+                title="New Provider Application",
+                message=(
+                    f"{request.user.email} has submitted a provider application "
+                    f"(Provider ID: {provider.id})."
+                ),
+                notification_type=Notification.SYSTEM,
+                priority=Notification.MEDIUM,
+                event_key=f"provider:{provider.id}:application:admin:{admin_user.id}",
+                send_email=True,
+            )
+
         response_serializer = ProviderSerializer(
             provider,
             context={"request": request},
@@ -132,7 +169,6 @@ class ProviderOnboardingView(generics.CreateAPIView):
             },
             status=status.HTTP_201_CREATED,
         )
-
 
 # =========================================================
 # NEARBY PROVIDERS
@@ -192,6 +228,7 @@ class NearbyProviderListView(APIView):
             "category",
                 ).filter(
             verification_status=ProviderProfile.APPROVED,
+             kyc__status=ProviderKYC.APPROVED,
             availability_status="available",
             latitude__isnull=False,
             longitude__isnull=False,
@@ -270,9 +307,10 @@ class ProviderListView(generics.ListAPIView):
             "user",
             "category",
                 ).filter(
-            availability_status="available",
-            verification_status=ProviderProfile.APPROVED,
-        )
+    availability_status="available",
+    verification_status=ProviderProfile.APPROVED,
+    kyc__status=ProviderKYC.APPROVED,
+)
 
         # Search
         search = self.request.query_params.get("search")
@@ -351,9 +389,10 @@ class ProviderDetailView(generics.RetrieveAPIView):
     queryset = ProviderProfile.objects.select_related(
         "user",
         "category",
-    ).filter(
+   ).filter(
     availability_status="available",
     verification_status=ProviderProfile.APPROVED,
+    kyc__status=ProviderKYC.APPROVED,
 )
 
     serializer_class = ProviderSerializer
@@ -397,16 +436,33 @@ class ProviderDashboardView(APIView):
             )
 
         bookings = Booking.objects.filter(provider=profile)
+        kyc = ProviderKYC.objects.filter(
+    provider=profile
+).first()
 
+        kyc_status = (
+    kyc.status if kyc
+    else ProviderKYC.NOT_SUBMITTED
+)
         serializer = ProviderSerializer(
             profile,
             context={"request": request},
         )
 
         return Response(
-            {
-                "provider": serializer.data,
-                "statistics": {
+    {
+        "provider": serializer.data,
+
+        "verification": {
+            "application_status": profile.verification_status,
+            "kyc_status": kyc_status,
+            "is_verified": (
+                profile.verification_status == ProviderProfile.APPROVED
+                and kyc_status == ProviderKYC.APPROVED
+            ),
+        },
+
+        "statistics": {
                     "total_bookings": bookings.count(),
                     "pending_bookings": bookings.filter(
                         status="pending"
@@ -640,6 +696,7 @@ class SavedProviderListCreateView(APIView):
                 customer=request.user,
                 provider__availability_status="available",
                 provider__verification_status=ProviderProfile.APPROVED,
+                provider__kyc__status=ProviderKYC.APPROVED,
             )
             .select_related(
                 "provider",
@@ -681,6 +738,7 @@ class SavedProviderListCreateView(APIView):
                 id=provider_id,
                 verification_status=ProviderProfile.APPROVED,
                 availability_status="available",
+                kyc__status=ProviderKYC.APPROVED,
             )
         except ProviderProfile.DoesNotExist:
             return Response(
@@ -751,6 +809,360 @@ class SavedProviderDeleteView(APIView):
             {
                 "message": "Provider removed successfully.",
                 "saved": False,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+
+
+# =========================================================
+# PROVIDER KYC UPLOAD
+# =========================================================
+
+class ProviderKYCUploadView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    REQUIRED_DOCUMENTS = [
+        "citizenship_front",
+        "citizenship_back",
+        "verification_selfie",
+    ]
+
+    def post(self, request):
+        if request.user.role != "provider":
+            return Response(
+                {"error": "Only providers can submit KYC documents."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            profile = ProviderProfile.objects.get(user=request.user)
+        except ProviderProfile.DoesNotExist:
+            return Response(
+                {"error": "Provider profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Require all three documents.
+        missing = [
+            field for field in self.REQUIRED_DOCUMENTS
+            if field not in request.FILES
+        ]
+
+        if missing:
+            return Response(
+                {
+                    "error": "All three KYC documents are required.",
+                    "missing_documents": missing,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Check existing KYC record without creating one.
+        kyc = ProviderKYC.objects.filter(
+            provider=profile
+        ).first()
+
+        if kyc and kyc.status != ProviderKYC.REJECTED:
+            return Response(
+                {
+                    "error": (
+                        "KYC documents can only be submitted initially "
+                        "or resubmitted after rejection."
+                    ),
+                    "kyc_status": kyc.status,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate ALL documents before creating or changing a record.
+        for field in self.REQUIRED_DOCUMENTS:
+            uploaded_file = request.FILES[field]
+
+            if uploaded_file.size > 5 * 1024 * 1024:
+                return Response(
+                    {"error": f"{field} must be 5 MB or smaller."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            try:
+                get_image_dimensions(uploaded_file)
+                uploaded_file.seek(0)
+            except Exception:
+                return Response(
+                    {"error": f"{field} must be a valid image."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # Create the record only after all documents pass validation.
+        if kyc is None:
+            kyc = ProviderKYC(provider=profile)
+
+        # Replace previous rejected documents with new submissions.
+        for field in self.REQUIRED_DOCUMENTS:
+            setattr(kyc, field, request.FILES[field])
+
+        kyc.status = ProviderKYC.PENDING
+        kyc.rejection_reason = ""
+        kyc.submitted_at = timezone.now()
+        kyc.reviewed_at = None
+        kyc.reviewed_by = None
+
+        kyc.save()
+
+        return Response(
+            {
+                "message": "KYC documents submitted successfully.",
+                "kyc_status": kyc.status,
+                "submitted_at": kyc.submitted_at,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+
+# =========================================================
+# PROVIDER KYC STATUS
+# =========================================================
+
+class ProviderKYCStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != "provider":
+            return Response(
+                {"error": "Only providers can view their KYC status."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            profile = ProviderProfile.objects.get(user=request.user)
+        except ProviderProfile.DoesNotExist:
+            return Response(
+                {"error": "Provider profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            kyc = ProviderKYC.objects.get(provider=profile)
+        except ProviderKYC.DoesNotExist:
+            return Response(
+                {
+                    "kyc_status": ProviderKYC.NOT_SUBMITTED,
+                    "rejection_reason": "",
+                    "submitted_at": None,
+                    "reviewed_at": None,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            {
+                "kyc_status": kyc.status,
+                "rejection_reason": kyc.rejection_reason,
+                "submitted_at": kyc.submitted_at,
+                "reviewed_at": kyc.reviewed_at,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+# =========================================================
+# SECURE KYC DOCUMENT VIEW
+# =========================================================
+
+class ProviderKYCDocumentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    ALLOWED_DOCUMENTS = {
+        "citizenship_front",
+        "citizenship_back",
+        "verification_selfie",
+    }
+
+    def get(self, request, provider_id, document_type):
+
+        if request.user.role not in ["provider", "admin"]:
+            return Response(
+                {"error": "You are not allowed to view KYC documents."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if document_type not in self.ALLOWED_DOCUMENTS:
+            return Response(
+                {"error": "Invalid document type."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if request.user.role == "provider":
+            owns_profile = ProviderProfile.objects.filter(
+                id=provider_id,
+                user=request.user,
+            ).exists()
+
+            if not owns_profile:
+                return Response(
+                    {"error": "You cannot access another provider's documents."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        try:
+            kyc = ProviderKYC.objects.get(provider_id=provider_id)
+        except ProviderKYC.DoesNotExist:
+            return Response(
+                {"error": "KYC submission not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        document = getattr(kyc, document_type)
+
+        if not document or not document.name:
+            return Response(
+                {"error": "This document has not been uploaded."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            file_object = document.storage.open(document.name, "rb")
+        except (FileNotFoundError, OSError):
+            return Response(
+                {"error": "Document file could not be found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        content_type, _ = mimetypes.guess_type(document.name)
+
+        if content_type not in ["image/jpeg", "image/png", "image/gif"]:
+            content_type = "application/octet-stream"
+
+        response = FileResponse(
+            file_object,
+            content_type=content_type,
+        )
+
+        response["Content-Disposition"] = (
+            f'inline; filename="{document_type}"'
+        )
+        response["Cache-Control"] = "private, no-store"
+        response["X-Content-Type-Options"] = "nosniff"
+
+        return response
+
+
+# =========================================================
+# ADMIN PROVIDER KYC REVIEW
+# =========================================================
+
+class AdminProviderKYCReviewView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def check_admin(self, request):
+        return request.user.role == "admin"
+
+    def get(self, request):
+        if not self.check_admin(request):
+            return Response(
+                {"error": "Only administrators can review KYC submissions."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        submissions = ProviderKYC.objects.select_related(
+            "provider",
+            "provider__user",
+            "reviewed_by",
+        ).order_by("-submitted_at")
+
+        results = []
+
+        for kyc in submissions:
+            provider = kyc.provider
+
+            results.append({
+                "kyc_id": kyc.id,
+                "provider_id": provider.id,
+                "provider_name": provider.user.get_full_name(),
+                "provider_email": provider.user.email,
+                "provider_verification_status": provider.verification_status,
+                "kyc_status": kyc.status,
+                "rejection_reason": kyc.rejection_reason,
+                "submitted_at": kyc.submitted_at,
+                "reviewed_at": kyc.reviewed_at,
+                "reviewed_by": (
+                    kyc.reviewed_by.email if kyc.reviewed_by else None
+                ),
+            })
+
+        return Response(
+            {"count": len(results), "results": results},
+            status=status.HTTP_200_OK,
+        )
+
+    def patch(self, request, kyc_id):
+        if not self.check_admin(request):
+            return Response(
+                {"error": "Only administrators can review KYC submissions."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            kyc = ProviderKYC.objects.select_related(
+                "provider",
+                "provider__user",
+            ).get(pk=kyc_id)
+        except ProviderKYC.DoesNotExist:
+            return Response(
+                {"error": "KYC submission not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        decision = request.data.get("status")
+        rejection_reason = request.data.get("rejection_reason", "").strip()
+
+        if decision not in [ProviderKYC.APPROVED, ProviderKYC.REJECTED]:
+            return Response(
+                {"error": "Status must be 'approved' or 'rejected'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if kyc.status != ProviderKYC.PENDING:
+            return Response(
+                {"error": "Only pending KYC submissions can be reviewed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if decision == ProviderKYC.REJECTED and not rejection_reason:
+            return Response(
+                {"error": "A rejection reason is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        kyc.status = decision
+        kyc.rejection_reason = (
+            rejection_reason if decision == ProviderKYC.REJECTED else ""
+        )
+        kyc.reviewed_at = timezone.now()
+        kyc.reviewed_by = request.user
+
+        kyc.save(update_fields=[
+            "status",
+            "rejection_reason",
+            "reviewed_at",
+            "reviewed_by",
+        ])
+# Notify provider only when both approvals are complete.
+        if decision == ProviderKYC.APPROVED:
+           from notifications.services import notify_provider_fully_verified
+
+        notify_provider_fully_verified(kyc.provider)
+        return Response(
+            {
+                "message": f"KYC {decision} successfully.",
+                "provider_id": kyc.provider_id,
+                "kyc_status": kyc.status,
+                "rejection_reason": kyc.rejection_reason,
+                "reviewed_at": kyc.reviewed_at,
             },
             status=status.HTTP_200_OK,
         )

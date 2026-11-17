@@ -78,42 +78,46 @@
           <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2 gap-3">
 
             <!-- =================================================
-                 NOTIFICATIONS
-            ================================================== -->
-            <li class="nav-item dropdown">
+     NOTIFICATIONS
+================================================== -->
+<li class="nav-item dropdown">
 
-              <a
-                href="notifications.html"
-                class="oc-icon-btn"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-                aria-label="Notifications"
-                title="Notifications"
-              >
-                <i class="fa-regular fa-bell"></i>
-              </a>
+    <a
+        href="#"
+        class="oc-icon-btn"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+        aria-label="Notifications"
+        title="Notifications"
+    >
+        <i class="fa-regular fa-bell"></i>
+        <span id="customerUnreadBadge" class="d-none"></span>
+    </a>
 
-              <ul
-                class="dropdown-menu dropdown-menu-end oc-dropdown oc-notif-dropdown"
-              >
+    <ul
+        id="customerNotificationDropdown"
+        class="dropdown-menu dropdown-menu-end oc-dropdown oc-notif-dropdown"
+    >
 
-                <li class="oc-dropdown-header">
-                  Notifications
-                </li>
+        <li class="oc-dropdown-header">
+            Notifications
+        </li>
 
-                <li>
-                  <div
-                    class="dropdown-item text-muted justify-content-center py-4"
-                  >
-                    <i class="fa-regular fa-bell-slash"></i>
-                    <span>No new notifications</span>
-                  </div>
-                </li>
+        <li>
+            <div class="dropdown-item text-muted justify-content-center py-4">
+                Loading notifications...
+            </div>
+        </li>
 
-              </ul>
+        <li>
+            <a href="notifications.html" class="dropdown-item text-center">
+                View all notifications
+            </a>
+        </li>
 
-            </li>
+    </ul>
 
+</li>
 
             <!-- =================================================
                  MESSAGES
@@ -211,6 +215,16 @@
                     Settings
                   </a>
                 </li>
+
+<li>
+  <a
+    class="dropdown-item"
+    href="support.html"
+  >
+    <i class="fa-solid fa-headset"></i>
+    Support & Help
+  </a>
+</li>
 
                 <li>
                   <hr class="dropdown-divider" />

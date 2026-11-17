@@ -156,7 +156,7 @@ function t(key, fallback) {
     window.location.hostname === '127.0.0.1'
 )
     ? 'http://127.0.0.1:8000'
-    : 'https://levitra-lower-debian-announces.trycloudflare.com';
+    : 'http://127.0.0.1:8000';
 
 const API_BASE = `${BACKEND_BASE}/api`;
 

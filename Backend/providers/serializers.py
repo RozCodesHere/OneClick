@@ -51,7 +51,7 @@ class ProviderSerializer(serializers.ModelSerializer):
     happy_customers = serializers.SerializerMethodField()
     repeat_customers = serializers.SerializerMethodField()
     average_response_time = serializers.SerializerMethodField()
-
+    is_verified = serializers.SerializerMethodField()
     class Meta:
         model = ProviderProfile
 
@@ -76,6 +76,7 @@ class ProviderSerializer(serializers.ModelSerializer):
             "available",
             "availability_status",
             "verification_status",
+             "is_verified",
             "rating",
             "review_count",
             "reviews",
@@ -101,6 +102,25 @@ class ProviderSerializer(serializers.ModelSerializer):
     def get_full_name(self, obj):
 
         return f"{obj.user.first_name} {obj.user.last_name}".strip()
+
+
+       # ---------------------------------------------------------
+    # COMBINED PROVIDER VERIFICATION (APPLICATION + KYC)
+    # ---------------------------------------------------------
+
+    def get_is_verified(self, obj):
+
+        from .models import ProviderKYC
+
+        return (
+            obj.verification_status == ProviderProfile.APPROVED
+            and ProviderKYC.objects.filter(
+                provider=obj,
+                status=ProviderKYC.APPROVED,
+            ).exists()
+        )
+
+
 
     # ---------------------------------------------------------
     # PROFILE IMAGE
@@ -299,24 +319,27 @@ class ProviderSerializer(serializers.ModelSerializer):
             )
         )
 
+        
         return [
-            {
-                "id": provider_service.service.id,
-                "name": provider_service.service.name,
-                "category_id": (
-                    provider_service.service.category.id
-                    if provider_service.service.category
-                    else None
-                ),
-                "category_name": (
-                    provider_service.service.category.name
-                    if provider_service.service.category
-                    else None
-                ),
-                "price": provider_service.price,
-            }
-            for provider_service in provider_services
-        ]
+    {
+        "id": provider_service.service.id,
+        "name": provider_service.service.name,
+        "category_id": (
+            provider_service.service.category.id
+            if provider_service.service.category
+            else None
+        ),
+        "category_name": (
+            provider_service.service.category.name
+            if provider_service.service.category
+            else None
+        ),
+        "price": provider_service.price,
+        "price_type": provider_service.price_type,
+    }
+    for provider_service in provider_services
+]
+
 
 # =========================================================
 # SAVED PROVIDER SERIALIZER

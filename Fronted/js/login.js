@@ -33,11 +33,11 @@ document.addEventListener('DOMContentLoaded', function () {
        BACKEND URLS
     ===================================================== */
 
-    var USE_LOCAL_BACKEND = true;
+    var USE_LOCAL_BACKEND = false;
 
     var BACKEND_URL = USE_LOCAL_BACKEND
         ? 'http://127.0.0.1:8000'
-        : 'https://levitra-lower-debian-announces.trycloudflare.com';
+        : 'http://127.0.0.1:8000';
 
     var API_URL = BACKEND_URL + '/api/users/login/';
 

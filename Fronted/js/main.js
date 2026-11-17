@@ -293,9 +293,7 @@ async function loadHomepageCategories() {
 
         });
 
-        if (window.AOS) {
-            AOS.refresh();
-        }
+      
 
     } catch (error) {
 
@@ -440,7 +438,7 @@ async function loadFeaturedProviders() {
                   `;
 
             column.innerHTML = `
-                <div class="oc-provider-card h-100" data-aos="fade-up">
+                <div class="oc-provider-card h-100">
 
                     ${image}
 

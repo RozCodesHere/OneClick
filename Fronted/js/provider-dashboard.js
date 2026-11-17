@@ -8,7 +8,7 @@ const API_BASE = (
     window.location.hostname === "localhost"
 )
     ? "http://127.0.0.1:8000/api"
-    : "https://levitra-lower-debian-announces.trycloudflare.com/api";
+    : "http://127.0.0.1:8000/api";
 
 /* ==========================================================================
    PROVIDER LIVE GPS TRACKING
@@ -164,6 +164,7 @@ if (dashboardDate) {
 }
 
     loadProviderDashboard();
+    loadProviderNotificationDropdown();
 
     initSidebarToggle();
     initDropdowns();
@@ -489,19 +490,9 @@ renderProviderCounterOffers(
 
         window.oneClickBookings =
             bookings;
-
-           // Resume GPS tracking if a job is active.
-const activeTrackingBooking = bookings.find(
-    booking =>
-        booking.status === "on_the_way" ||
-        booking.status === "in_progress"
-);
-
-if (activeTrackingBooking) {
-    startProviderLocationTracking(
-        activeTrackingBooking.id
-    );
-}
+// Load provider payment transaction history
+await loadProviderPaymentTransactions();
+           
 
 /* ---------------------------------------------------------
    LOAD CUSTOMER MESSAGES
@@ -538,7 +529,18 @@ renderProviderMessages(
         renderCurrentJob(
             bookings
         );
+// Initialize the customer map before starting provider GPS.
+const activeTrackingBooking = bookings.find(
+    booking =>
+        booking.status === "on_the_way" ||
+        booking.status === "in_progress"
+);
 
+if (activeTrackingBooking) {
+    startProviderLocationTracking(
+        activeTrackingBooking.id
+    );
+}
 renderUpcomingJob(
     bookings
 );
@@ -921,12 +923,9 @@ async function loadProviderMessages() {
 
         while (nextPage) {
 
-            const secureNextPage =
-    nextPage.replace(/^http:\/\//i, "https://");
-
-const nextResponse =
+            const nextResponse =
     await fetch(
-        secureNextPage,
+        nextPage,
                     {
                         method: "GET",
                         headers: {
@@ -973,6 +972,251 @@ const nextResponse =
         return [];
     }
 }
+
+
+
+
+
+/* =========================================================
+   PROVIDER PAYMENT TRANSACTION HISTORY
+========================================================= */
+
+async function loadProviderPaymentTransactions() {
+
+    const container = document.getElementById(
+        "providerPaymentHistoryContainer"
+    );
+
+    if (!container) return;
+
+    const token = getAccessToken();
+
+    if (!token) {
+        container.innerHTML = `
+            <div class="alert alert-warning">
+                Please login again to view payment history.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="text-center text-muted py-4">
+            <i class="fa-solid fa-spinner fa-spin me-2"></i>
+            Loading payment history...
+        </div>
+    `;
+
+    try {
+
+        const response = await fetch(
+            `${API_BASE}/bookings/payment/transactions/`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        const data = await response.json().catch(() => ({}));
+
+        if (response.status === 401) {
+            throw new Error("Your login session has expired. Please login again.");
+        }
+
+        if (!response.ok) {
+            throw new Error(
+                data.error ||
+                data.detail ||
+                `Payment history request failed: ${response.status}`
+            );
+        }
+
+        const transactions = Array.isArray(data)
+            ? data
+            : Array.isArray(data.results)
+                ? data.results
+                : [];
+
+        console.log("Provider payment transactions:", transactions);
+
+        renderProviderPaymentTransactions(transactions);
+
+    } catch (error) {
+
+        console.error("Provider payment history error:", error);
+
+        container.innerHTML = `
+            <div class="alert alert-danger">
+                ${escapePaymentText(error.message)}
+            </div>
+        `;
+    }
+}
+
+
+/* =========================================================
+   RENDER PROVIDER PAYMENT TRANSACTIONS
+========================================================= */
+
+function renderProviderPaymentTransactions(transactions) {
+
+    const container = document.getElementById(
+        "providerPaymentHistoryContainer"
+    );
+
+    if (!container) return;
+
+    if (!transactions.length) {
+
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fa-solid fa-receipt fa-2x mb-3"></i>
+                <h6>No payment transactions yet</h6>
+                <p class="mb-0">
+                    Your booking payment records will appear here.
+                </p>
+            </div>
+        `;
+
+        return;
+    }
+
+    const rows = transactions.map(transaction => {
+
+        const status = String(transaction.status || "pending").toLowerCase();
+
+        const statusClasses = {
+            completed: "bg-success",
+            pending: "bg-warning text-dark",
+            failed: "bg-danger",
+            conflict: "bg-secondary"
+        };
+
+        const statusClass =
+            statusClasses[status] || "bg-secondary";
+
+        const amount = Number(transaction.amount || 0);
+
+        const createdDate = transaction.created_at
+            ? new Date(transaction.created_at).toLocaleString()
+            : "—";
+
+        const transactionId =
+            transaction.transaction_id || "—";
+
+        return `
+            <tr>
+
+                <td>
+                    #${escapePaymentText(transaction.booking_id)}
+                </td>
+
+                <td>
+                    ${escapePaymentText(transaction.customer_name || "Customer")}
+                </td>
+
+                <td class="fw-semibold">
+                    Rs. ${amount.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}
+                </td>
+
+                <td>
+                    ${escapePaymentText(
+                        String(transaction.method || "—").toUpperCase()
+                    )}
+                </td>
+
+                <td>
+                    <span class="badge ${statusClass}">
+                        ${escapePaymentText(status.toUpperCase())}
+                    </span>
+                </td>
+
+                <td>
+                    ${escapePaymentText(transactionId)}
+                </td>
+
+                <td>
+                    ${escapePaymentText(createdDate)}
+                </td>
+
+            </tr>
+        `;
+
+    }).join("");
+
+    container.innerHTML = `
+        <table class="table table-hover align-middle">
+
+            <thead>
+                <tr>
+                    <th>Booking</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th>Transaction ID</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                ${rows}
+            </tbody>
+
+        </table>
+    `;
+}
+
+
+/* =========================================================
+   SAFE PAYMENT HISTORY TEXT
+========================================================= */
+
+function escapePaymentText(value) {
+
+    return String(value ?? "").replace(/[&<>"']/g, character => {
+
+        const entities = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        };
+
+        return entities[character];
+
+    });
+}
+
+
+/* =========================================================
+   REFRESH PAYMENT HISTORY BUTTON
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const refreshButton = document.getElementById(
+        "refreshProviderPaymentsBtn"
+    );
+
+    if (refreshButton) {
+        refreshButton.addEventListener("click", function () {
+            loadProviderPaymentTransactions();
+        });
+    }
+
+});
+
+
+
+
 
 function renderProviderMessages(messages) {
 
@@ -2594,29 +2838,24 @@ function renderCurrentJob(bookings) {
     }
 
 
-    const today =
-        getTodayDateString();
-
-
-   const currentJob =
+    const currentJob =
     bookings
         .filter(function (booking) {
             return (
-                booking.booking_date === today &&
+                booking.status === "accepted" ||
+                booking.status === "on_the_way" ||
+                booking.status === "in_progress" ||
                 (
-                    booking.status === "accepted" ||
-                    booking.status === "on_the_way" ||
-                    booking.status === "in_progress" ||
-                    (
-                        booking.status === "completed" &&
-                        booking.payment_method === "cash" &&
-                        booking.payment_status !== "paid"
-                    )
+                    booking.status === "completed" &&
+                    booking.payment_method === "cash" &&
+                    booking.payment_status !== "paid"
                 )
             );
         })
         .sort(function (a, b) {
-            return String(a.booking_time || "").localeCompare(
+            return String(a.booking_date || "").localeCompare(
+                String(b.booking_date || "")
+            ) || String(a.booking_time || "").localeCompare(
                 String(b.booking_time || "")
             );
         })[0];
@@ -2919,6 +3158,11 @@ if (currentJob.status === "completed") {
 
     
 panel.dataset.bookingId = currentJob.id;
+panel.dataset.priceType =
+    currentJob.price_type || "fixed";
+
+panel.dataset.priceApprovalStatus =
+    currentJob.price_approval_status || "not_required";
 console.log("CURRENT JOB MAP DATA:", currentJob);
 updateProviderCustomerMap(currentJob);
 
@@ -2929,13 +3173,57 @@ if (startJobBtn) {
             ? "inline-flex"
             : "none";
 }
-// Show Start Service after provider reaches the customer.
+
+// Handle Start Service and negotiated pricing.
 if (startServiceBtn) {
-    startServiceBtn.style.display =
-        currentJob.status === "on_the_way"
-            ? "inline-flex"
-            : "none";
+
+    startServiceBtn.disabled = false;
+
+    if (currentJob.status !== "on_the_way") {
+
+        startServiceBtn.style.display = "none";
+
+    } else {
+
+        startServiceBtn.style.display = "inline-flex";
+
+        // Fixed-price bookings work exactly as before.
+        if (currentJob.price_type !== "negotiable") {
+
+            startServiceBtn.innerHTML =
+                '<i class="fa-solid fa-play"></i> Start Service';
+
+        } else {
+
+            const approvalStatus =
+                currentJob.price_approval_status;
+
+            if (approvalStatus === "approved") {
+
+                startServiceBtn.innerHTML =
+                    '<i class="fa-solid fa-play"></i> Start Service';
+
+            } else if (approvalStatus === "pending") {
+
+                startServiceBtn.disabled = true;
+
+                startServiceBtn.innerHTML =
+                    '<i class="fa-solid fa-clock"></i> Waiting for Customer Approval';
+
+            } else if (approvalStatus === "rejected") {
+
+                startServiceBtn.innerHTML =
+                    '<i class="fa-solid fa-rotate"></i> Revise Price';
+
+            } else {
+
+                startServiceBtn.innerHTML =
+                    '<i class="fa-solid fa-handshake"></i> Submit Agreed Price';
+            }
+        }
+    }
 }
+
 
 
 // Show Complete Job only after provider starts the job.
@@ -2946,14 +3234,18 @@ if (completeJobBtn) {
             : "none";
 }
 
-// Show cash confirmation after job completion if unpaid.
+
+// Show cash confirmation only for completed,
+// unpaid bookings where the customer selected cash.
 if (confirmCashPaymentBtn) {
     confirmCashPaymentBtn.style.display =
         currentJob.status === "completed" &&
+        currentJob.payment_method === "cash" &&
         currentJob.payment_status !== "paid"
             ? "inline-flex"
             : "none";
 }
+
 
 if (
     confirmCashPaymentBtn &&
@@ -5008,16 +5300,30 @@ if (newStatus === "on_the_way") {
         navigationScreen.style.display = "block";
     }
 
+    // Get the latest booking data after dashboard reload.
+    const currentJobPanel = document.querySelector(
+        ".current-job-panel"
+    );
+
+    const currentBookingId = Number(
+        currentJobPanel?.dataset.bookingId
+    );
+
     setTimeout(() => {
 
-        if (providerCustomerMap) {
-            providerCustomerMap.invalidateSize(true);
+        // Reinitialize/refresh the map after it becomes visible.
+        if (currentBookingId === Number(bookingId)) {
+            // The customer marker should already exist from renderCurrentJob().
+            if (providerCustomerMap) {
+                providerCustomerMap.invalidateSize(true);
+            }
         }
 
-        startProviderLocationTracking(bookingId);
+        
 
-    }, 500);
+    }, 700);
 }
+
 
 return true;
 
@@ -5103,77 +5409,116 @@ return true;
         });
     }
 
-    /* ---------------- START SERVICE ---------------- */
+   
+/* ---------------- START SERVICE ---------------- */
 
-    if (startServiceBtn &&
-        startServiceBtn.dataset.listenerAttached !== "true") {
+if (
+    startServiceBtn &&
+    startServiceBtn.dataset.listenerAttached !== "true"
+) {
 
-        startServiceBtn.dataset.listenerAttached = "true";
+    startServiceBtn.dataset.listenerAttached = "true";
 
-        startServiceBtn.addEventListener("click", async function () {
+    startServiceBtn.addEventListener("click", async function () {
 
-            const panel =
-                document.querySelector(".current-job-panel");
+        const panel = document.querySelector(".current-job-panel");
 
-            const bookingId =
-                panel?.dataset.bookingId;
+        const bookingId = panel?.dataset.bookingId;
 
-            if (!bookingId) {
-                alert("Booking ID not found.");
+        if (!bookingId) {
+            alert("Booking ID not found.");
+            return;
+        }
+
+        const priceType = panel.dataset.priceType || "fixed";
+        const approvalStatus =
+            panel.dataset.priceApprovalStatus || "not_required";
+
+        // Negotiable booking: wait for the customer's decision.
+        if (
+            priceType === "negotiable" &&
+            approvalStatus === "pending"
+        ) {
+            alert("Waiting for the customer to approve the proposed price.");
+            return;
+        }
+
+        // Negotiable booking: customer rejected or no proposal exists.
+        if (
+            priceType === "negotiable" &&
+            approvalStatus !== "approved"
+        ) {
+
+            const modalElement = document.getElementById(
+                "negotiatedPriceModal"
+            );
+
+            if (!modalElement || typeof bootstrap === "undefined") {
+                alert("Negotiated price form could not be opened.");
                 return;
             }
 
-            const confirmed = confirm(
-                "Have you reached the customer and are you ready to start the service?"
+            document.getElementById(
+                "negotiatedPriceBookingId"
+            ).value = bookingId;
+
+            document.getElementById(
+                "negotiatedPriceAmount"
+            ).value = "";
+
+            document.getElementById(
+                "negotiatedWorkDescription"
+            ).value = "";
+
+            document.getElementById(
+                "negotiatedPriceError"
+            ).classList.add("d-none");
+
+            document.getElementById(
+                "negotiatedPriceSuccess"
+            ).classList.add("d-none");
+
+            bootstrap.Modal.getOrCreateInstance(
+                modalElement
+            ).show();
+
+            return;
+        }
+
+        // Fixed-price or customer-approved booking.
+        const confirmed = confirm(
+            "Have you reached the customer and are you ready to start the service?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        startServiceBtn.disabled = true;
+
+        startServiceBtn.innerHTML =
+            '<i class="fa-solid fa-spinner fa-spin"></i> Starting Service...';
+
+        const success = await updateBookingStatus(
+            bookingId,
+            "in_progress",
+            startServiceBtn
+        );
+
+        if (success) {
+
+            console.log("Service started:", bookingId);
+
+            const navigationScreen = document.getElementById(
+                "providerNavigationScreen"
             );
 
-            if (!confirmed) {
-                return;
+            if (navigationScreen) {
+                navigationScreen.style.display = "none";
             }
 
-            startServiceBtn.disabled = true;
-
-            startServiceBtn.innerHTML =
-                '<i class="fa-solid fa-spinner fa-spin"></i> Starting Service...';
-
-            const success = await updateBookingStatus(
-                bookingId,
-                "in_progress",
-                startServiceBtn
-            );
-
-           if (success) {
-    console.log("Service started:", bookingId);
-
-    const navigationScreen = document.getElementById(
-        "providerNavigationScreen"
-    );
-
-    if (navigationScreen) {
-        navigationScreen.style.display = "none";
-    }
-
-    stopProviderLocationTracking();
-}
-
-        });
-    }
-
-
-    const closeNavigationBtn = document.getElementById(
-    "closeProviderNavigation"
-);
-
-if (closeNavigationBtn &&
-    closeNavigationBtn.dataset.listenerAttached !== "true") {
-
-    closeNavigationBtn.dataset.listenerAttached = "true";
-
-    closeNavigationBtn.addEventListener("click", function () {
-
-        document.getElementById(
-            "providerNavigationScreen"
-        ).style.display = "none";
+            stopProviderLocationTracking();
+        }
 
     });
 }
@@ -5226,6 +5571,151 @@ if (closeNavigationBtn &&
     }
 
 })();
+
+
+/* ==========================================================================
+   SUBMIT NEGOTIATED PRICE
+   ========================================================================== */
+
+(function initNegotiatedPriceSubmission() {
+
+    const submitBtn = document.getElementById(
+        "submitNegotiatedPriceBtn"
+    );
+
+    if (
+        !submitBtn ||
+        submitBtn.dataset.listenerAttached === "true"
+    ) {
+        return;
+    }
+
+    submitBtn.dataset.listenerAttached = "true";
+
+    submitBtn.addEventListener("click", async function () {
+
+        const bookingId = document.getElementById(
+            "negotiatedPriceBookingId"
+        ).value;
+
+        const priceInput = document.getElementById(
+            "negotiatedPriceAmount"
+        );
+
+        const descriptionInput = document.getElementById(
+            "negotiatedWorkDescription"
+        );
+
+        const errorBox = document.getElementById(
+            "negotiatedPriceError"
+        );
+
+        const successBox = document.getElementById(
+            "negotiatedPriceSuccess"
+        );
+
+        const price = priceInput.value.trim();
+        const description = descriptionInput.value.trim();
+
+        errorBox.classList.add("d-none");
+        successBox.classList.add("d-none");
+
+        if (!bookingId) {
+            errorBox.textContent = "Booking ID is missing.";
+            errorBox.classList.remove("d-none");
+            return;
+        }
+
+        if (!price || Number(price) <= 0 || !Number.isFinite(Number(price))) {
+            errorBox.textContent = "Enter a valid price greater than zero.";
+            errorBox.classList.remove("d-none");
+            return;
+        }
+
+        if (!description) {
+            errorBox.textContent = "Please describe the agreed work.";
+            errorBox.classList.remove("d-none");
+            return;
+        }
+
+        const token = getAccessToken();
+
+        if (!token) {
+            errorBox.textContent = "Your session expired. Please log in again.";
+            errorBox.classList.remove("d-none");
+            return;
+        }
+
+        submitBtn.disabled = true;
+
+        submitBtn.innerHTML =
+            '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+
+        try {
+
+            const response = await fetch(
+                `${API_BASE}/bookings/${bookingId}/negotiated-price/`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        negotiated_price: price,
+                        negotiated_work_description: description
+                    })
+                }
+            );
+
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error ||
+                    result.detail ||
+                    "Unable to submit the negotiated price."
+                );
+            }
+
+            successBox.textContent =
+                "Price submitted. Waiting for customer approval.";
+
+            successBox.classList.remove("d-none");
+
+            // Close modal and refresh booking information.
+            const modalElement = document.getElementById(
+                "negotiatedPriceModal"
+            );
+
+            const modalInstance =
+                bootstrap.Modal.getOrCreateInstance(modalElement);
+
+            modalInstance.hide();
+
+            await loadProviderDashboard();
+
+            console.log("Negotiated price submitted:", result);
+
+        } catch (error) {
+
+            console.error("Negotiated price submission failed:", error);
+
+            errorBox.textContent = error.message;
+            errorBox.classList.remove("d-none");
+
+        } finally {
+
+            submitBtn.disabled = false;
+
+            submitBtn.innerHTML =
+                '<i class="fa-solid fa-paper-plane me-1"></i> Submit Price';
+        }
+
+    });
+
+})();
+
 
 
 /* ==========================================================================
@@ -6984,3 +7474,381 @@ document.addEventListener("DOMContentLoaded", async function () {
     loadWorkPhotos();
 
 });
+
+
+
+
+/* =========================================================
+   PROVIDER NOTIFICATION DROPDOWN
+   ========================================================= */
+
+async function loadProviderNotificationDropdown() {
+
+    const dropdownList = document.getElementById(
+        "providerNotificationList"
+    );
+
+    const badge = document.getElementById(
+        "providerUnreadBadge"
+    );
+
+    if (!dropdownList) return;
+
+    const token = getAccessToken();
+
+    if (!token) return;
+
+    try {
+
+        const response = await fetch(
+            `${API_BASE}/notifications/`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                `Notification API error: ${response.status}`
+            );
+        }
+
+        const data = await response.json();
+
+        const notifications = Array.isArray(data)
+            ? data
+            : (data.results || []);
+
+        const unreadCount = notifications.filter(
+            item => !item.is_read
+        ).length;
+
+        // Update unread badge
+        if (badge) {
+
+            badge.textContent = unreadCount;
+
+            badge.classList.toggle(
+                "d-none",
+                unreadCount === 0
+            );
+        }
+
+        // Show latest five notifications
+        const latestNotifications = notifications.slice(0, 5);
+
+        dropdownList.innerHTML = "";
+
+        if (latestNotifications.length === 0) {
+
+            dropdownList.innerHTML = `
+                <div class="dropdown-item notification-empty">
+                    <span class="item-icon bg-primary-soft">
+                        <i class="fa-regular fa-bell"></i>
+                    </span>
+                    <span>
+                        <strong>No notifications</strong>
+                        <small>You don't have any notifications yet.</small>
+                    </span>
+                </div>
+            `;
+
+            return;
+        }
+
+        latestNotifications.forEach(function (item) {
+
+            const notificationItem = document.createElement("div");
+
+            notificationItem.className =
+                "dropdown-item notification-empty";
+
+            const icon = document.createElement("span");
+            icon.className = "item-icon bg-primary-soft";
+
+            const iconElement = document.createElement("i");
+            iconElement.className = "fa-regular fa-bell";
+
+            icon.appendChild(iconElement);
+
+            const content = document.createElement("span");
+
+            const title = document.createElement("strong");
+            title.textContent = item.title || "Notification";
+
+            if (!item.is_read) {
+                title.style.fontWeight = "700";
+            }
+
+            const message = document.createElement("small");
+            message.textContent = item.message || "";
+
+            content.appendChild(title);
+            content.appendChild(message);
+
+            notificationItem.appendChild(icon);
+            notificationItem.appendChild(content);
+
+            dropdownList.appendChild(notificationItem);
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Provider notification loading error:",
+            error
+        );
+
+    }
+}
+
+
+
+/* =========================================================
+   ONECLICK — PROVIDER KYC VERIFICATION
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    loadProviderKYCStatus();
+
+    const kycForm = document.getElementById("providerKycForm");
+
+    if (kycForm) {
+        kycForm.addEventListener("submit", submitProviderKYC);
+    }
+
+});
+
+
+/* =========================================================
+   LOAD KYC STATUS
+========================================================= */
+
+async function loadProviderKYCStatus() {
+
+    const section = document.getElementById("providerKycSection");
+    const content = document.getElementById("providerKycContent");
+    const form = document.getElementById("providerKycForm");
+
+    if (!section || !content || !form) return;
+
+    section.style.display = "block";
+
+    const token = getAccessToken();
+
+    if (!token) {
+        content.textContent = "Please login again to check verification status.";
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `${API_BASE}/providers/kyc/status/`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const data = await response.json();
+        // Also check the provider's final verification status.
+const dashboardResponse = await fetch(
+    `${API_BASE}/providers/dashboard/`,
+    {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    }
+);
+
+const dashboardData = await dashboardResponse.json();
+
+if (!dashboardResponse.ok) {
+    throw new Error(
+        dashboardData.error || "Unable to load provider verification."
+    );
+}
+
+const verification = dashboardData.verification;
+
+        if (!response.ok) {
+            throw new Error(
+                data.error || data.detail || "Unable to load KYC status."
+            );
+        }
+
+        form.style.display = "none";
+
+        if (verification.is_verified === true) {
+
+    section.style.display = "none";
+    return;
+
+} else if (
+    data.status === "pending" ||
+    verification.application_status === "pending"
+) {
+
+    content.innerHTML = `
+        <p class="text-warning fw-semibold">
+            <i class="fa-solid fa-clock"></i>
+            Verification Pending
+        </p>
+        <p class="text-muted small">
+            ${
+                data.status === "approved"
+                    ? "Your KYC is approved. Your provider application is awaiting administrator approval."
+                    : "Your documents are submitted and awaiting administrator review."
+            }
+        </p>
+    `;
+} 
+        else if (data.status === "rejected") {
+
+            content.innerHTML = `
+                <p class="text-danger fw-semibold">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    Verification Rejected
+                </p>
+                <p class="small">
+                    <strong>Reason:</strong>
+                    ${escapePaymentText(data.rejection_reason || "Please resubmit your documents.")}
+                </p>
+                <p class="text-muted small">
+                    Please upload all three documents again.
+                </p>
+            `;
+
+            form.style.display = "block";
+
+            document.getElementById("providerKycSubmitBtn").innerHTML =
+                '<i class="fa-solid fa-rotate"></i> Resubmit Documents';
+
+        } else {
+
+            content.innerHTML = `
+                <p class="text-muted small">
+                    Identity verification has not been submitted yet.
+                    Please upload all three required documents.
+                </p>
+            `;
+
+            form.style.display = "block";
+
+        }
+
+    } catch (error) {
+
+        console.error("Provider KYC status error:", error);
+
+        content.textContent = error.message;
+
+    }
+
+}
+
+
+/* =========================================================
+   SUBMIT KYC DOCUMENTS
+========================================================= */
+
+async function submitProviderKYC(event) {
+
+    event.preventDefault();
+
+    const form = document.getElementById("providerKycForm");
+    const button = document.getElementById("providerKycSubmitBtn");
+
+    const front = document.getElementById("kycCitizenshipFront").files[0];
+    const back = document.getElementById("kycCitizenshipBack").files[0];
+    const selfie = document.getElementById("kycVerificationSelfie").files[0];
+
+    if (!front || !back || !selfie) {
+        alert("Please select all three required documents.");
+        return;
+    }
+
+    const files = [front, back, selfie];
+
+    for (const file of files) {
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert("Each image must be smaller than 5 MB.");
+            return;
+        }
+
+        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+            alert("Please select valid JPG, PNG or WEBP images.");
+            return;
+        }
+
+    }
+
+    const token = getAccessToken();
+
+    if (!token) {
+        alert("Your session has expired. Please login again.");
+        return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("citizenship_front", front);
+    formData.append("citizenship_back", back);
+    formData.append("verification_selfie", selfie);
+
+    button.disabled = true;
+    button.textContent = "Uploading documents...";
+
+    try {
+
+        const response = await fetch(
+            `${API_BASE}/providers/kyc/upload/`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
+                body: formData
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.error || data.detail || "Document upload failed."
+            );
+        }
+
+        alert("Your documents have been submitted successfully.");
+
+        form.reset();
+
+        await loadProviderKYCStatus();
+
+    } catch (error) {
+
+        console.error("Provider KYC upload error:", error);
+
+        alert(error.message);
+
+    } finally {
+
+        button.disabled = false;
+
+        button.innerHTML =
+            '<i class="fa-solid fa-cloud-arrow-up"></i> Submit for Verification';
+
+    }
+
+}

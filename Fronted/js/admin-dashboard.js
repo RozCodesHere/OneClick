@@ -23,6 +23,7 @@ let currentAdmin = null;
 
 let allUsers = [];
 let allBookings = [];
+let allPaymentTransactions = [];
 let allProviders = [];
 let allServices = [];
 let allReviews = [];
@@ -61,6 +62,7 @@ async function initializeDashboard() {
       await Promise.all([
     loadUsers(),
     loadBookings(),
+    loadPaymentTransactions(),
     loadProviders(),
     loadServices(),
     loadReviews(),
@@ -88,6 +90,8 @@ async function initializeDashboard() {
         renderSystemStatus();
 
         renderNotifications();
+
+        await loadAdminNotificationDropdown();
 
         renderMessages();
 
@@ -331,6 +335,30 @@ async function loadBookings() {
 
 }
 
+/* =========================================================
+   LOAD PAYMENT TRANSACTIONS
+========================================================= */
+
+async function loadPaymentTransactions() {
+
+    console.log("Loading payment transactions...");
+
+    const data =
+        await apiRequest("/bookings/payment/admin/transactions/");
+
+    allPaymentTransactions =
+        Array.isArray(data)
+            ? data
+            : Array.isArray(data.results)
+                ? data.results
+                : [];
+
+    console.log(
+        "REAL PAYMENT TRANSACTIONS:",
+        allPaymentTransactions
+    );
+
+}
 
 /* =========================================================
    LOAD PROVIDERS
@@ -1144,11 +1172,15 @@ function calculateAndRenderStatistics() {
 
 
     const activeBookings =
-        allBookings.filter(
-            booking =>
-                booking.status === "pending" ||
-                booking.status === "accepted"
-        ).length;
+    allBookings.filter(
+        booking =>
+            [
+                "pending",
+                "accepted",
+                "on_the_way",
+                "in_progress"
+            ].includes(booking.status)
+    ).length;
 
 
     const completedJobs =
@@ -1186,6 +1218,21 @@ function calculateAndRenderStatistics() {
 
     const currentYear =
         new Date().getFullYear();
+
+const actualRevenue =
+    allBookings
+        .filter(function (booking) {
+    return (
+        booking.status === "completed" &&
+        booking.payment_status === "paid"
+    );
+})
+        .reduce(function (total, booking) {
+            return (
+                total +
+                getNumericValue(booking.total_price)
+            );
+        }, 0);
 
 
     const monthlyBookingValue =
@@ -1244,16 +1291,17 @@ function calculateAndRenderStatistics() {
 
     const statistics = {
 
-        customers,
-        providers,
-        activeBookings,
-        completedJobs,
-        pendingBookings,
-        totalBookingValue,
-        monthlyBookingValue,
-        platformRating: rating
+    customers,
+    providers,
+    activeBookings,
+    completedJobs,
+    pendingBookings,
+    totalBookingValue,
+    monthlyBookingValue,
+    actualRevenue,
+    platformRating: rating
 
-    };
+};
 
 
     console.log(
@@ -1322,6 +1370,13 @@ function updateStatCards(statistics) {
         )
     );
 
+setStat(
+    "actualRevenue",
+    formatCurrency(
+        statistics.actualRevenue
+    )
+);
+
 
     setStat(
         "monthlyBookingValue",
@@ -1352,6 +1407,7 @@ function updateStatCards(statistics) {
 
                     element.textContent =
                         getTrendText(
+                            
                             element.dataset.trend
                         );
 
@@ -1394,6 +1450,9 @@ function getTrendText(
 
         case "monthlyBookingValue":
             return "Current month";
+
+            case "actualRevenue":
+    return "From paid bookings";
 
         case "platformRating":
             return "Based on reviews";
@@ -1517,8 +1576,8 @@ function renderBookings() {
 
                             <td>
                                 ${escapeHTML(
-                                    booking.service || "—"
-                                )}
+    booking.service?.name || "—"
+)}
                             </td>
 
                             <td>
@@ -2290,100 +2349,178 @@ function renderReviews() {
    PAYMENTS
 ========================================================= */
 
+
+
 function renderPaymentSection() {
 
     const cards =
-        document.getElementById(
-            "paymentCardsGrid"
-        );
-
+        document.getElementById("paymentCardsGrid");
 
     const transactions =
-        document.getElementById(
-            "paymentTransactions"
-        );
+        document.getElementById("paymentTransactions");
 
+    const paidBookings =
+        allBookings.filter(function (booking) {
+            return (
+                booking.status === "completed" &&
+                booking.payment_status === "paid"
+            );
+        });
+
+    const paymentRevenue =
+        paidBookings.reduce(function (total, booking) {
+            return total + getNumericValue(booking.total_price);
+        }, 0);
+
+    const formatNPR = function (amount) {
+        return "Rs. " + Number(amount || 0).toLocaleString("en-IN");
+    };
+
+    const paymentMethods = [
+        ...new Set(
+            paidBookings
+                .map(function (booking) {
+                    return booking.payment_method;
+                })
+                .filter(Boolean)
+        )
+    ];
 
     if (cards) {
-
         cards.innerHTML = `
             <div class="payment-summary-card">
-
-                <span>
-                    Payment Status
-                </span>
-
-                <strong>
-                    Not Configured
-                </strong>
-
+                <span>Payment Status</span>
+                <strong>${paidBookings.length} Paid</strong>
             </div>
 
-
             <div class="payment-summary-card">
-
-                <span>
-                    Gateway
-                </span>
-
-                <strong>
-                    Not Configured
-                </strong>
-
+                <span>Payment Methods</span>
+                <strong>${paymentMethods.length
+                    ? paymentMethods.map(method =>
+                        escapeHTML(method.toUpperCase())
+                    ).join(", ")
+                    : "No paid methods"
+                }</strong>
             </div>
 
-
             <div class="payment-summary-card">
-
-                <span>
-                    Transactions
-                </span>
-
-                <strong>
-                    —
-                </strong>
-
+                <span>Paid Bookings</span>
+                <strong>${paidBookings.length}</strong>
             </div>
 
-
             <div class="payment-summary-card">
-
-                <span>
-                    Payment Revenue
-                </span>
-
-                <strong>
-                    —
-                </strong>
-
+                <span>Payment Revenue</span>
+                <strong>${formatNPR(paymentRevenue)}</strong>
             </div>
         `;
-
     }
 
+    if (!transactions) return;
 
-    if (transactions) {
+    if (!Array.isArray(allPaymentTransactions) ||
+        allPaymentTransactions.length === 0) {
 
         transactions.innerHTML = `
             <div class="not-configured-card">
-
-                <i class="fa-solid fa-credit-card"></i>
-
-                <h3>
-                    Payment Integration Not Configured
-                </h3>
-
+                <i class="fa-solid fa-receipt"></i>
+                <h3>No Payment Transactions</h3>
                 <p>
-                    Online payment processing is postponed.
-                    Booking values shown elsewhere are not confirmed payments.
+                    No payment transaction records are available yet.
                 </p>
-
             </div>
         `;
 
+        return;
     }
 
+    const formatDate = function (dateValue) {
+        if (!dateValue) return "—";
+
+        const date = new Date(dateValue);
+
+        return isNaN(date.getTime())
+            ? "—"
+            : date.toLocaleString();
+    };
+
+    const getStatusClass = function (status) {
+        const allowed = [
+            "pending",
+            "completed",
+            "failed",
+            "conflict"
+        ];
+
+        return allowed.includes(status)
+            ? status
+            : "neutral";
+    };
+
+    transactions.innerHTML = `
+        <div class="payment-transactions-header">
+            <h3>Payment Transaction History</h3>
+            <span>${allPaymentTransactions.length} Records</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Booking</th>
+                        <th>Customer</th>
+                        <th>Provider</th>
+                        <th>Service</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th>Transaction ID</th>
+                        <th>Created</th>
+                        <th>Paid At</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    ${allPaymentTransactions.map(function (payment) {
+
+                        const statusValue =
+                            String(payment.status || "unknown").toLowerCase();
+
+                        return `
+                            <tr>
+                                <td>#${escapeHTML(String(payment.booking_id ?? "—"))}</td>
+
+                                <td>${escapeHTML(payment.customer_name || "—")}</td>
+
+                                <td>${escapeHTML(payment.provider_name || "—")}</td>
+
+                                <td>${escapeHTML(payment.service_name || "—")}</td>
+
+                                <td>${formatNPR(payment.amount)}</td>
+
+                                <td>${escapeHTML(
+                                    String(payment.method || "—").toUpperCase()
+                                )}</td>
+
+                                <td>
+                                    <span class="status-pill status-pill-${getStatusClass(statusValue)}">
+                                        ${escapeHTML(statusValue.toUpperCase())}
+                                    </span>
+                                </td>
+
+                                <td>${escapeHTML(payment.transaction_id || payment.pidx || "—")}</td>
+
+                                <td>${escapeHTML(formatDate(payment.created_at))}</td>
+
+                                <td>${escapeHTML(formatDate(payment.paid_at))}</td>
+                            </tr>
+                        `;
+                    }).join("")}
+                </tbody>
+            </table>
+        </div>
+    `;
 }
+
 
 
 /* =========================================================
@@ -2493,29 +2630,35 @@ function drawBookingValueChart() {
         labels.map(
             function (month) {
 
-                return allBookings
-                    .filter(
-                        function (booking) {
+               return allBookings
+    .filter(
+        function (booking) {
 
-                            const date =
-                                parseDate(
-                                    booking.booking_date
-                                );
+            if (
+                booking.status !== "completed" ||
+                booking.payment_status !== "paid"
+            ) {
+                return false;
+            }
 
-                            if (!date) {
-                                return false;
-                            }
+            const date =
+                parseDate(
+                    booking.booking_date
+                );
 
+            if (!date) {
+                return false;
+            }
 
-                            return (
-                                date.getFullYear() ===
-                                month.year &&
-                                date.getMonth() ===
-                                month.month
-                            );
+            return (
+                date.getFullYear() ===
+                month.year &&
+                date.getMonth() ===
+                month.month
+            );
 
-                        }
-                    )
+        }
+    )
                     .reduce(
                         function (total, booking) {
 
@@ -4310,11 +4453,26 @@ function setupSidebar() {
                         }
 
 
-                        if (
-                            document.getElementById(
-                                section
-                            )
-                        ) {
+                        // Allow links to dedicated HTML pages to navigate normally.
+const pageLink = element.getAttribute("href");
+
+if (
+    pageLink &&
+    /\.html(?:[?#]|$)/i.test(pageLink)
+) {
+
+    closeSidebar();
+
+    return;
+
+}
+
+
+if (
+    document.getElementById(
+        section
+    )
+) {
 
                             event.preventDefault();
 
@@ -6454,3 +6612,103 @@ document.addEventListener(
 
     }
 );
+
+
+
+
+/* =========================================================
+   ADMIN — REAL NOTIFICATION DROPDOWN
+========================================================= */
+
+async function loadAdminNotificationDropdown() {
+
+    const container = document.getElementById(
+        "topNotificationsContent"
+    );
+
+    const badge = document.getElementById(
+        "notificationBadge"
+    );
+
+    if (!container) return;
+
+    try {
+
+        const data = await apiRequest("/notifications/");
+
+        const notifications = Array.isArray(data)
+            ? data
+            : (data.results || []);
+
+        const unreadCount = notifications.filter(
+            item => !item.is_read
+        ).length;
+
+        // Update unread badge
+        if (badge) {
+            badge.textContent = unreadCount;
+            badge.style.display =
+                unreadCount > 0 ? "inline-flex" : "none";
+        }
+
+        // Show latest five notifications
+        const latest = notifications.slice(0, 5);
+
+        container.innerHTML = "";
+
+        if (latest.length === 0) {
+
+            container.innerHTML = `
+                <div class="dropdown-item notification-empty">
+                    <i class="fa-regular fa-bell"></i>
+                    <span>
+                        <strong>No notifications</strong>
+                        <small>No notifications available.</small>
+                    </span>
+                </div>
+            `;
+
+            return;
+        }
+
+        latest.forEach(function (item) {
+
+            const notification = document.createElement("div");
+            notification.className = "dropdown-item";
+
+            const content = document.createElement("div");
+
+            const title = document.createElement("strong");
+            title.textContent = item.title || "Notification";
+
+            if (!item.is_read) {
+                title.style.fontWeight = "700";
+            }
+
+            const message = document.createElement("small");
+            message.textContent = item.message || "";
+
+            const date = document.createElement("small");
+            date.textContent = item.created_at
+                ? new Date(item.created_at).toLocaleString()
+                : "";
+
+            content.appendChild(title);
+            content.appendChild(message);
+            content.appendChild(date);
+
+            notification.appendChild(content);
+
+            container.appendChild(notification);
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Admin notification loading error:",
+            error
+        );
+
+    }
+}

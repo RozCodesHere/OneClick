@@ -351,11 +351,7 @@ else if (requestedRole === "provider") {
        FILE UPLOAD LABEL
     ========================================================= */
 
-    function wireFileUpload(
-        inputId,
-        labelId,
-        defaultText
-    ) {
+     {
 
         var input =
             document.getElementById(inputId);
@@ -1671,10 +1667,7 @@ var provCity =
             "provBio"
         );
 
-    var provCitizenship =
-        document.getElementById(
-            "provCitizenship"
-        );
+    
 
     var provPhoto =
         document.getElementById(
@@ -1960,10 +1953,7 @@ var districtValid =
                         20
                     );
 
-                var citizenshipValid =
-                    validateFileInput(
-                        provCitizenship
-                    );
+                
 
                 var photoValid =
                     validateFileInput(
@@ -1996,7 +1986,7 @@ var districtValid =
 provinceValid &&
 districtValid &&
                     bioValid &&
-                    citizenshipValid &&
+                    
                     photoValid &&
                     termsValid;
 
@@ -2601,7 +2591,7 @@ formData.append(
     provDistrict,
     provCity,
     provBio,
-    provCitizenship,
+   
     provPhoto
 ].forEach(
                         function (input) {
@@ -2628,31 +2618,7 @@ formData.append(
 
                    
 
-                    /* ---------- Reset citizenship label ---------- */
-
-                    var citizenshipLabel =
-                        document.getElementById(
-                            "provCitizenshipLabel"
-                        );
-
-
-                    if (citizenshipLabel) {
-
-                        var citizenshipSpan =
-                            citizenshipLabel.querySelector(
-                                "span"
-                            );
-
-                        if (citizenshipSpan) {
-
-                            citizenshipSpan.textContent =
-                                "Choose file — JPG, PNG or PDF";
-                        }
-
-                        citizenshipLabel.classList.remove(
-                            "oc-file-selected"
-                        );
-                    }
+                    
 
 
                     /* ---------- Reset photo label ---------- */

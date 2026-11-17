@@ -103,6 +103,237 @@ document.querySelectorAll(".oc-ripple").forEach((btn) => {
 
 
 /* =========================================================
+   ROLE-SPECIFIC FAQ DATA
+   ========================================================= */
+
+const supportFaqData = {
+
+    customer: [
+
+        {
+            category: "booking",
+            question: "How do I book a service?",
+            answer: "Browse available services, select a provider, choose your preferred date and time, provide the service location, and submit your booking request."
+        },
+
+        {
+            category: "booking",
+            question: "How can I check my booking status?",
+            answer: "Open My Bookings from your customer dashboard to view your booking details and current service status."
+        },
+
+        {
+            category: "booking",
+            question: "Can I track my provider?",
+            answer: "When your provider starts travelling to your location, open the booking tracking section to view their available live location."
+        },
+
+        {
+            category: "booking",
+            question: "How do I contact my provider?",
+            answer: "Use the Messages section to communicate with your provider about your confirmed booking."
+        },
+
+        {
+            category: "payment",
+            question: "How can I pay for a service?",
+            answer: "Use the payment option available for your booking. OneClick supports Khalti and Cash on Service."
+        },
+
+        {
+            category: "payment",
+            question: "When should I pay for a service?",
+            answer: "For Cash on Service, pay after the service is completed. For online payment, follow the payment instructions displayed for your booking."
+        },
+
+        {
+            category: "provider",
+            question: "How can I check provider reviews?",
+            answer: "Open a provider's profile to view their available ratings and customer reviews."
+        },
+
+        {
+            category: "account",
+            question: "How can I update my profile?",
+            answer: "Open My Profile from your customer dashboard to view and manage your available profile information."
+        },
+
+        {
+            category: "account",
+            question: "How do I change my password?",
+            answer: "Use the password management option available in your account settings."
+        },
+
+        {
+            category: "technical",
+            question: "What if my booking information is not loading?",
+            answer: "Check your internet connection and reload your dashboard. If the problem continues, submit a support ticket with details of the issue."
+        },
+
+        {
+            category: "safety",
+            question: "How do I report a safety concern?",
+            answer: "Open Support & Help, select Safety & Reporting, describe the issue, and submit a support ticket."
+        }
+
+    ],
+
+    provider: [
+
+        {
+            category: "booking",
+            question: "How do I receive service requests?",
+            answer: "Check the bookings and service requests sections of your provider dashboard to view requests assigned or made available to you."
+        },
+
+        {
+            category: "booking",
+            question: "How do I accept or reject a booking?",
+            answer: "Open the booking details in your provider dashboard and use the available booking actions to respond to the request."
+        },
+
+        {
+            category: "booking",
+            question: "How do I update a booking's service status?",
+            answer: "Open the relevant booking in your provider dashboard and use the available service actions to update its progress."
+        },
+
+        {
+            category: "booking",
+            question: "How does live location tracking work?",
+            answer: "When you enable Live GPS in your provider dashboard, your location can be shared with the customer for an active booking."
+        },
+
+        {
+            category: "payment",
+            question: "How are my earnings calculated?",
+            answer: "Completed bookings count toward provider earnings only when their payment status is also marked as paid."
+        },
+
+        {
+            category: "payment",
+            question: "When does a completed booking count as earnings?",
+            answer: "A booking must have both a completed service status and a paid payment status to count toward your earnings."
+        },
+
+        {
+            category: "provider",
+            question: "How can I manage my services?",
+            answer: "Open Manage Services in your provider dashboard to access the service management options available to your account."
+        },
+
+        {
+            category: "provider",
+            question: "How does provider verification work?",
+            answer: "Your provider application and submitted documents are reviewed by the OneClick administration team. Check your provider account for your verification status."
+        },
+
+        {
+            category: "provider",
+            question: "How can customers review my work?",
+            answer: "Customers can submit ratings and reviews after completed bookings. Available reviews can be viewed in your provider dashboard."
+        },
+
+        {
+            category: "account",
+            question: "How can I update my provider profile?",
+            answer: "Open My Profile from your provider dashboard to view and manage your provider information."
+        },
+
+        {
+            category: "technical",
+            question: "What if my provider dashboard is not loading?",
+            answer: "Check your internet connection and reload the dashboard. If the problem continues, submit a support ticket."
+        },
+
+        {
+            category: "safety",
+            question: "How do I report a customer-related issue?",
+            answer: "Open Support & Help, select Safety & Reporting, describe the issue, and submit a support ticket."
+        }
+
+    ]
+
+};
+
+
+/* =========================================================
+   RENDER FAQS BASED ON USER ROLE
+   ========================================================= */
+
+function renderSupportFaqs(role) {
+
+    const accordion =
+        document.getElementById("faqAccordion");
+
+    if (!accordion) return;
+
+    const selectedFaqs =
+        role === "provider"
+            ? supportFaqData.provider
+            : supportFaqData.customer;
+
+    accordion.innerHTML = "";
+
+    selectedFaqs.forEach((faq, index) => {
+
+        const faqNumber = index + 1;
+
+        const item = document.createElement("div");
+
+        item.className = "accordion-item";
+
+        item.setAttribute(
+            "data-faq-cat",
+            faq.category
+        );
+
+        item.innerHTML = `
+            <h2 class="accordion-header">
+                <button
+                    class="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#supportFaq${faqNumber}"
+                    aria-expanded="false"
+                    aria-controls="supportFaq${faqNumber}"
+                >
+                    ${faq.question}
+                </button>
+            </h2>
+
+            <div
+                id="supportFaq${faqNumber}"
+                class="accordion-collapse collapse"
+                data-bs-parent="#faqAccordion"
+            >
+                <div class="accordion-body">
+                    ${faq.answer}
+                </div>
+            </div>
+        `;
+
+        accordion.appendChild(item);
+
+    });
+
+    // Refresh the FAQ collection after rendering.
+    faqItems = accordion.querySelectorAll(
+        ".accordion-item"
+    );
+
+    // Reset existing FAQ search.
+    if (faqSearchInput) {
+        faqSearchInput.value = "";
+    }
+
+    filterFaq("");
+
+}
+
+
+
+/* =========================================================
    FAQ SEARCH
    ========================================================= */
 
@@ -112,7 +343,7 @@ const faqSearchInput =
 const searchClearBtn =
     document.getElementById("searchClearBtn");
 
-const faqItems =
+let faqItems =
     document.querySelectorAll(
         "#faqAccordion .accordion-item"
     );
@@ -382,8 +613,13 @@ async function loadCurrentUser() {
         }
 
 
-        const user =
-            await response.json();
+       
+const user = await response.json();
+
+// Load FAQs according to the logged-in user's role.
+renderSupportFaqs(user.role);
+
+// Set the correct dashboard link.
 const dashboardLink = document.querySelector(
     'a[href="customer-dashboard.html"]'
 );
@@ -395,31 +631,28 @@ if (dashboardLink) {
             : "customer-dashboard.html";
 }
 
-        const fullName =
-            `${user.first_name || ""} ${user.last_name || ""}`
-                .trim();
+const fullName =
+    `${user.first_name || ""} ${user.last_name || ""}`
+        .trim();
 
+ticketName.value =
+    fullName || user.email || "";
 
-        ticketName.value =
-            fullName || user.email || "";
+ticketEmail.value =
+    user.email || "";
 
+/*
+ * The logged-in user's identity comes
+ * from JWT/backend. These fields are
+ * informational and should not be used
+ * to identify another user.
+ */
 
-        ticketEmail.value =
-            user.email || "";
+ticketName.readOnly = true;
+ticketEmail.readOnly = true;
 
+return user;
 
-        /*
-         * The logged-in user's identity comes
-         * from JWT/backend. These fields are
-         * informational and should not be used
-         * to identify another user.
-         */
-
-        ticketName.readOnly = true;
-        ticketEmail.readOnly = true;
-
-
-        return user;
 
     } catch (error) {
 
@@ -1119,7 +1352,7 @@ async function loadTickets() {
             "Failed to load support tickets:",
             error
         );
-
+    tickets = [];
 
         ticketList.innerHTML = `
             <div class="text-center py-4">
@@ -1331,13 +1564,17 @@ function renderTickets(filter) {
 
     if (filteredTickets.length === 0) {
 
-        ticketNoResults.classList.remove(
-            "d-none"
-        );
+    ticketNoResults.classList.remove("d-none");
 
-        return;
+    ticketNoResults.innerHTML = `
+        <i class="fa-solid fa-inbox"></i>
+        No support tickets found.
+        Submit a request through Contact Support if you need help.
+    `;
 
-    }
+    return;
+
+}
 
 
     ticketNoResults.classList.add(
@@ -1663,76 +1900,28 @@ loadTickets();
 
 
 /* =========================================================
-   LIVE CHAT
-   =========================================================
-
-   OneClick currently has no real chat backend.
-   Therefore we do NOT generate fake automated
-   responses.
-
-   Instead, Start Live Chat takes the user to
-   the real support ticket form.
+   CONTACT SUPPORT BUTTON
    ========================================================= */
 
-const chatPopup =
-    document.getElementById(
-        "chatPopup"
-    );
-
-
 const startChatBtn =
-    document.getElementById(
-        "startChatBtn"
-    );
-
-
-const closeChatBtn =
-    document.getElementById(
-        "closeChatBtn"
-    );
-
+    document.getElementById("startChatBtn");
 
 if (startChatBtn) {
 
-    startChatBtn.addEventListener(
-        "click",
-        () => {
+    startChatBtn.addEventListener("click", () => {
 
-            document
-                .getElementById("contact")
-                .scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                });
+        document.getElementById("contact").scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
 
+        showToast(
+            "Please send your message through Contact Support."
+        );
 
-            showToast(
-                "Please send your message through Contact Support."
-            );
-
-        }
-    );
+    });
 
 }
-
-
-if (closeChatBtn) {
-
-    closeChatBtn.addEventListener(
-        "click",
-        () => {
-
-            if (chatPopup) {
-                chatPopup.classList.remove(
-                    "show"
-                );
-            }
-
-        }
-    );
-
-}
-
 
 /* =========================================================
    REPORT FRAUD

@@ -374,43 +374,15 @@ async function loadProviders(options = {}) {
 
 /*
  * CUSTOMER LOCATION FILTER
+ *
+ * Temporarily disabled for testing.
+ * We will restore location filtering after
+ * provider location data is consistent.
  */
 
-if (customerLocation.country) {
-
-    providerUrl.searchParams.set(
-        "country",
-        customerLocation.country
-    );
-
-}
-
-if (customerLocation.province) {
-
-    providerUrl.searchParams.set(
-        "province",
-        customerLocation.province
-    );
-
-}
-
-if (customerLocation.district) {
-
-    providerUrl.searchParams.set(
-        "district",
-        customerLocation.district
-    );
-
-}
-
-if (customerLocation.city) {
-
-    providerUrl.searchParams.set(
-        "city",
-        customerLocation.city
-    );
-
-}
+// TEMPORARILY DISABLED:
+// Do not filter providers by customer location yet.
+// Fetch all eligible providers instead.
 
 
         console.log(

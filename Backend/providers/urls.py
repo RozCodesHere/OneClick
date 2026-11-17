@@ -1,5 +1,6 @@
 from django.urls import path
 
+
 from .views import (
     NearbyProviderListView,
     ProviderListView,
@@ -13,7 +14,12 @@ from .views import (
     SavedProviderDeleteView,
     AdminProviderListView,
     ProviderWorkPhotoDeleteView,
+    ProviderKYCUploadView,
+    ProviderKYCStatusView,
+    ProviderKYCDocumentView,
+    AdminProviderKYCReviewView,
 )
+
 
 urlpatterns = [
 
@@ -109,4 +115,39 @@ urlpatterns = [
     name="provider-work-photo-delete",
 ),
 
+
+
+    # =====================================================
+    # PROVIDER KYC
+    # =====================================================
+
+    path(
+        "kyc/upload/",
+        ProviderKYCUploadView.as_view(),
+        name="provider-kyc-upload",
+    ),
+
+    path(
+        "kyc/status/",
+        ProviderKYCStatusView.as_view(),
+        name="provider-kyc-status",
+    ),
+
+    path(
+    "kyc/documents/<int:provider_id>/<str:document_type>/",
+    ProviderKYCDocumentView.as_view(),
+    name="provider-kyc-document",
+),
+
+path(
+    "admin/kyc/",
+    AdminProviderKYCReviewView.as_view(),
+    name="admin-provider-kyc-list",
+),
+
+path(
+    "admin/kyc/<int:kyc_id>/",
+    AdminProviderKYCReviewView.as_view(),
+    name="admin-provider-kyc-review",
+),
 ]

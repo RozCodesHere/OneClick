@@ -304,18 +304,66 @@ function initializePaymentSelection() {
         paymentButton.disabled = false;
     }
 
+
 } else if (selectedMethod.value === "cash") {
 
+    paymentButton.disabled = true;
+
     showPaymentMessage(
-        "Please pay cash to your provider. The provider will confirm receipt in the demo.",
+        "Saving your cash payment selection...",
         "info"
     );
 
+    try {
+        const token = localStorage.getItem("access_token");
+
+        const response = await fetch(
+            `${API_BASE}/bookings/payment/cash/select/`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    booking_id: currentBooking.id
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.error || "Unable to select cash payment."
+            );
+        }
+
+        currentBooking.payment_method = "cash";
+
+        showPaymentMessage(
+            "Cash payment selected successfully. Please pay your provider after service completion confirmation. The provider will confirm receipt in the demo.",
+            "success"
+        );
+
+        console.log("Cash payment selection:", result);
+
+    } catch (error) {
+        console.error("CASH PAYMENT ERROR:", error);
+
+        showPaymentMessage(error.message, "danger");
+
+    } finally {
+        paymentButton.disabled = false;
+    }
+
 }
+
 
     });
 
 }
+
 
 
 /* =========================================================
@@ -333,15 +381,43 @@ document.addEventListener("DOMContentLoaded", async function() {
 
     if (paymentResult === "success") {
 
-        showPaymentMessage(
-            "Payment verified successfully! Your invoice is now paid.",
-            "success"
-        );
+        if (
+            currentBooking &&
+            currentBooking.payment_status === "paid"
+        ) {
+
+            showPaymentMessage(
+                "Payment verified successfully! Your invoice is now paid.",
+                "success"
+            );
+
+        } else {
+
+            showPaymentMessage(
+                "We could not confirm the booking's paid status. Please refresh your booking details before making another payment.",
+                "warning"
+            );
+
+        }
 
     } else if (paymentResult === "failed") {
 
         showPaymentMessage(
-            "Payment could not be verified. Please try again.",
+            "Payment was not completed. Please check your payment status before trying again.",
+            "danger"
+        );
+
+    } else if (paymentResult === "pending") {
+
+        showPaymentMessage(
+            "Your payment is still being processed. Please check again shortly. Do not make another payment while this one is pending.",
+            "warning"
+        );
+
+    } else if (paymentResult === "conflict") {
+
+        showPaymentMessage(
+            "Khalti reports a successful payment, but this booking was already paid using another method. Do not pay again. Please contact OneClick Support so the transactions can be reviewed.",
             "danger"
         );
 

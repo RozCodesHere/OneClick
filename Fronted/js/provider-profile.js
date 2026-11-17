@@ -247,6 +247,9 @@ async function loadProviderProfile() {
             );
 
         }
+                // Use the combined application + KYC verification status.
+        provider.is_verified =
+            dashboardData.verification?.is_verified === true;
 
         console.log(
             "LOGGED-IN PROVIDER PROFILE:",
@@ -728,7 +731,7 @@ setText("#providerService", serviceName || category);
             "#floatingVerifyBadge"
         );
 
-    if (provider.verified) {
+    if (provider.is_verified === true) {
 
         if (verifyBadge) {
 
@@ -761,6 +764,16 @@ setText("#providerService", serviceName || category);
         }
 
     }
+
+    const verificationNote =
+    document.querySelector("#verificationNote");
+
+if (verificationNote) {
+    verificationNote.style.display =
+        provider.is_verified === true ? "flex" : "none";
+}
+
+
 
     /* =====================================================
        AVAILABILITY
@@ -817,23 +830,6 @@ function renderCompletedWorkGallery(photos) {
 
 }
 
-
-    /* =====================================================
-       PROVIDER STATISTICS
-       ===================================================== */
-
-    const statValues = document.querySelectorAll(".mini-stat-value");
-
-    const statistics = [
-        provider.completed_jobs ?? 0,
-        provider.happy_customers ?? 0,
-        provider.repeat_customers ?? 0,
-        provider.average_response_time || "—"
-    ];
-
-    statValues.forEach((element, index) => {
-        element.textContent = statistics[index] ?? "—";
-    });
 
     
 /* =========================================================

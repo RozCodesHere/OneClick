@@ -499,6 +499,7 @@ document.addEventListener(
 setupLogout();
 setupInvoiceButtons();
 setupDashboardLink();
+setupBottomActionButtons();
     }
 );
 
@@ -600,6 +601,74 @@ function startBookingCompletionPolling(bookingId) {
         4000
     );
 }
+
+/* =========================================================
+   BOTTOM ACTION BUTTONS
+   ========================================================= */
+
+function setupBottomActionButtons() {
+
+    const bookAgainButton =
+        document.querySelector("#bookAgainBtn");
+
+    const contactProviderButton =
+        document.querySelector("#contactProviderBtn");
+
+    const backToHistoryButton =
+        document.querySelector("#backToHistoryBtn");
+
+    if (bookAgainButton) {
+        bookAgainButton.addEventListener("click", function() {
+
+            const booking = window.currentBooking;
+
+            if (!booking) {
+                alert("Booking information is not loaded yet.");
+                return;
+            }
+
+            const params = new URLSearchParams();
+
+            if (booking.service) {
+                params.set("service_id", booking.service);
+            }
+
+            if (booking.provider) {
+                params.set("provider_id", booking.provider);
+            }
+
+            const query = params.toString();
+
+            window.location.href = query
+                ? `booking.html?${query}`
+                : "booking.html";
+        });
+    }
+
+    if (contactProviderButton) {
+        contactProviderButton.addEventListener("click", function() {
+
+            const booking = window.currentBooking;
+
+            if (!booking || !booking.provider) {
+                alert("Provider information is not available.");
+                return;
+            }
+
+            window.location.href =
+                `chat.html?provider_id=${encodeURIComponent(booking.provider)}`;
+        });
+    }
+
+    if (backToHistoryButton) {
+        backToHistoryButton.addEventListener("click", function() {
+            window.location.href = "booking-history.html";
+        });
+    }
+}
+
+
+
 
 /* =========================================================
    LOAD BOOKING
@@ -727,6 +796,8 @@ startProviderLocationTracking(
    ========================================================= */
 
 function renderBooking(booking) {
+    window.currentBooking = booking;
+
     const formattedBookingId =
         formatBookingId(booking.id);
 
@@ -842,12 +913,73 @@ if (serviceCard) {
         );
     }
 
-    if (chargeRows[3]) {
+       if (chargeRows[3]) {
         setChargeValue(
             chargeRows[3],
             formatCurrency(agreedPrice)
         );
     }
+
+    // PAYMENT INFORMATION
+    let paymentInfo = serviceCard.querySelector(
+        "#bookingPaymentInfo"
+    );
+
+    if (!paymentInfo) {
+        paymentInfo = document.createElement("div");
+        paymentInfo.id = "bookingPaymentInfo";
+        paymentInfo.className = "mt-3 p-3 rounded border";
+        serviceCard.querySelector(".card-body").appendChild(paymentInfo);
+    }
+
+    const paymentStatus = (
+        booking.payment_status || "unpaid"
+    ).toLowerCase();
+
+    const paymentMethod = (
+        booking.payment_method || ""
+    ).toLowerCase();
+
+    let paymentLabel = "Not paid yet";
+    let methodLabel = "Not selected";
+    let paymentClass = "text-warning";
+
+    if (paymentStatus === "paid") {
+        paymentLabel = "Paid";
+
+        methodLabel =
+            paymentMethod === "cash"
+                ? "Cash"
+                : paymentMethod === "khalti"
+                    ? "Khalti"
+                    : "Payment method not recorded";
+
+        paymentClass = "text-success";
+
+    } else if (paymentStatus === "pending") {
+        paymentLabel = "Payment pending";
+        methodLabel = paymentMethod || "Khalti";
+        paymentClass = "text-warning";
+
+    } else if (paymentStatus === "conflict") {
+        paymentLabel = "Payment conflict";
+        methodLabel = "Contact OneClick Support";
+        paymentClass = "text-danger";
+    }
+
+    paymentInfo.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <strong>Payment Status</strong>
+            <span class="${paymentClass} fw-bold">
+                ${paymentLabel}
+            </span>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-2">
+            <strong>Payment Method</strong>
+            <span>${methodLabel}</span>
+        </div>
+    `;
 }
 
     /* LOCATION */
@@ -1461,9 +1593,9 @@ function renderInvoice(booking) {
             `Invoice #INV-${String(booking.id).padStart(5, "0")}`;
     }
 
-    // Original provider-listed price
-    const originalPrice =
-        Number(booking.service_price) || 0;
+    // Actual service amount used in the booking invoice
+const originalPrice =
+    Number(booking.total_price ?? booking.service_price) || 0;
 
     // Final negotiated price, including VAT
     const agreedPrice =
@@ -2511,36 +2643,265 @@ async function cancelBooking(
    INVOICE BUTTONS
    ========================================================= */
 
+
 function setupInvoiceButtons() {
     const downloadButton =
-        document.querySelector(
-            "#downloadInvoiceBtn"
-        );
+        document.querySelector("#downloadInvoiceBtn");
 
+    
+
+    // DOWNLOAD A CLEAN, ONE-PAGE PDF
     if (downloadButton) {
-        downloadButton.addEventListener(
-            "click",
-            function() {
-                alert(
-                    "Invoice download will be connected after the invoice system is implemented."
+        downloadButton.addEventListener("click", async function () {
+            const invoice =
+                document.querySelector("#invoiceSection");
+
+            const JsPDF = window.jspdf?.jsPDF;
+
+            if (!invoice || !JsPDF) {
+                alert("Invoice PDF could not be generated. Please refresh the page.");
+                return;
+            }
+
+            try {
+                downloadButton.disabled = true;
+                downloadButton.innerHTML =
+                    '<i class="fa-solid fa-spinner fa-spin me-1"></i> Generating...';
+
+                const pdf = new JsPDF("p", "mm", "a4");
+
+                const pageWidth = 210;
+                const margin = 20;
+                const contentWidth = pageWidth - margin * 2;
+
+                // White background
+                pdf.setFillColor(255, 255, 255);
+                pdf.rect(0, 0, 210, 297, "F");
+
+                // CENTERED ONECLICK LOGO
+const logo = new Image();
+logo.src = "assests/images/logo.png";
+
+await new Promise(resolve => {
+    logo.onload = resolve;
+    logo.onerror = resolve;
+});
+
+if (logo.naturalWidth > 0) {
+    const logoWidth = 48;
+    const logoHeight =
+        (logo.naturalHeight / logo.naturalWidth) * logoWidth;
+
+    pdf.addImage(
+        logo,
+        "PNG",
+        (pageWidth - logoWidth) / 2,
+        12,
+        logoWidth,
+        logoHeight
+    );
+}
+
+// Centered invoice heading
+pdf.setTextColor(30, 30, 30);
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(19);
+pdf.text("INVOICE", pageWidth / 2, 55, {
+    align: "center"
+});
+
+                
+
+                const invoiceId =
+                    invoice.querySelector(".invoice-id")?.textContent.trim()
+                    || "OneClick Invoice";
+
+                pdf.setFont("helvetica", "normal");
+                pdf.setFontSize(10);
+                pdf.text(invoiceId, margin, 62);
+
+               pdf.text(
+    "Invoice Date: " + new Date().toLocaleDateString("en-GB"),
+    margin,
+    69
+);
+
+// BOOKING DETAILS
+const booking = window.currentBooking || {};
+
+let detailsY = 83;
+
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(11);
+pdf.setTextColor(40, 40, 40);
+pdf.text("Booking Details", margin, detailsY);
+
+detailsY += 8;
+
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(10);
+
+const bookingDetails = [
+    ["Customer", booking.customer_name || "—"],
+    ["Provider", booking.provider_name || "—"],
+    ["Service", booking.service_name || booking.service_category || "—"],
+    ["Booking Date", booking.booking_date
+        ? new Date(booking.booking_date + "T00:00:00")
+            .toLocaleDateString("en-GB")
+        : "—"]
+];
+
+bookingDetails.forEach(([label, value]) => {
+    pdf.setTextColor(90, 90, 90);
+    pdf.text(label + ":", margin, detailsY);
+
+    pdf.setTextColor(35, 35, 35);
+    pdf.text(String(value), margin + 35, detailsY);
+
+    detailsY += 7;
+});
+
+// Separator
+pdf.setDrawColor(210, 210, 210);
+pdf.line(margin, detailsY + 2, pageWidth - margin, detailsY + 2);
+
+                // Invoice table headings
+                let y = detailsY + 12;
+
+                pdf.setFont("helvetica", "bold");
+                pdf.setFontSize(11);
+                pdf.setTextColor(50, 50, 50);
+
+                pdf.text("Description", margin, y);
+                pdf.text("Amount", pageWidth - margin, y, {
+                    align: "right"
+                });
+
+                y += 5;
+
+                pdf.setDrawColor(220, 220, 220);
+                pdf.line(margin, y, pageWidth - margin, y);
+
+                // Read actual rendered invoice values
+                const rows =
+                    invoice.querySelectorAll(".charge-row");
+
+                rows.forEach(function (row) {
+                    const spans = row.querySelectorAll("span");
+
+                    if (spans.length < 2) return;
+
+                    const label = spans[0].textContent.trim();
+                    const value = spans[1].textContent.trim();
+
+                    y += 12;
+
+                    const isTotal =
+                        row.classList.contains("total-row");
+
+                    pdf.setFont(
+                        "helvetica",
+                        isTotal ? "bold" : "normal"
+                    );
+
+                    pdf.setFontSize(isTotal ? 12 : 10);
+
+                    pdf.setTextColor(
+                        isTotal ? 37 : 60,
+                        isTotal ? 99 : 60,
+                        isTotal ? 235 : 60
+                    );
+
+                    pdf.text(label, margin, y);
+
+                    pdf.text(
+                        value,
+                        pageWidth - margin,
+                        y,
+                        { align: "right" }
+                    );
+
+                    if (isTotal) {
+                        y += 4;
+                        pdf.setDrawColor(37, 99, 235);
+                        pdf.line(
+                            margin,
+                            y,
+                            pageWidth - margin,
+                            y
+                        );
+                    }
+                });
+
+                // Payment information
+                const paymentInfo =
+                    document.querySelector("#bookingPaymentInfo");
+
+                if (paymentInfo) {
+                    y += 20;
+
+                    pdf.setFont("helvetica", "bold");
+                    pdf.setFontSize(11);
+                    pdf.setTextColor(40, 40, 40);
+                    pdf.text("Payment Information", margin, y);
+
+                    y += 8;
+
+                    const paymentLines =
+                        paymentInfo.innerText
+                            .split("\n")
+                            .map(line => line.trim())
+                            .filter(Boolean);
+
+                    pdf.setFont("helvetica", "normal");
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(70, 70, 70);
+
+                    paymentLines.forEach(function (line) {
+                        pdf.text(line, margin, y);
+                        y += 6;
+                    });
+                }
+
+                // Footer
+                pdf.setFont("helvetica", "normal");
+                pdf.setFontSize(9);
+                pdf.setTextColor(130, 130, 130);
+
+                pdf.text(
+                    "Thank you for choosing OneClick.",
+                    pageWidth / 2,
+                    275,
+                    { align: "center" }
                 );
+
+                pdf.text(
+                    "This is a computer-generated invoice.",
+                    pageWidth / 2,
+                    281,
+                    { align: "center" }
+                );
+
+                const safeFilename = invoiceId.replace(
+                    /[^a-zA-Z0-9-_]/g,
+                    "-"
+                );
+
+                pdf.save(`${safeFilename}.pdf`);
+
+            } catch (error) {
+                console.error("Invoice PDF error:", error);
+                alert("Unable to generate invoice. Please try again.");
+
+            } finally {
+                downloadButton.disabled = false;
+                downloadButton.innerHTML =
+                    '<i class="fa-solid fa-download me-1"></i> Download Invoice';
             }
-        );
+        });
     }
 
-    const printButton =
-        document.querySelector(
-            "#printInvoiceBtn"
-        );
-
-    if (printButton) {
-        printButton.addEventListener(
-            "click",
-            function() {
-                window.print();
-            }
-        );
-    }
+    
 }
 
 

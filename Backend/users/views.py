@@ -7,7 +7,11 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-
+from notifications.models import Notification
+from notifications.services import (
+    create_notification,
+    notify_provider_fully_verified,
+)
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -21,7 +25,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from bookings.models import Booking
-from providers.models import ProviderProfile
+from providers.models import ProviderProfile, ProviderKYC
 
 from .serializers import (
     RegisterSerializer,
@@ -210,12 +214,33 @@ class VerifyEmailOTPView(APIView):
         user.is_active = True
         user.save(update_fields=["email_verified", "is_active"])
 
+        
         otp_record.delete()
+
+        # Notify all active administrators.
+        admin_users = User.objects.filter(
+            role=User.ADMIN,
+            is_active=True
+        )
+
+        for admin_user in admin_users:
+            create_notification(
+                recipient=admin_user,
+                title="New User Registered",
+                message=(
+                    f"A new user has verified their email: {user.email}"
+                ),
+                notification_type=Notification.SYSTEM,
+                priority=Notification.MEDIUM,
+                event_key=f"user:{user.id}:registered:admin:{admin_user.id}",
+                send_email=True,
+            )
 
         return Response(
             {"message": "Email verified successfully. You can now log in."},
             status=status.HTTP_200_OK,
         )
+
 
 
 # ============================================================
@@ -540,13 +565,34 @@ class GoogleLoginView(APIView):
 
             # New Google accounts start as customers.
             # Provider onboarding can update the role afterward.
-            user = User.objects.create_user(
-                email=email,
-                password=None,
-                first_name=name_parts[0] if name_parts else "",
-                last_name=name_parts[1] if len(name_parts) > 1 else "",
-                role=User.CUSTOMER,
-            )
+            
+        user = User.objects.create_user(
+    email=email,
+    password=None,
+    first_name=name_parts[0] if name_parts else "",
+    last_name=name_parts[1] if len(name_parts) > 1 else "",
+    role=User.CUSTOMER,
+)
+
+# Notify all active administrators about the new Google account.
+        admin_users = User.objects.filter(
+    role=User.ADMIN,
+    is_active=True
+)
+
+        for admin_user in admin_users:
+          create_notification(
+        recipient=admin_user,
+        title="New User Registered",
+        message=(
+            f"A new user registered using Google: {user.email}"
+        ),
+        notification_type=Notification.SYSTEM,
+        priority=Notification.MEDIUM,
+        event_key=f"user:{user.id}:google_registered:admin:{admin_user.id}",
+        send_email=True,
+    )
+ 
 
         if not user.is_active:
             return Response(
@@ -903,13 +949,16 @@ class AdminUserListView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        users = User.objects.all().order_by("-date_joined")
+        users = User.objects.filter(
+            role=User.CUSTOMER
+        ).order_by("-date_joined")
         serializer = UserSerializer(users, many=True)
 
         return Response(
             serializer.data,
             status=status.HTTP_200_OK,
         )
+
 
 
 # ============================================================
@@ -921,35 +970,97 @@ class AdminProviderVerificationView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if not request.user.is_staff:
+
+        if request.user.role != "admin":
             return Response(
-                {"error": "Admin access required."},
+                {"error": "Only administrators can update provider verification."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         try:
             provider = ProviderProfile.objects.get(pk=pk)
+
         except ProviderProfile.DoesNotExist:
             return Response(
                 {"error": "Provider not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        verified = request.data.get("verified")
+        verification_status = request.data.get(
+            "verification_status"
+        )
 
-        if verified is None:
+        allowed_statuses = [
+            ProviderProfile.APPROVED,
+            ProviderProfile.REJECTED,
+        ]
+
+        if verification_status not in allowed_statuses:
             return Response(
-                {"error": "The verified field is required."},
+                {
+                    "error": "Invalid verification status.",
+                    "allowed_statuses": allowed_statuses,
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        provider.is_verified = verified
-        provider.save(update_fields=["is_verified"])
+        # Remember the previous status.
+        previous_status = provider.verification_status
+               # A provider cannot be approved until their KYC is approved.
+        if verification_status == ProviderProfile.APPROVED:
 
+            kyc_approved = ProviderKYC.objects.filter(
+                provider=provider,
+                status=ProviderKYC.APPROVED,
+            ).exists()
+
+            if not kyc_approved:
+                return Response(
+                    {
+                        "error": (
+                            "Provider KYC must be approved before "
+                            "approving the provider application."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        # Update verification status.
+        provider.verification_status = verification_status
+
+        provider.save(
+            update_fields=["verification_status"]
+        )
+
+        # Notify provider only when status actually changes.
+        if previous_status != verification_status:
+
+            if verification_status == ProviderProfile.APPROVED:
+
+                notify_provider_fully_verified(provider)
+
+            else:
+
+                create_notification(
+                    recipient=provider.user,
+                    title="Provider Application Rejected",
+                    message=(
+                        "Your OneClick provider application has been rejected. "
+                        "Please contact OneClick support if you need further information."
+                    ),
+                    notification_type=Notification.SYSTEM,
+                    priority=Notification.MEDIUM,
+                    event_key=(
+                        f"provider:{provider.id}:verification:"
+                        f"{verification_status}:user:{provider.user_id}"
+                    ),
+                    send_email=True,
+                )
+        
         return Response(
             {
-                "message": "Provider verification status updated.",
-                "verified": provider.is_verified,
+                "message": "Provider verification status updated successfully.",
+                "provider_id": provider.id,
+                "verification_status": provider.verification_status,
             },
             status=status.HTTP_200_OK,
         )
@@ -970,20 +1081,74 @@ class AdminBookingListView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        bookings = Booking.objects.all().order_by("-created_at")
+        bookings = (
+            Booking.objects
+            .select_related(
+                "customer",
+                "provider__user",
+                "provider__category",
+                "service",
+                "service__category",
+            )
+            .all()
+            .order_by("-created_at")
+        )
+
         data = []
 
         for booking in bookings:
-            data.append(
-                {
-                    "id": booking.id,
-                    "status": booking.status,
-                    "created_at": booking.created_at,
-                }
-            )
+            data.append({
+                "id": booking.id,
+
+                "customer": {
+                    "id": booking.customer.id,
+                    "name": booking.customer.get_full_name()
+                    or booking.customer.email,
+                    "email": booking.customer.email,
+                },
+
+                "provider": {
+                    "id": booking.provider.id,
+                    "name": booking.provider.user.get_full_name()
+                    or booking.provider.user.email,
+                    "email": booking.provider.user.email,
+                },
+
+                "service": {
+                    "id": booking.service.id,
+                    "name": booking.service.name,
+                    "category": booking.service.category.name,
+                },
+
+                "booking_date": booking.booking_date,
+                "booking_time": booking.booking_time,
+
+                "address": booking.address,
+
+# Customer service location
+"latitude": booking.latitude,
+"longitude": booking.longitude,
+
+# Provider live location
+"provider_latitude": booking.provider_latitude,
+"provider_longitude": booking.provider_longitude,
+
+"note": booking.note,
+
+                "total_price": booking.total_price,
+
+"status": booking.status,
+"payment_method": booking.payment_method,
+"payment_status": booking.payment_status,
+
+                "created_at": booking.created_at,
+                "accepted_at": booking.accepted_at,
+                "provider_on_way_at": booking.provider_on_way_at,
+                "started_at": booking.started_at,
+                "completed_at": booking.completed_at,
+            })
 
         return Response(data, status=status.HTTP_200_OK)
-
 
 # ============================================================
 # DEACTIVATE ACCOUNT

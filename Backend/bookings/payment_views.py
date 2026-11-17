@@ -1,5 +1,5 @@
 import requests
-
+from datetime import timedelta
 from providers.models import ProviderProfile
 from decimal import Decimal
 
@@ -14,6 +14,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Booking, PaymentTransaction
+from notifications.models import Notification
+from notifications.services import create_notification
 
 
 
@@ -46,11 +48,41 @@ class KhaltiInitiateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+                # Negotiable bookings require an approved final price.
+        if (
+            booking.price_type == Booking.PRICE_NEGOTIABLE
+            and booking.price_approval_status != "approved"
+        ):
+            return Response(
+                {
+                    "error": (
+                        "The negotiated price must be approved "
+                        "before selecting cash payment."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        
+
         if booking.payment_status == "paid":
             return Response(
                 {"error": "This booking is already paid."},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        if booking.payment_method == "cash":
+         return Response(
+        {
+            "error": (
+                "Cash payment has already been selected "
+                "for this booking. Khalti payment is not available."
+            )
+        },
+        status=status.HTTP_400_BAD_REQUEST
+    )
+
+
 
         if not settings.KHALTI_SECRET_KEY:
             return Response(
@@ -83,6 +115,29 @@ class KhaltiInitiateView(APIView):
                 status="pending"
             ).order_by("-created_at").first()
 
+            if payment is not None:
+                session_age = timezone.now() - payment.created_at
+
+                # Reuse only a recent session with a payment URL.
+                if (
+                    payment.payment_url
+                    and session_age < timedelta(minutes=25)
+                ):
+                    return Response({
+                        "message": "Existing payment session reused.",
+                        "payment_url": payment.payment_url,
+                        "pidx": payment.pidx
+                    })
+
+                # Preserve old transaction history.
+                if (
+                    session_age >= timedelta(minutes=25)
+                    or payment.pidx
+                ):
+                    payment.status = "failed"
+                    payment.save(update_fields=["status"])
+                    payment = None
+
             if payment is None:
                 payment = PaymentTransaction.objects.create(
                     booking=booking,
@@ -91,13 +146,6 @@ class KhaltiInitiateView(APIView):
                     method="khalti",
                     status="pending"
                 )
-
-            if payment.payment_url:
-                return Response({
-                    "message": "Existing payment session reused.",
-                    "payment_url": payment.payment_url,
-                    "pidx": payment.pidx
-                })
 
         payload = {
             "return_url": settings.KHALTI_RETURN_URL,
@@ -161,12 +209,30 @@ class KhaltiInitiateView(APIView):
             payment.status = "failed"
             payment.save(update_fields=["status"])
 
+            create_notification(
+                recipient=booking.customer,
+                title="Khalti Payment Could Not Be Started",
+                message=(
+                    f"We couldn't start your Khalti payment "
+                    f"for booking #{booking.id}. Please try again."
+                ),
+                notification_type=Notification.PAYMENT,
+                event_key=(
+                    f"booking:{booking.id}:payment:"
+                    f"khalti:initiation_failed:{payment.id}:customer"
+                ),
+                related_booking=booking,
+            )
+
             print("KHALTI INITIATION ERROR:", error)
 
             return Response(
                 {"error": "Unable to initiate Khalti payment."},
                 status=status.HTTP_502_BAD_GATEWAY
             )
+
+
+
 
 
 class KhaltiReturnView(APIView):
@@ -193,11 +259,10 @@ class KhaltiReturnView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        if payment.status == "completed":
-            return redirect(
-                f"{settings.KHALTI_WEBSITE_URL}/payment.html"
-                f"?booking_id={payment.booking_id}&payment=success"
-            )
+        payment_url = (
+            f"{settings.KHALTI_WEBSITE_URL}/payment.html"
+            f"?booking_id={payment.booking_id}"
+        )
 
         headers = {
             "Authorization": f"Key {settings.KHALTI_SECRET_KEY}",
@@ -212,20 +277,58 @@ class KhaltiReturnView(APIView):
                 timeout=20
             )
 
-            response.raise_for_status()
             result = response.json()
+
+            print("KHALTI LOOKUP RESULT:", result)
+
+            response.raise_for_status()
+
+            khalti_status = str(
+                result.get("status", "")
+            ).strip().lower()
+
+            terminal_statuses = {
+                "expired",
+                "user canceled",
+                "user cancelled",
+                "canceled",
+                "cancelled",
+            }
 
             expected_amount = int(payment.amount * 100)
 
+            # Verify the payment reference and amount.
             if (
                 result.get("pidx") != pidx
-                or result.get("status") != "Completed"
                 or result.get("total_amount") != expected_amount
             ):
-                return redirect(
-                    f"{settings.KHALTI_WEBSITE_URL}/payment.html"
-                    f"?booking_id={payment.booking_id}&payment=failed"
-                )
+                print("KHALTI PAYMENT VERIFICATION MISMATCH")
+                return redirect(f"{payment_url}&payment=failed")
+
+            # Handle unsuccessful terminal states.
+            if khalti_status in terminal_statuses:
+                PaymentTransaction.objects.filter(
+                    id=payment.id,
+                    status="pending"
+                ).update(status="failed")
+
+                return redirect(f"{payment_url}&payment=failed")
+
+            # Pending payments are not successful or failed yet.
+            if khalti_status in {"pending", "initiated"}:
+                return redirect(f"{payment_url}&payment=pending")
+
+            # Unknown statuses must never be treated as successful.
+            if khalti_status != "completed":
+                print("UNRECOGNIZED KHALTI STATUS:", khalti_status)
+                return redirect(f"{payment_url}&payment=pending")
+
+            # A completed payment must have a gateway transaction ID.
+            gateway_transaction_id = result.get("transaction_id")
+
+            if not gateway_transaction_id:
+                print("KHALTI TRANSACTION ID MISSING")
+                return redirect(f"{payment_url}&payment=pending")
 
             with transaction.atomic():
                 locked_payment = PaymentTransaction.objects.select_for_update().get(
@@ -236,40 +339,210 @@ class KhaltiReturnView(APIView):
                     id=locked_payment.booking_id
                 )
 
-                if locked_booking.payment_status == "paid":
-                    return redirect(
-                        f"{settings.KHALTI_WEBSITE_URL}/payment.html"
-                        f"?booking_id={payment.booking_id}&payment=failed"
+                # Repeated callback for an already completed transaction.
+                if locked_payment.status == "completed":
+                    if (
+                        locked_payment.transaction_id == gateway_transaction_id
+                        and locked_booking.payment_status == "paid"
+                        and locked_booking.payment_transaction_id
+                        == gateway_transaction_id
+                    ):
+                        return redirect(f"{payment_url}&payment=success")
+
+                    return redirect(f"{payment_url}&payment=conflict")
+
+                                # Recheck negotiated-price approval before recording payment.
+                if (
+                    locked_booking.price_type == Booking.PRICE_NEGOTIABLE
+                    and locked_booking.price_approval_status != "approved"
+                ):
+                    locked_payment.status = "conflict"
+                    locked_payment.transaction_id = gateway_transaction_id
+                    locked_payment.paid_at = timezone.now()
+                    locked_payment.save(
+                        update_fields=[
+                            "status",
+                            "transaction_id",
+                            "paid_at",
+                        ]
                     )
 
-                locked_payment.status = "completed"
-                locked_payment.transaction_id = result.get("transaction_id")
-                locked_payment.paid_at = timezone.now()
-                locked_payment.save()
+                    print(
+                        "KHALTI PRICE APPROVAL CONFLICT:",
+                        f"Booking #{locked_booking.id}",
+                    )
 
-                locked_booking.payment_status = "paid"
-                locked_booking.payment_transaction_id = result.get(
-                    "transaction_id"
-                )
-                locked_booking.save(
+                    return redirect(f"{payment_url}&payment=conflict")
+
+                # Check whether another payment has already paid this booking.
+                if locked_booking.payment_status == "paid":
+                    locked_payment.status = "conflict"
+                    locked_payment.transaction_id = gateway_transaction_id
+                    locked_payment.paid_at = timezone.now()
+                    locked_payment.save(
+                        update_fields=[
+                            "status",
+                            "transaction_id",
+                            "paid_at",
+                        ]
+                    )
+
+                    print(
+                        "KHALTI PAYMENT CONFLICT:",
+                        f"Booking #{locked_booking.id}",
+                        f"Gateway transaction: {gateway_transaction_id}"
+                    )
+
+                    return redirect(f"{payment_url}&payment=conflict")
+
+                # Record the verified gateway transaction normally.
+                locked_payment.status = "completed"
+                locked_payment.transaction_id = gateway_transaction_id
+                locked_payment.paid_at = timezone.now()
+                locked_payment.save(
                     update_fields=[
-                        "payment_status",
-                        "payment_transaction_id"
+                        "status",
+                        "transaction_id",
+                        "paid_at"
                     ]
                 )
 
-            return redirect(
-                f"{settings.KHALTI_WEBSITE_URL}/payment.html"
-                f"?booking_id={payment.booking_id}&payment=success"
-            )
+                locked_booking.payment_status = "paid"
+                locked_booking.payment_method = "khalti"
+                locked_booking.payment_transaction_id = gateway_transaction_id
+                locked_booking.khalti_pidx = pidx
 
-        except requests.RequestException as error:
+                locked_booking.save(
+                    update_fields=[
+                        "payment_status",
+                        "payment_method",
+                        "payment_transaction_id",
+                        "khalti_pidx"
+                    ]
+                )
+
+            create_notification(
+                    recipient=locked_booking.customer,
+                    title="Payment Successful",
+                    message=(
+                        f"Your Khalti payment for booking "
+                        f"#{locked_booking.id} was successful."
+                    ),
+                    notification_type=Notification.PAYMENT,
+                    event_key=(
+                        f"booking:{locked_booking.id}:"
+                        "payment:khalti:success:customer"
+                    ),
+                    related_booking=locked_booking,
+                )
+
+            create_notification(
+                    recipient=locked_booking.provider.user,
+                    title="Customer Payment Received",
+                    message=(
+                        f"Payment for booking #{locked_booking.id} "
+                        "has been successfully received through Khalti."
+                    ),
+                    notification_type=Notification.PAYMENT,
+                    event_key=(
+                        f"booking:{locked_booking.id}:"
+                        "payment:khalti:success:provider"
+                    ),
+                    related_booking=locked_booking,
+                )
+
+            return redirect(f"{payment_url}&payment=success")
+
+        except (requests.RequestException, ValueError) as error:
             print("KHALTI LOOKUP ERROR:", error)
 
-            return redirect(
-                f"{settings.KHALTI_WEBSITE_URL}/payment.html"
-                f"?booking_id={payment.booking_id}&payment=failed"
+            # A lookup error does not prove that payment failed.
+            return redirect(f"{payment_url}&payment=pending")
+
+
+
+
+class CashPaymentSelectView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        booking_id = request.data.get("booking_id")
+
+        if not booking_id:
+            return Response(
+                {"error": "Booking ID is required."},
+                status=status.HTTP_400_BAD_REQUEST
             )
+
+        if request.user.role != "customer":
+            return Response(
+                {"error": "Only customers can select cash payment."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        try:
+            with transaction.atomic():
+                booking = Booking.objects.select_for_update().get(
+                    id=booking_id,
+                    customer=request.user
+                )
+
+                if booking.status != "completed":
+                    return Response(
+                        {"error": "Booking must be completed first."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                if booking.payment_status == "paid":
+                    return Response(
+                        {"error": "This booking is already paid."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # Expire old pending Khalti sessions after 25 minutes.
+                stale_khalti_sessions = PaymentTransaction.objects.filter(
+                    booking=booking,
+                    method="khalti",
+                    status="pending",
+                    created_at__lt=timezone.now() - timedelta(minutes=25)
+                )
+
+                stale_khalti_sessions.update(status="failed")
+
+                # Block cash if a recent Khalti session is still pending.
+                pending_khalti = PaymentTransaction.objects.filter(
+                    booking=booking,
+                    method="khalti",
+                    status="pending"
+                ).exists()
+
+                if pending_khalti:
+                    return Response(
+                        {
+                            "error": (
+                                "A recent Khalti payment session is still pending. "
+                                "Please finish it before selecting cash."
+                            )
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                booking.payment_method = "cash"
+                booking.save(update_fields=["payment_method"])
+
+                return Response({
+                    "message": "Cash payment selected successfully.",
+                    "payment_method": booking.payment_method,
+                    "payment_status": booking.payment_status
+                })
+
+        except Booking.DoesNotExist:
+            return Response(
+                {"error": "Booking not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
 
 class CashPaymentConfirmView(APIView):
     permission_classes = [IsAuthenticated]
@@ -297,20 +570,67 @@ class CashPaymentConfirmView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        if booking.status != "completed":
-            return Response(
-                {"error": "Service must be completed first."},
-                status=status.HTTP_400_BAD_REQUEST
+        with transaction.atomic():
+
+            booking = Booking.objects.select_for_update().get(
+                id=booking.id,
+                provider=provider
             )
 
-        with transaction.atomic():
-            booking = Booking.objects.select_for_update().get(
-                id=booking.id
+            if booking.status != "completed":
+                return Response(
+                    {"error": "Service must be completed first."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+ # Negotiable bookings require customer-approved pricing.
+            if (
+                booking.price_type == Booking.PRICE_NEGOTIABLE
+                and booking.price_approval_status != "approved"
+            ):
+              return Response(
+        {
+            "error": (
+                "The negotiated price must be approved "
+                "before confirming cash payment."
             )
+        },
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
             if booking.payment_status == "paid":
                 return Response(
                     {"error": "This booking is already paid."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if booking.payment_method != "cash":
+                return Response(
+                    {
+                        "error": (
+                            "The customer has not selected cash payment "
+                            "for this booking."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Do not confirm cash while a recent Khalti session is pending.
+            recent_pending_khalti = PaymentTransaction.objects.filter(
+                booking=booking,
+                method="khalti",
+                status="pending",
+                created_at__gte=timezone.now() - timedelta(minutes=25)
+            ).exists()
+
+            if recent_pending_khalti:
+                return Response(
+                    {
+                        "error": (
+                            "A recent Khalti payment is still pending. "
+                            "Please resolve that payment before confirming cash."
+                        )
+                    },
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -326,10 +646,12 @@ class CashPaymentConfirmView(APIView):
             payment.transaction_id = (
                 f"CASH-BOOKING-{booking.id}-{payment.id}"
             )
+
             payment.save(update_fields=["transaction_id"])
 
             booking.payment_status = "paid"
             booking.payment_transaction_id = payment.transaction_id
+
             booking.save(
                 update_fields=[
                     "payment_status",
@@ -337,11 +659,38 @@ class CashPaymentConfirmView(APIView):
                 ]
             )
 
+        # Notify customer about cash payment confirmation.
+        create_notification(
+            recipient=booking.customer,
+            title="Cash Payment Confirmed",
+            message=(
+                f"Your cash payment for booking #{booking.id} "
+                f"has been confirmed by the provider."
+            ),
+            notification_type=Notification.PAYMENT,
+            event_key=f"booking:{booking.id}:payment:cash:success:customer",
+            related_booking=booking,
+        )
+
+        # Notify provider about the recorded payment.
+        create_notification(
+            recipient=booking.provider.user,
+            title="Cash Payment Recorded",
+            message=(
+                f"Cash payment for booking #{booking.id} "
+                f"has been successfully recorded."
+            ),
+            notification_type=Notification.PAYMENT,
+            event_key=f"booking:{booking.id}:payment:cash:success:provider",
+            related_booking=booking,
+        )
+
         return Response({
             "message": "Demo cash payment confirmed by provider.",
             "payment_status": "paid",
             "transaction_id": payment.transaction_id
         })
+
 
 
 class ProviderTransactionHistoryView(APIView):
@@ -384,6 +733,56 @@ class ProviderTransactionHistoryView(APIView):
                 "method": payment.method,
                 "status": payment.status,
                 "transaction_id": payment.transaction_id,
+                "created_at": payment.created_at,
+                "paid_at": payment.paid_at,
+            }
+            for payment in payments
+        ]
+
+        return Response(data)
+
+
+
+class AdminTransactionHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        if not request.user.is_staff:
+            return Response(
+                {"error": "Admin access required."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        payments = PaymentTransaction.objects.select_related(
+            "booking",
+            "customer",
+            "booking__provider__user",
+            "booking__service",
+        ).order_by("-created_at")
+
+        data = [
+            {
+                "id": payment.id,
+                "booking_id": payment.booking_id,
+
+                "customer_name": (
+                    payment.customer.get_full_name()
+                    or payment.customer.email
+                ),
+
+                "provider_name": (
+                    payment.booking.provider.user.get_full_name()
+                    or payment.booking.provider.user.email
+                ),
+
+                "service_name": payment.booking.service.name,
+
+                "amount": payment.amount,
+                "method": payment.method,
+                "status": payment.status,
+                "transaction_id": payment.transaction_id,
+                "pidx": payment.pidx,
                 "created_at": payment.created_at,
                 "paid_at": payment.paid_at,
             }

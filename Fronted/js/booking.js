@@ -639,8 +639,9 @@ function renderServices(services) {
    option.value = String(service.id);
 option.textContent = service.name;
 
-// Store the provider's actual listed price.
+// Store the provider's actual listed price and pricing type.
 option.dataset.price = service.price ?? "0.00";
+option.dataset.priceType = service.price_type || "fixed";
 
 option.dataset.description =
     "Professional service available on OneClick.";
@@ -734,11 +735,22 @@ function updateSelectedService() {
             "Professional service available on OneClick.";
     }
 
-    // Always display the provider's estimated price
-    if (estimatedPrice && !isExistingBooking) {
+   // Display negotiated or fixed service pricing.
+if (estimatedPrice && !isExistingBooking) {
+
+    const priceType = option.dataset.priceType || "fixed";
+
+    if (priceType === "negotiable") {
+
+        estimatedPrice.textContent =
+            "Negotiable – Final price after inspection";
+
+    } else {
+
         estimatedPrice.textContent =
             `Rs. ${selectedProviderServicePrice.toFixed(2)}`;
     }
+}
 
     // Display final quotation price only for quotation bookings
     if (quotationRow && finalQuotedPrice) {

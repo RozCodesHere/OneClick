@@ -48,15 +48,15 @@
 
     <div class="sidebar-header">
 
-        <div class="brand">
-            <div class="brand-icon">
-                <i class="fa-solid fa-bolt"></i>
-            </div>
+        
 
-            <div class="brand-text">
-                <span>OneClick</span>
-                <small>.Admin</small>
-            </div>
+            
+                 <a class="navbar-brand oc-brand" href="#home">
+    <img src="assests/images/logo.png"
+         alt="OneClick.admin"
+         class="oneclick-logo">
+</a>
+            
         </div>
 
         <button
@@ -82,21 +82,21 @@
                 <span>Dashboard</span>
             </a>
 
-            <a href="#customers"
+            <a href="admin-customers.html"
                class="nav-link"
                data-section="customers">
                 <i class="fa-solid fa-users"></i>
                 <span>Customers</span>
             </a>
 
-            <a href="#providers"
+            <a href="admin-providers.html"
                class="nav-link"
                data-section="providers">
                 <i class="fa-solid fa-user-tie"></i>
                 <span>Providers</span>
             </a>
 
-            <a href="#bookings"
+            <a href="admin-bookings.html"
                class="nav-link"
                data-section="bookings">
                 <i class="fa-solid fa-calendar-check"></i>
@@ -104,19 +104,15 @@
                 <span class="nav-badge" id="bookingNavBadge">0</span>
             </a>
 
-            <a href="#services"
-               class="nav-link"
-               data-section="services">
-                <i class="fa-solid fa-screwdriver-wrench"></i>
-                <span>Services</span>
-            </a>
+            <a href="admin-services.html" class="nav-link">
+    <i class="fa-solid fa-screwdriver-wrench"></i>
+    <span>Services</span>
+</a>
 
-            <a href="#payments"
-               class="nav-link"
-               data-section="payments">
-                <i class="fa-solid fa-credit-card"></i>
-                <span>Payments</span>
-            </a>
+            <a href="#payments" class="nav-link" data-section="payments">
+    <i class="fa-solid fa-credit-card"></i>
+    <span>Payments</span>
+</a>
 
             <a href="#reports"
                class="nav-link"
@@ -125,19 +121,14 @@
                 <span>Reports</span>
             </a>
 
-            <a href="#reviews"
-               class="nav-link"
-               data-section="reviews">
-                <i class="fa-solid fa-star"></i>
-                <span>Reviews</span>
-            </a>
+           <a href="review.html" class="nav-link">
+    <i class="fa-solid fa-star"></i>
+    <span>Reviews</span>
+</a>
 
-            <a href="#support"
-   class="nav-link"
-   data-section="support">
+            <a href="support.html" class="nav-link">
     <i class="fa-solid fa-headset"></i>
     <span>Support</span>
-    <span class="nav-badge" id="supportNavBadge">0</span>
 </a>
 
             <a href="#messages"
@@ -147,12 +138,10 @@
                 <span>Messages</span>
             </a>
 
-            <a href="#settings"
-               class="nav-link"
-               data-section="settings">
-                <i class="fa-solid fa-gear"></i>
-                <span>Settings</span>
-            </a>
+            <a href="setting.html" class="nav-link">
+    <i class="fa-solid fa-gear"></i>
+    <span>Settings</span>
+</a>
 
             <a href="#profile"
                class="nav-link"
@@ -707,42 +696,42 @@
                     Current month
                 </div>
 
-            </article>
+                        </article>
 
 
-            <!-- Rating -->
+            <!-- Actual Revenue -->
             <article class="stat-card">
 
                 <div class="stat-card-top">
 
                     <div class="stat-icon">
-                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-wallet"></i>
                     </div>
 
                 </div>
 
                 <div class="stat-label">
-                    Platform Rating
+                    Actual Revenue
                 </div>
 
                 <div
                     class="stat-value"
-                    data-stat="platformRating"
+                    data-stat="actualRevenue"
                 >
-                    0.0
+                    Rs. 0
                 </div>
 
                 <div
                     class="stat-trend stat-trend-neutral"
-                    data-trend="platformRating"
+                    data-trend="actualRevenue"
                 >
-                    Based on reviews
+                    From paid bookings
                 </div>
 
-            </article>
+                      </article>
 
         </section>
-
+        <!-- END STATISTICS -->
 
 
         <!-- =================================================
@@ -986,8 +975,9 @@
                     </h2>
 
                     <p>
-                        Payment integration is currently postponed.
-                    </p>
+    Monitor payment transactions, payment methods, and confirmed
+    booking revenue across OneClick.
+</p>
                 </div>
 
             </div>

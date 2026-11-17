@@ -27,12 +27,13 @@ async function initializePage() {
         return;
     }
 
-    setupSidebar();
-    setupLogout();
-    setActiveNav();
+   setupSidebar();
+setupLogout();
+setActiveNav();
+setupCashConfirmation();
 
-    await loadProviderInfo();
-    await loadCompletedJobs();
+await loadProviderInfo();
+await loadCompletedJobs();
 }
 
 
@@ -144,6 +145,84 @@ async function loadCompletedJobs() {
         `;
     }
 }
+
+// ===============================
+// CASH PAYMENT CONFIRMATION
+// ===============================
+
+function setupCashConfirmation() {
+
+    const container =
+        document.getElementById("completedJobsContainer");
+
+    if (!container) return;
+
+    container.addEventListener("click", async function (event) {
+
+        const button = event.target.closest(".confirm-cash-payment-btn");
+
+        if (!button) return;
+
+        const bookingId = button.dataset.bookingId;
+
+        if (!bookingId) return;
+
+        const confirmed = window.confirm(
+            "Have you actually received the cash payment for this booking?"
+        );
+
+        if (!confirmed) return;
+
+        const token = getAccessToken();
+
+        button.disabled = true;
+        button.textContent = "Confirming...";
+
+        try {
+
+            const response = await fetch(
+                `${API_BASE}/bookings/payment/cash/confirm/`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        booking_id: bookingId
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error ||
+                    data.detail ||
+                    "Cash payment confirmation failed."
+                );
+            }
+
+            alert(
+                data.message ||
+                "Cash payment confirmed successfully."
+            );
+
+            await loadCompletedJobs();
+
+        } catch (error) {
+
+            console.error("Cash confirmation error:", error);
+
+            alert(error.message);
+
+            button.disabled = false;
+            button.textContent = "Confirm Cash Received";
+        }
+    });
+}
+
 
 
 // ===============================
@@ -262,7 +341,6 @@ function createCompletedJobCard(booking) {
         booking.service_price ??
         null;
 
-
     const priceDisplay =
         totalPrice !== null &&
         totalPrice !== undefined &&
@@ -270,16 +348,65 @@ function createCompletedJobCard(booking) {
             ? `Rs. ${escapeHtml(String(totalPrice))}`
             : "Price not available";
 
+    const paymentMethod =
+        String(booking.payment_method || "").toLowerCase();
+
+    const paymentStatus =
+        String(booking.payment_status || "unpaid").toLowerCase();
+
+    const needsCashConfirmation =
+        paymentMethod === "cash" &&
+        paymentStatus !== "paid";
+
+    let paymentDisplay = "";
+
+    if (paymentStatus === "paid") {
+
+        paymentDisplay = `
+            <span class="text-success">
+                <i class="fas fa-check-circle"></i>
+                Payment Paid (${escapeHtml(paymentMethod || "N/A")})
+            </span>
+        `;
+
+    } else if (needsCashConfirmation) {
+
+        paymentDisplay = `
+            <span class="text-warning">
+                <i class="fas fa-clock"></i>
+                Cash Payment Awaiting Confirmation
+            </span>
+        `;
+
+    } else {
+
+        paymentDisplay = `
+            <span class="text-secondary">
+                Payment: ${escapeHtml(paymentStatus)}
+            </span>
+        `;
+    }
+
+    const cashConfirmationButton =
+        needsCashConfirmation
+            ? `
+                <button
+                    type="button"
+                    class="btn btn-success confirm-cash-payment-btn mt-3"
+                    data-booking-id="${escapeHtml(String(booking.id))}"
+                >
+                    <i class="fas fa-money-bill-wave"></i>
+                    Confirm Cash Received
+                </button>
+            `
+            : "";
 
     return `
         <div class="completed-job-item">
 
             <div class="completed-job-icon">
-
                 <i class="fas fa-check"></i>
-
             </div>
-
 
             <div class="completed-job-details">
 
@@ -304,39 +431,31 @@ function createCompletedJobCard(booking) {
 
                 </div>
 
-
                 <div class="job-info-grid">
 
                     <div>
                         <i class="fas fa-user"></i>
-
                         <span>
                             ${escapeHtml(String(customerName))}
                         </span>
                     </div>
 
-
                     <div>
                         <i class="fas fa-calendar"></i>
-
                         <span>
                             ${formatDisplayDate(bookingDate)}
                         </span>
                     </div>
 
-
                     <div>
                         <i class="far fa-clock"></i>
-
                         <span>
                             ${escapeHtml(String(bookingTime))}
                         </span>
                     </div>
 
-
                     <div>
                         <i class="fas fa-map-marker-alt"></i>
-
                         <span>
                             ${escapeHtml(String(address))}
                         </span>
@@ -344,12 +463,17 @@ function createCompletedJobCard(booking) {
 
                 </div>
 
+                <div class="mt-3">
+                    ${paymentDisplay}
+                </div>
+
+                ${cashConfirmationButton}
+
             </div>
 
         </div>
     `;
 }
-
 
 // ===============================
 // SIDEBAR

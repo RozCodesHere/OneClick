@@ -1,5 +1,5 @@
 from django.db.models import Q
-from providers.models import ProviderProfile
+from providers.models import ProviderProfile, ProviderKYC
 
 from rest_framework import generics, serializers, status
 from rest_framework.response import Response
@@ -447,6 +447,18 @@ class QuotationListCreateView(
                 "Only verified providers can send quotations."
             )
 
+  # Provider must also have approved KYC.
+        kyc_approved = ProviderKYC.objects.filter(
+            provider=provider,
+            status=ProviderKYC.APPROVED,
+        ).exists()
+
+        if not kyc_approved:
+
+            raise serializers.ValidationError(
+                "Your identity verification must be approved before sending quotations."
+            )
+
         # -------------------------------------------------
         # PROVIDER MUST BE AVAILABLE
         # -------------------------------------------------
@@ -571,7 +583,25 @@ class QuotationAcceptView(generics.UpdateAPIView):
 
         service_request = quotation.request
 
-        
+        # Provider must remain fully verified when quotation is accepted.
+        provider = quotation.provider
+
+        if provider.verification_status != ProviderProfile.APPROVED:
+            return Response(
+                {"detail": "This provider is no longer verified."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        kyc_approved = ProviderKYC.objects.filter(
+            provider=provider,
+            status=ProviderKYC.APPROVED,
+        ).exists()
+
+        if not kyc_approved:
+            return Response(
+                {"detail": "This provider's identity verification is not approved."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         
         # Accept the customer's counter-price when available.
         if (
@@ -672,6 +702,27 @@ class ProviderQuotationAcceptView(generics.UpdateAPIView):
 
         service_request = quotation.request
 
+        # Provider must remain fully verified.
+        provider = quotation.provider
+
+        if provider.verification_status != ProviderProfile.APPROVED:
+            return Response(
+                {"detail": "Your provider application is not approved."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        kyc_approved = ProviderKYC.objects.filter(
+            provider=provider,
+            status=ProviderKYC.APPROVED,
+        ).exists()
+
+        if not kyc_approved:
+            return Response(
+                {"detail": "Your KYC verification is not approved."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        
         # Accept the customer's counter-price.
         quotation.price = quotation.counter_price
         quotation.status = Quotation.STATUS_ACCEPTED
@@ -1199,6 +1250,24 @@ class MessageListCreateView(
         # -------------------------------------------------
 
         if user.role == "customer":
+
+            # Customer can message only fully verified providers.
+            if provider.verification_status != ProviderProfile.APPROVED:
+                raise serializers.ValidationError(
+                    "This provider is not verified."
+                )
+
+            from providers.models import ProviderKYC
+
+            kyc_approved = ProviderKYC.objects.filter(
+                provider=provider,
+                status=ProviderKYC.APPROVED,
+            ).exists()
+
+            if not kyc_approved:
+                raise serializers.ValidationError(
+                    "This provider's identity verification is not approved."
+                )
 
             receiver = provider.user
 

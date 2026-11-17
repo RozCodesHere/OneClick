@@ -1,0 +1,859 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Manage Customers | OneClick Admin</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+
+    <style>
+        body {
+            background: #f5f7fb;
+        }
+
+        .admin-customers-page {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        .customer-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 28px;
+        }
+
+        .customer-search {
+            max-width: 420px;
+            width: 100%;
+            position: relative;
+        }
+
+        .customer-search i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .customer-search input {
+            width: 100%;
+            padding: 12px 15px 12px 42px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        .customer-search input:focus {
+            border-color: #2563eb;
+        }
+
+        .customer-count {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .customer-table-wrapper {
+            background: #fff;
+            border: 1px solid #e8edf3;
+            border-radius: 14px;
+            margin-top: 22px;
+            overflow-x: auto;
+        }
+
+        .customer-table {
+            width: 100%;
+            min-width: 850px;
+            border-collapse: collapse;
+        }
+
+        .customer-table th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            padding: 16px;
+            text-align: left;
+        }
+
+        .customer-table td {
+            padding: 16px;
+            border-top: 1px solid #edf0f4;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .customer-email,
+        .customer-phone {
+            color: #64748b;
+        }
+
+        .customer-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .customer-status.active {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .customer-status.inactive {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .customer-view-btn {
+            border: 1px solid #dbeafe;
+            background: #eff6ff;
+            color: #2563eb;
+            padding: 7px 12px;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .customer-view-btn:hover {
+            background: #dbeafe;
+        }
+
+        .customer-empty {
+            padding: 45px 20px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .customer-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-top: 25px;
+        }
+
+        .customer-summary-card {
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #e8edf3;
+            border-radius: 12px;
+        }
+
+        .customer-summary-card span {
+            display: block;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .customer-summary-card strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 25px;
+            color: #1e293b;
+        }
+
+        @media (max-width: 576px) {
+            .admin-customers-page {
+                padding: 24px 14px;
+            }
+        }
+
+
+/* =========================================================
+   CUSTOMER PROFILE FLOATING MODAL
+========================================================= */
+
+body.customer-modal-open {
+    overflow: hidden;
+}
+
+.customer-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.58);
+    backdrop-filter: blur(4px);
+}
+
+.customer-modal.show {
+    display: flex;
+}
+
+.customer-modal-panel {
+    background: #fff;
+    width: 100%;
+    max-width: 1100px;
+    max-height: 92vh;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 25px 70px rgba(15, 23, 42, 0.25);
+    display: flex;
+    flex-direction: column;
+    animation: customerModalOpen .2s ease;
+}
+
+@keyframes customerModalOpen {
+    from {
+        opacity: 0;
+        transform: translateY(15px) scale(.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.customer-modal-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 25px;
+    border-bottom: 1px solid #edf0f4;
+}
+
+.customer-modal-topbar h3 {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+    color: #1e293b;
+}
+
+.customer-modal-close {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 9px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 17px;
+}
+
+.customer-modal-close:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.customer-modal-content {
+    padding: 25px;
+    overflow-y: auto;
+}
+
+.customer-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 14px 25px;
+    border-top: 1px solid #edf0f4;
+}
+
+.customer-modal-footer button {
+    padding: 9px 20px;
+    border: 1px solid #dbe2ea;
+    background: #fff;
+    color: #475569;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.customer-modal-loading,
+.customer-modal-error {
+    text-align: center;
+    padding: 55px 20px;
+    color: #64748b;
+}
+
+.customer-modal-loading i,
+.customer-modal-error i {
+    font-size: 30px;
+    margin-bottom: 14px;
+}
+
+.customer-modal-error i {
+    color: #dc2626;
+}
+
+.customer-modal-error h3 {
+    color: #1e293b;
+}
+
+.customer-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #edf0f4;
+}
+
+.customer-profile-avatar {
+    width: 82px;
+    height: 82px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.customer-profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.customer-profile-avatar span {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 27px;
+    font-weight: 700;
+}
+
+.customer-profile-heading {
+    flex: 1;
+    min-width: 200px;
+}
+
+.customer-profile-label {
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.customer-profile-heading h2 {
+    margin: 5px 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.customer-profile-heading p {
+    color: #64748b;
+    font-size: 13px;
+    margin: 5px 0 10px;
+}
+
+.customer-profile-id {
+    color: #64748b;
+    font-size: 12px;
+    text-align: right;
+}
+
+.customer-profile-id strong {
+    display: block;
+    color: #1e293b;
+    font-size: 18px;
+    margin-top: 5px;
+}
+
+.customer-profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin: 22px 0;
+}
+
+.customer-profile-stat {
+    padding: 17px;
+    background: #f8fafc;
+    border: 1px solid #edf0f4;
+    border-radius: 11px;
+}
+
+.customer-profile-stat span {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.customer-profile-stat strong {
+    display: block;
+    font-size: 23px;
+    color: #1e293b;
+    margin-top: 5px;
+}
+
+.customer-detail-section {
+    margin-top: 25px;
+}
+
+.customer-detail-section-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.customer-detail-section-heading > i {
+    color: #2563eb;
+}
+
+.customer-detail-section-heading h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.customer-booking-count {
+    margin-left: auto;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.customer-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.customer-detail-item {
+    padding: 13px 15px;
+    background: #f8fafc;
+    border: 1px solid #edf0f4;
+    border-radius: 9px;
+    min-width: 0;
+}
+
+.customer-detail-item span {
+    display: block;
+    color: #64748b;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
+.customer-detail-item strong {
+    display: block;
+    color: #1e293b;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.customer-booking-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #edf0f4;
+    border-radius: 10px;
+}
+
+.customer-booking-table {
+    width: 100%;
+    min-width: 850px;
+    border-collapse: collapse;
+}
+
+.customer-booking-table th {
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    padding: 13px;
+    text-align: left;
+}
+
+.customer-booking-table td {
+    padding: 13px;
+    border-top: 1px solid #edf0f4;
+    font-size: 12px;
+    color: #475569;
+    vertical-align: middle;
+}
+
+.customer-booking-table td strong {
+    display: block;
+    color: #1e293b;
+}
+
+.customer-booking-table td small {
+    display: block;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+.booking-status,
+.booking-payment-status {
+    display: inline-block;
+    padding: 5px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.booking-status.completed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.booking-status.pending {
+    background: #fef3c7;
+    color: #a16207;
+}
+
+.booking-status.cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.booking-status.in-progress {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.customer-no-bookings {
+    padding: 35px 20px;
+    text-align: center;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    color: #64748b;
+}
+
+.customer-no-bookings i {
+    display: block;
+    font-size: 27px;
+    margin-bottom: 12px;
+}
+
+.customer-no-bookings strong {
+    color: #334155;
+}
+
+.customer-no-bookings p {
+    font-size: 13px;
+    margin: 6px 0 0;
+}
+
+@media (max-width: 600px) {
+    .customer-modal {
+        padding: 8px;
+    }
+
+    .customer-modal-panel {
+        max-height: 96vh;
+        border-radius: 12px;
+    }
+
+    .customer-modal-content {
+        padding: 17px;
+    }
+
+    .customer-profile-stats {
+        gap: 8px;
+    }
+
+    .customer-profile-stat {
+        padding: 12px;
+    }
+
+    .customer-profile-stat strong {
+        font-size: 19px;
+    }
+
+    .customer-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .customer-profile-heading h2 {
+        font-size: 20px;
+    }
+
+    .customer-profile-id {
+        text-align: left;
+        width: 100%;
+    }
+}
+
+
+
+
+
+/* =========================================================
+   ADMIN CUSTOMERS — DARK MODE
+========================================================= */
+
+body.dark-mode {
+    background: #0f172a;
+    color: #e2e8f0;
+}
+
+body.dark-mode .customer-table-wrapper,
+body.dark-mode .customer-summary-card,
+body.dark-mode .customer-modal-panel {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode .customer-table th,
+body.dark-mode .customer-booking-table th {
+    background: #273449;
+    color: #cbd5e1;
+}
+
+body.dark-mode .customer-table td,
+body.dark-mode .customer-booking-table td {
+    border-color: #334155;
+    color: #cbd5e1;
+}
+
+body.dark-mode .customer-name,
+body.dark-mode .customer-summary-card strong,
+body.dark-mode .customer-modal-topbar h3,
+body.dark-mode .customer-profile-heading h2,
+body.dark-mode .customer-profile-id strong,
+body.dark-mode .customer-profile-stat strong,
+body.dark-mode .customer-detail-section-heading h3,
+body.dark-mode .customer-detail-item strong,
+body.dark-mode .customer-booking-table td strong,
+body.dark-mode .customer-no-bookings strong {
+    color: #f1f5f9;
+}
+
+body.dark-mode .customer-email,
+body.dark-mode .customer-phone,
+body.dark-mode .customer-count,
+body.dark-mode .customer-summary-card span,
+body.dark-mode .customer-profile-label,
+body.dark-mode .customer-profile-heading p,
+body.dark-mode .customer-profile-id,
+body.dark-mode .customer-profile-stat span,
+body.dark-mode .customer-booking-count,
+body.dark-mode .customer-detail-item span,
+body.dark-mode .customer-modal-loading,
+body.dark-mode .customer-modal-error,
+body.dark-mode .customer-no-bookings,
+body.dark-mode .customer-no-bookings p {
+    color: #94a3b8;
+}
+
+body.dark-mode .customer-search input {
+    background: #1e293b;
+    border-color: #475569;
+    color: #f1f5f9;
+}
+
+body.dark-mode .customer-search input::placeholder {
+    color: #94a3b8;
+}
+
+body.dark-mode .customer-summary-card,
+body.dark-mode .customer-profile-stat,
+body.dark-mode .customer-detail-item {
+    background: #273449;
+    border-color: #334155;
+}
+
+body.dark-mode .customer-modal-topbar,
+body.dark-mode .customer-modal-footer,
+body.dark-mode .customer-profile-header {
+    border-color: #334155;
+}
+
+body.dark-mode .customer-modal-close {
+    background: #334155;
+    color: #e2e8f0;
+}
+
+body.dark-mode .customer-modal-footer button {
+    background: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+body.dark-mode .customer-booking-table-wrapper {
+    border-color: #334155;
+}
+
+body.dark-mode .customer-booking-table td small {
+    color: #94a3b8;
+}
+
+body.dark-mode .customer-no-bookings {
+    border-color: #475569;
+}
+
+    </style>
+</head>
+
+<body>
+
+    <main class="admin-customers-page">
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+            <div>
+                <span class="section-eyebrow">ADMINISTRATION</span>
+
+                <h1>Customer Management</h1>
+
+                <p>
+                    View and manage customer accounts registered on OneClick.
+                </p>
+            </div>
+
+            <a href="admin-dashboard.html" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+
+        </div>
+
+        <section class="customer-summary">
+
+            <div class="customer-summary-card">
+                <span>Total Customers</span>
+                <strong id="totalCustomers">0</strong>
+            </div>
+
+            <div class="customer-summary-card">
+                <span>Active Accounts</span>
+                <strong id="activeCustomers">0</strong>
+            </div>
+
+            <div class="customer-summary-card">
+                <span>Inactive Accounts</span>
+                <strong id="inactiveCustomers">0</strong>
+            </div>
+
+        </section>
+
+        <div class="customer-toolbar">
+
+            <div class="customer-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                    type="search"
+                    id="customerSearch"
+                    placeholder="Search by name, email or phone..."
+                >
+            </div>
+
+            <div class="customer-count" id="customerCount">
+                Loading customers...
+            </div>
+
+        </div>
+
+        <div class="customer-table-wrapper">
+
+            <table class="customer-table">
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Joined Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="customerTableBody">
+
+                    <tr>
+                        <td colspan="7" class="customer-empty">
+                            Loading customers...
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+<!-- CUSTOMER PROFILE FLOATING MODAL -->
+<div
+    class="customer-modal"
+    id="customerModal"
+    aria-hidden="true"
+>
+    <div
+        class="customer-modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="customerModalTitle"
+    >
+
+        <div class="customer-modal-topbar">
+            <h3 id="customerModalTitle">
+                <i class="fa-solid fa-user-circle"></i>
+                Customer Details
+            </h3>
+
+            <button
+                type="button"
+                class="customer-modal-close"
+                id="closeCustomerModal"
+                aria-label="Close customer details"
+            >
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div
+            class="customer-modal-content"
+            id="customerModalContent"
+        >
+            <div class="customer-modal-loading">
+                Loading customer profile...
+            </div>
+        </div>
+
+        <div class="customer-modal-footer">
+            <button
+                type="button"
+                id="customerModalCloseBottom"
+            >
+                Close
+            </button>
+        </div>
+
+    </div>
+</div>
+
+
+
+    </main>
+
+    <script src="js/admin-customers.js"></script>
+
+</body>
+</html>
