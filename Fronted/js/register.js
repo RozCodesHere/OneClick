@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
        API BASE
     ========================================================= */
 
-    var API_BASE = "http://127.0.0.1:8000/api";
+    var API_BASE = "https://oneclick-backend-6hk7.onrender.com/api";
 
 
     /* =========================================================

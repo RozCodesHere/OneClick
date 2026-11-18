@@ -2,7 +2,7 @@
    ONECLICK - SAVED PROVIDERS
    ========================================================= */
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "https://oneclick-backend-6hk7.onrender.com/api";
 const SAVED_PROVIDERS_API = `${API_BASE}/providers/saved-providers`;
 
 const savedProvidersGrid = document.getElementById("savedProvidersGrid");

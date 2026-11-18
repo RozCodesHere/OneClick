@@ -4,7 +4,7 @@
 
 
 const API_BASE =
-    "http://127.0.0.1:8000/api";
+    "https://oneclick-backend-6hk7.onrender.com/api";
 
 
 const PROVIDER_SERVICES_API =

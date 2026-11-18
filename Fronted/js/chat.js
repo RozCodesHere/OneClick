@@ -3,7 +3,7 @@
    Customer ↔ Provider
    ========================================================== */
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "https://oneclick-backend-6hk7.onrender.com/api";
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -1219,7 +1219,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     String(message.image)
                         .startsWith("http")
                         ? message.image
-                        : `http://127.0.0.1:8000${message.image}`;
+                        : `https://oneclick-backend-6hk7.onrender.com${message.image}`;
 
                 imageHtml = `
 
@@ -1245,7 +1245,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     String(message.file)
                         .startsWith("http")
                         ? message.file
-                        : `http://127.0.0.1:8000${message.file}`;
+                        : `https://oneclick-backend-6hk7.onrender.com${message.file}`;
 
                 fileHtml = `
 

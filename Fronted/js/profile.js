@@ -3,7 +3,7 @@
    Dynamic Django REST API Integration
    ========================================================= */
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "https://oneclick-backend-6hk7.onrender.com/api";
 
 /* =========================================================
    PAGE INITIALIZATION
@@ -770,7 +770,7 @@ function renderProfilePicture(picture) {
     if (picture) {
         const imageUrl = picture.startsWith("http")
             ? picture
-            : `http://127.0.0.1:8000${picture}`;
+            : `https://oneclick-backend-6hk7.onrender.com${picture}`;
 
         avatar.innerHTML = `
             <img

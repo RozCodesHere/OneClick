@@ -1,4 +1,4 @@
-var BACKEND_URL = 'http://127.0.0.1:8000';
+var BACKEND_URL = 'https://oneclick-backend-6hk7.onrender.com';
 
 document.getElementById('forgotPasswordForm').addEventListener('submit', async function (event) {
 

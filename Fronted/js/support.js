@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
    API CONFIGURATION
    ========================================================= */
 
-const API_BASE_URL = "http://127.0.0.1:8000/api";
+const API_BASE_URL = "https://oneclick-backend-6hk7.onrender.com/api";
 const SUPPORT_API_URL = `${API_BASE_URL}/support/tickets/`;
 
 const accessToken = localStorage.getItem("access_token");

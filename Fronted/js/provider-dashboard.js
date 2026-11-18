@@ -7,8 +7,8 @@ const API_BASE = (
     window.location.hostname === "127.0.0.1" ||
     window.location.hostname === "localhost"
 )
-    ? "http://127.0.0.1:8000/api"
-    : "http://127.0.0.1:8000/api";
+    ? "https://oneclick-backend-6hk7.onrender.com/api"
+    : "https://oneclick-backend-6hk7.onrender.com/api";
 
 /* ==========================================================================
    PROVIDER LIVE GPS TRACKING
@@ -1389,7 +1389,7 @@ function renderProviderMessages(messages) {
                         src="${
                             message.image.startsWith("http")
                                 ? message.image
-                                : `http://127.0.0.1:8000${message.image}`
+                                : `https://oneclick-backend-6hk7.onrender.com${message.image}`
                         }"
                         alt="Shared image"
                         class="message-shared-image"
@@ -1410,7 +1410,7 @@ function renderProviderMessages(messages) {
                         src="${
                             message.image.startsWith("http")
                                 ? message.image
-                                : `http://127.0.0.1:8000${message.image}`
+                                : `https://oneclick-backend-6hk7.onrender.com${message.image}`
                         }"
                         alt="Shared image"
                         class="message-shared-image"
@@ -3276,7 +3276,7 @@ if (
             const token = localStorage.getItem("access_token");
 
             const response = await fetch(
-                "http://127.0.0.1:8000/api/bookings/payment/cash/confirm/",
+                "https://oneclick-backend-6hk7.onrender.com/api/bookings/payment/cash/confirm/",
                 {
                     method: "POST",
                     headers: {
@@ -7344,7 +7344,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
             const response = await fetch(
-                "http://127.0.0.1:8000/api/providers/work-photos/upload/",
+                "https://oneclick-backend-6hk7.onrender.com/api/providers/work-photos/upload/",
                 {
                     method: "POST",
                     headers: {
@@ -7389,7 +7389,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         try {
             const response = await fetch(
-                "http://127.0.0.1:8000/api/providers/dashboard/",
+                "https://oneclick-backend-6hk7.onrender.com/api/providers/dashboard/",
                 {
                     headers: {
                         "Authorization": `Bearer ${getAccessToken()}`
@@ -7435,7 +7435,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                     try {
                         const deleteResponse = await fetch(
-                            `http://127.0.0.1:8000/api/providers/work-photos/${photo.id}/delete/`,
+                            `https://oneclick-backend-6hk7.onrender.com/api/providers/work-photos/${photo.id}/delete/`,
                             {
                                 method: "DELETE",
                                 headers: {

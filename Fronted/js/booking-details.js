@@ -3,7 +3,7 @@
    Dynamic Booking Details from Django REST API
    ========================================================= */
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "https://oneclick-backend-6hk7.onrender.com/api";
 
 let currentBookingAddress = "";
 
@@ -3167,7 +3167,7 @@ function resolveMediaUrl(
         return url;
     }
 
-    return `http://127.0.0.1:8000${url.replace(/^\/+/, "/")}`;
+    return `https://oneclick-backend-6hk7.onrender.com${url.replace(/^\/+/, "/")}`;
 }
 
 /* =========================================================

@@ -3,7 +3,7 @@
    Dynamic provider data from Django REST API
    ========================================================= */
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "https://oneclick-backend-6hk7.onrender.com/api";
 
 /* =========================================================
    PAGE INITIALIZATION
@@ -393,7 +393,7 @@ if (avatar) {
         const imageUrl =
             user.profile_picture.startsWith("http")
                 ? user.profile_picture
-                : `http://127.0.0.1:8000${user.profile_picture}`;
+                : `https://oneclick-backend-6hk7.onrender.com${user.profile_picture}`;
 
         avatar.src =
             imageUrl;
@@ -816,7 +816,7 @@ function renderCompletedWorkGallery(photos) {
 
         const imageUrl = photo.image.startsWith("http")
             ? photo.image
-            : `http://127.0.0.1:8000${photo.image}`;
+            : `https://oneclick-backend-6hk7.onrender.com${photo.image}`;
 
         return `
             <div class="gallery-item">

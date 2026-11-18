@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "https://oneclick-backend-6hk7.onrender.com/api";
 
 const API_ORIGIN = new URL(API_BASE).origin;
 
@@ -234,7 +234,7 @@ if (avatar) {
         const imageUrl =
             user.profile_picture.startsWith("http")
                 ? user.profile_picture
-                : `http://127.0.0.1:8000${user.profile_picture}`;
+                : `https://oneclick-backend-6hk7.onrender.com${user.profile_picture}`;
 
         avatar.innerHTML = "";
 

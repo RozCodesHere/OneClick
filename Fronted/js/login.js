@@ -36,8 +36,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var USE_LOCAL_BACKEND = false;
 
     var BACKEND_URL = USE_LOCAL_BACKEND
-        ? 'http://127.0.0.1:8000'
-        : 'http://127.0.0.1:8000';
+        ? 'https://oneclick-backend-6hk7.onrender.com'
+        : 'https://oneclick-backend-6hk7.onrender.com';
 
     var API_URL = BACKEND_URL + '/api/users/login/';
 
