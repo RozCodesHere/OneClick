@@ -7680,39 +7680,57 @@ if (!dashboardResponse.ok) {
 
 const verification = dashboardData.verification;
 
+console.log("KYC DEBUG:", {
+    kycStatus: data.kyc_status,
+    applicationStatus: verification.application_status,
+    isVerified: verification.is_verified
+});
         if (!response.ok) {
             throw new Error(
                 data.error || data.detail || "Unable to load KYC status."
             );
         }
 
+       
         form.style.display = "none";
+
+        const kycStatus = data.kyc_status;
+        const applicationStatus = verification.application_status;
 
         if (verification.is_verified === true) {
 
-    section.style.display = "none";
-    return;
+            section.style.display = "none";
+            return;
 
-} else if (
-    data.status === "pending" ||
-    verification.application_status === "pending"
-) {
+        } else if (kycStatus === "pending") {
 
-    content.innerHTML = `
-        <p class="text-warning fw-semibold">
-            <i class="fa-solid fa-clock"></i>
-            Verification Pending
-        </p>
-        <p class="text-muted small">
-            ${
-                data.status === "approved"
-                    ? "Your KYC is approved. Your provider application is awaiting administrator approval."
-                    : "Your documents are submitted and awaiting administrator review."
-            }
-        </p>
-    `;
-} 
-        else if (data.status === "rejected") {
+            content.innerHTML = `
+                <p class="text-warning fw-semibold">
+                    <i class="fa-solid fa-clock"></i>
+                    Verification Pending
+                </p>
+                <p class="text-muted small">
+                    Your documents are submitted and awaiting administrator review.
+                </p>
+            `;
+
+        } else if (kycStatus === "approved") {
+
+            content.innerHTML = `
+                <p class="text-success fw-semibold">
+                    <i class="fa-solid fa-check-circle"></i>
+                    Documents Approved
+                </p>
+                <p class="text-muted small">
+                    ${
+                        applicationStatus === "pending"
+                            ? "Your KYC is approved. Your provider application is awaiting administrator approval."
+                            : "Your identity documents have been approved."
+                    }
+                </p>
+            `;
+
+        } else if (kycStatus === "rejected") {
 
             content.innerHTML = `
                 <p class="text-danger fw-semibold">
@@ -7743,8 +7761,8 @@ const verification = dashboardData.verification;
             `;
 
             form.style.display = "block";
-
         }
+
 
     } catch (error) {
 
