@@ -498,6 +498,22 @@ class GoogleLoginView(APIView):
     permission_classes = []
 
     def post(self, request):
+        import logging
+
+        try:
+            return self._post_google_login(request)
+
+        except Exception:
+            logging.getLogger(__name__).exception(
+                "Unexpected error during Google Login"
+            )
+
+            return Response(
+                {"error": "Google login failed due to a server error."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def _post_google_login(self, request):
         credential = request.data.get("credential")
 
         if not credential:
@@ -551,6 +567,7 @@ class GoogleLoginView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
+       
         # Check whether this Google email already has an account.
         is_new_user = False
 
@@ -565,33 +582,36 @@ class GoogleLoginView(APIView):
 
             # New Google accounts start as customers.
             # Provider onboarding can update the role afterward.
-            
-        user = User.objects.create_user(
-    email=email,
-    password=None,
-    first_name=name_parts[0] if name_parts else "",
-    last_name=name_parts[1] if len(name_parts) > 1 else "",
-    role=User.CUSTOMER,
-)
+            user = User.objects.create_user(
+                email=email,
+                password=None,
+                first_name=name_parts[0] if name_parts else "",
+                last_name=name_parts[1] if len(name_parts) > 1 else "",
+                role=User.CUSTOMER,
+            )
 
-# Notify all active administrators about the new Google account.
-        admin_users = User.objects.filter(
-    role=User.ADMIN,
-    is_active=True
-)
+            # Notify all active administrators about the new Google account.
+            admin_users = User.objects.filter(
+                role=User.ADMIN,
+                is_active=True
+            )
 
-        for admin_user in admin_users:
-          create_notification(
-        recipient=admin_user,
-        title="New User Registered",
-        message=(
-            f"A new user registered using Google: {user.email}"
-        ),
-        notification_type=Notification.SYSTEM,
-        priority=Notification.MEDIUM,
-        event_key=f"user:{user.id}:google_registered:admin:{admin_user.id}",
-        send_email=True,
-    )
+            for admin_user in admin_users:
+                create_notification(
+                    recipient=admin_user,
+                    title="New User Registered",
+                    message=(
+                        f"A new user registered using Google: {user.email}"
+                    ),
+                    notification_type=Notification.SYSTEM,
+                    priority=Notification.MEDIUM,
+                    event_key=(
+                        f"user:{user.id}:google_registered:"
+                        f"admin:{admin_user.id}"
+                    ),
+                    send_email=True,
+                )
+
  
 
         if not user.is_active:
