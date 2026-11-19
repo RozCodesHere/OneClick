@@ -1911,6 +1911,46 @@ img {
     color: #ffffff;
 }
 
+/* VIEW PROVIDER DETAILS */
+
+.provider-view-btn {
+
+    flex: 1;
+
+    min-height: 35px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    border-radius: 8px;
+
+    border: 1px solid transparent;
+
+    background: var(--primary-light);
+
+    color: var(--primary);
+
+    font-size: 9px;
+
+    font-weight: 600;
+
+    text-decoration: none;
+
+    transition: 0.2s ease;
+}
+
+.provider-view-btn:hover {
+
+    background: var(--primary);
+
+    color: #ffffff;
+}
+
 
 /* =========================================================
    PAYMENT SECTION

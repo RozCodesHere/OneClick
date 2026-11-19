@@ -199,7 +199,7 @@ else:
 
 PASSWORD_RESET_FRONTEND_URL = config(
     "PASSWORD_RESET_FRONTEND_URL",
-    default="http://127.0.0.1:5501/Fronted"
+    default="https://dainty-kitsune-4d690a.netlify.app"
 )
 AUTH_USER_MODEL = "users.User"
 REST_FRAMEWORK = {

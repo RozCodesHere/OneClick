@@ -1960,6 +1960,13 @@ function renderProviderApprovals() {
                             <div
                                 class="provider-actions"
                             >
+                            <a
+    href="admin-providers.html?provider_id=${encodeURIComponent(provider.id)}"
+    class="provider-view-btn"
+>
+    <i class="fa-solid fa-eye"></i>
+    View Details
+</a>
 
                                 <button
                                     type="button"

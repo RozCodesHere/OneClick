@@ -46,7 +46,6 @@ class ProviderWorkPhotoUploadView(APIView):
                 {"error": "Provider profile not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
         image = request.FILES.get("image")
 
         if not image:
@@ -1026,10 +1025,19 @@ class ProviderKYCDocumentView(APIView):
 
         try:
             file_object = document.storage.open(document.name, "rb")
-        except (FileNotFoundError, OSError):
+
+        except FileNotFoundError:
             return Response(
                 {"error": "Document file could not be found."},
                 status=status.HTTP_404_NOT_FOUND,
+            )
+
+        except Exception:
+            return Response(
+                {
+                    "error": "Unable to retrieve the KYC document. Please try again."
+                },
+                status=status.HTTP_502_BAD_GATEWAY,
             )
 
         content_type, _ = mimetypes.guess_type(document.name)

@@ -92,6 +92,22 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         await loadCurrentAdmin();
         await loadProviders();
+// Open a provider directly when redirected from Admin Dashboard.
+const urlParams = new URLSearchParams(window.location.search);
+const requestedProviderId = Number(urlParams.get("provider_id"));
+
+if (requestedProviderId) {
+    const provider = allProviders.find(
+        item => Number(item.id) === requestedProviderId
+    );
+
+    if (provider) {
+        openProviderModal(provider);
+    } else {
+        alert("Provider details could not be found.");
+    }
+}
+
 
     } catch (error) {
 
@@ -815,8 +831,7 @@ async function loadProviderKYC(provider) {
 
 // Fetch private documents using the admin JWT.
 async function loadKYCDocument(providerId, documentType, targetId) {
-
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
 
     const response = await fetch(
         `${API_BASE}/providers/kyc/documents/${providerId}/${documentType}/`,
@@ -834,7 +849,7 @@ async function loadKYCDocument(providerId, documentType, targetId) {
         throw new Error("Authentication expired.");
     }
 
-    if (!response.ok) {
+       if (!response.ok) {
         throw new Error(`Unable to load ${documentType}.`);
     }
 
