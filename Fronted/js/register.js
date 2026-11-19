@@ -351,7 +351,7 @@ else if (requestedRole === "provider") {
        FILE UPLOAD LABEL
     ========================================================= */
 
-     {
+         function wireFileUpload(inputId, labelId, defaultText) {
 
         var input =
             document.getElementById(inputId);
