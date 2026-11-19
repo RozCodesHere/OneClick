@@ -198,7 +198,7 @@ async function loadHomepageCategories() {
             if (categoryName.includes("clean")) {
 
                 categoryImage =
-                    "assests/images/SERVICE/cleaning (2).jpg";
+    "assests/images/SERVICE/cleaning(2).jpg";
 
             } else if (
                 categoryName.includes("electric")
@@ -213,7 +213,7 @@ async function loadHomepageCategories() {
             ) {
 
                 categoryImage =
-                    "assests/images/SERVICE/Plumbing (2).jpg";
+    "assests/images/HOME/plumber.jpg";
 
             } else if (
                 categoryName.includes("vehicle") ||
