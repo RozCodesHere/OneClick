@@ -169,18 +169,33 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 
-# Email
-# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+# ============================================================
+# EMAIL CONFIGURATION
+# ============================================================
 
-EMAIL_HOST_USER = config("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+if os.getenv("GOOGLE_APPS_SCRIPT_URL") and os.getenv("ONECLICK_SECRET"):
 
-DEFAULT_FROM_EMAIL = f"OneClick Support <{EMAIL_HOST_USER}>"
+    EMAIL_BACKEND = "config.email_backend.AppsScriptEmailBackend"
+
+    GOOGLE_APPS_SCRIPT_URL = os.getenv("GOOGLE_APPS_SCRIPT_URL")
+    ONECLICK_SECRET = os.getenv("ONECLICK_SECRET")
+
+    DEFAULT_FROM_EMAIL = "OneClick Support"
+
+else:
+
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+    EMAIL_HOST = "smtp.gmail.com"
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+
+    EMAIL_HOST_USER = config("EMAIL_HOST_USER")
+    EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+
+    DEFAULT_FROM_EMAIL = f"OneClick Support <{EMAIL_HOST_USER}>"
+
 
 PASSWORD_RESET_FRONTEND_URL = config(
     "PASSWORD_RESET_FRONTEND_URL",
