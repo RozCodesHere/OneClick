@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
 
+from providers.cloudinary_storage import CloudinaryImageStorage
 
 class UserManager(BaseUserManager):
 
@@ -118,10 +119,11 @@ class User(AbstractUser):
         ],
     )
     profile_picture = models.ImageField(
-        upload_to="profiles/",
-        blank=True,
-        null=True,
-    )
+    storage=CloudinaryImageStorage(),
+    upload_to="profiles/",
+    blank=True,
+    null=True,
+)
 
     name_changed_at = models.DateTimeField(
         null=True,
