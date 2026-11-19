@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models
 from .storage import PrivateKYCStorage
 from services.models import ServiceCategory
-
+from providers.cloudinary_storage import CloudinaryImageStorage
 
 class ProviderProfile(models.Model):
     # Verification statuses
@@ -75,10 +75,11 @@ class ProviderProfile(models.Model):
     )
 
     profile_image = models.ImageField(
-        upload_to="provider_profiles/",
-        blank=True,
-        null=True,
-    )
+    storage=CloudinaryImageStorage(),
+    upload_to="provider_profiles/",
+    blank=True,
+    null=True,
+)
 
 
 
@@ -126,8 +127,9 @@ class ProviderWorkPhoto(models.Model):
     )
 
     image = models.ImageField(
-        upload_to="provider_work_photos/",
-    )
+    storage=CloudinaryImageStorage(),
+    upload_to="provider_work_photos/",
+)
 
     caption = models.CharField(
         max_length=255,
