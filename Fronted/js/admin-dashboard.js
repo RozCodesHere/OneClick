@@ -9,7 +9,11 @@
    CONFIGURATION
 ========================================================= */
 
-const API_BASE = "https://oneclick-backend-6hk7.onrender.com/api";
+const API_BASE =
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "localhost"
+        ? "http://127.0.0.1:8000/api"
+        : "https://oneclick-backend-6hk7.onrender.com/api";
 
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
@@ -1164,11 +1168,7 @@ function calculateAndRenderStatistics() {
         ).length;
 
 
-    const providers =
-        allUsers.filter(
-            user =>
-                user.role === "provider"
-        ).length;
+    const providers = allProviders.length;
 
 
     const activeBookings =
@@ -1786,10 +1786,11 @@ function renderProviderApprovals() {
 
 
     const unverifiedProviders =
-        allProviders.filter(
-            provider =>
-                provider.verified !== true
-        );
+    allProviders.filter(
+        provider =>
+            String(provider.verification_status || "")
+                .toLowerCase() !== "approved"
+    );
 
 
     if (!unverifiedProviders.length) {
@@ -6321,18 +6322,19 @@ function normalizeMediaUrl(
         )
     ) {
 
-        return (
-            "https://oneclick-backend-6hk7.onrender.com" +
-            value
-        );
+      return (
+    API_BASE.replace("/api", "") +
+    value
+);
 
     }
 
 
     return (
-        "https://oneclick-backend-6hk7.onrender.com/media/" +
-        value
-    );
+    API_BASE.replace("/api", "") +
+    "/media/" +
+    value
+);
 
 }
 

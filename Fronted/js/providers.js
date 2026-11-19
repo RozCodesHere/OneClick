@@ -6,7 +6,10 @@ Service-aware provider filtering
 ========================================================= */
 
 const API_BASE =
-    "https://oneclick-backend-6hk7.onrender.com/api";
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "localhost"
+        ? "http://127.0.0.1:8000/api"
+        : "https://oneclick-backend-6hk7.onrender.com/api";
 
 const PROVIDERS_API =
     `${API_BASE}/providers/`;

@@ -33,15 +33,22 @@ document.addEventListener('DOMContentLoaded', function () {
        BACKEND URLS
     ===================================================== */
 
-    var USE_LOCAL_BACKEND = false;
+   
 
-    var BACKEND_URL = USE_LOCAL_BACKEND
-        ? 'https://oneclick-backend-6hk7.onrender.com'
-        : 'https://oneclick-backend-6hk7.onrender.com';
+var USE_LOCAL_BACKEND = (
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === 'localhost'
+);
 
-    var API_URL = BACKEND_URL + '/api/users/login/';
+var BACKEND_URL = USE_LOCAL_BACKEND
+    ? 'http://127.0.0.1:8000'
+    : 'https://oneclick-backend-6hk7.onrender.com';
 
-    var GOOGLE_API_URL = BACKEND_URL + '/api/users/login/google/';
+var API_URL = BACKEND_URL + '/api/users/login/';
+var GOOGLE_API_URL = BACKEND_URL + '/api/users/login/google/';
+console.log("Current website:", window.location.origin);
+console.log("Selected backend:", BACKEND_URL);
+
 
     var GOOGLE_CLIENT_ID =
         '673099442634-24da2mp2sqofhqv2uh28pt8309k2pl3r.apps.googleusercontent.com';
@@ -78,10 +85,12 @@ document.addEventListener('DOMContentLoaded', function () {
        EMAIL VALIDATION
     ===================================================== */
 
-    function isValidEmail(value) {
-        var pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return pattern.test(value.trim());
-    }
+    
+function isValidEmail(value) {
+    var pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return pattern.test(value.trim());
+}
+
 
     function setFieldValidity(input, valid) {
         if (!input) return;

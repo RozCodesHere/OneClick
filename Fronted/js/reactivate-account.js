@@ -1,4 +1,10 @@
-const API_BASE = "https://oneclick-backend-6hk7.onrender.com/api/users";
+const API_BASE =
+    (
+        window.location.hostname === "127.0.0.1" ||
+        window.location.hostname === "localhost"
+    )
+        ? "http://127.0.0.1:8000/api/users"
+        : "https://oneclick-backend-6hk7.onrender.com/api/users";
 
 const requestForm = document.getElementById("reactivateRequestForm");
 const verifyForm = document.getElementById("reactivateVerifyForm");

@@ -1,5 +1,9 @@
 
-const API_BASE = "https://oneclick-backend-6hk7.onrender.com/api";
+const API_BASE =
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "localhost"
+        ? "http://127.0.0.1:8000/api"
+        : "https://oneclick-backend-6hk7.onrender.com/api";
 
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
@@ -808,11 +812,40 @@ async function loadProviderKYC(provider) {
             }
         `;
 
-        await Promise.all([
+               const documentResults = await Promise.allSettled([
             loadKYCDocument(kyc.provider_id, "citizenship_front", "kycFrontPreview"),
             loadKYCDocument(kyc.provider_id, "citizenship_back", "kycBackPreview"),
             loadKYCDocument(kyc.provider_id, "verification_selfie", "kycSelfiePreview")
         ]);
+
+        const previewTargets = [
+            "kycFrontPreview",
+            "kycBackPreview",
+            "kycSelfiePreview"
+        ];
+
+        documentResults.forEach((result, index) => {
+
+            if (result.status === "rejected") {
+
+                const target = document.getElementById(
+                    previewTargets[index]
+                );
+
+                if (target) {
+                    target.innerHTML = `
+                        <p class="text-danger">
+                            Document unavailable. Provider needs to re-upload it.
+                        </p>
+                    `;
+                }
+
+                console.error(
+                    "KYC DOCUMENT PREVIEW ERROR:",
+                    result.reason
+                );
+            }
+        });
 
     } catch (error) {
 

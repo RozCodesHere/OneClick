@@ -1,4 +1,8 @@
-var BACKEND_URL = 'https://oneclick-backend-6hk7.onrender.com';
+var BACKEND_URL =
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === 'localhost'
+        ? 'http://127.0.0.1:8000'
+        : 'https://oneclick-backend-6hk7.onrender.com';
 
 var params = new URLSearchParams(window.location.search);
 

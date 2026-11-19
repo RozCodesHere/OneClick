@@ -155,10 +155,12 @@ function t(key, fallback) {
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1'
 )
-    ? 'https://oneclick-backend-6hk7.onrender.com'
+    ? 'http://127.0.0.1:8000'
     : 'https://oneclick-backend-6hk7.onrender.com';
 
 const API_BASE = `${BACKEND_BASE}/api`;
+
+
 
 
 

@@ -4,7 +4,11 @@
    Load real booking and invoice information
    ========================================================= */
 
-const API_BASE = "https://oneclick-backend-6hk7.onrender.com/api";
+const API_BASE =
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "localhost"
+        ? "http://127.0.0.1:8000/api"
+        : "https://oneclick-backend-6hk7.onrender.com/api";
 
 let currentBooking = null;
 

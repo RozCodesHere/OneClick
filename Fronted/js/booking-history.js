@@ -3,7 +3,14 @@
    Real Django REST API Integration
    ========================================================== */
 
-const API_BASE = "https://oneclick-backend-6hk7.onrender.com/api";
+const USE_LOCAL_BACKEND = (
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "localhost"
+);
+
+const API_BASE = USE_LOCAL_BACKEND
+    ? "http://127.0.0.1:8000/api"
+    : "https://oneclick-backend-6hk7.onrender.com/api";
 
 let bookings = [];
 let currentUser = null;
@@ -444,7 +451,7 @@ function getProviderImage(booking) {
     ) {
 
         image =
-            `https://oneclick-backend-6hk7.onrender.com${image}`;
+           `${API_BASE.replace("/api", "")}${image}`;
     }
 
 
